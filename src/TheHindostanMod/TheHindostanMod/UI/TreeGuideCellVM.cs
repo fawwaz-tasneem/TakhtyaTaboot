@@ -1,6 +1,6 @@
 using TaleWorlds.Library;
 
-namespace TheHindostanMod.UI
+namespace TakhtyaTaboot.UI
 {
     // One column of the tree gutter to the left of a node, drawing the connector lines.
     // A column is either an ancestor "pass-through" vertical line, or the node's own

@@ -10,7 +10,7 @@ using TaleWorlds.Core;
 using TaleWorlds.Library;
 using TaleWorlds.Localization;
 
-namespace TheHindostanMod
+namespace TakhtyaTaboot
 {
     // Padshahi Hukm — Imperial Authority (0-100) per kingdom: how far the emperor's
     // writ actually runs. High = taxes flow and lords obey; low = governors withhold

@@ -2,7 +2,7 @@ using System;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.Library;
 
-namespace TheHindostanMod.UI
+namespace TakhtyaTaboot.UI
 {
     // A selectable kingdom in the left-hand list.
     public class KingdomItemVM : ViewModel

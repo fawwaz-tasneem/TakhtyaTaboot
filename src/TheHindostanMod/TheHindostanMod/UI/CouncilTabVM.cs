@@ -2,7 +2,7 @@ using System;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.Library;
 
-namespace TheHindostanMod.UI
+namespace TakhtyaTaboot.UI
 {
     // A selectable council in the left-hand list (Imperial / My Liege's / My Own).
     public class CouncilTabVM : ViewModel

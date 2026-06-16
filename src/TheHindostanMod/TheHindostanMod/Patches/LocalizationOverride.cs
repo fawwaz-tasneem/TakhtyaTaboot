@@ -7,7 +7,7 @@ using TaleWorlds.Core;
 using TaleWorlds.Localization;
 using TaleWorlds.ModuleManager;
 
-namespace TheHindostanMod
+namespace TakhtyaTaboot
 {
     // English text is served from GameTexts._gameTextManager (a Dictionary<string,
     // GameText>), keyed by the OUTER semantic id + variation — NOT by the inner {=}
@@ -20,7 +20,7 @@ namespace TheHindostanMod
     // Confirmed working: title id str_faction_noble_name_with_title.empire, etc.
     public static class LocalizationOverride
     {
-        private const string ModuleId = "TheHindostanMod";
+        private const string ModuleId = "TakhtyaTaboot";
         private static readonly string DebugPath =
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory),
                          "hindostan_loc_debug.txt");

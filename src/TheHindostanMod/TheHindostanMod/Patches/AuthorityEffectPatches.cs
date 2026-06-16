@@ -4,7 +4,7 @@ using TaleWorlds.CampaignSystem.Party;
 using TaleWorlds.CampaignSystem.GameComponents;
 using TaleWorlds.Localization;
 
-namespace TheHindostanMod
+namespace TakhtyaTaboot
 {
     // Tax effect: when imperial authority is low, governors withhold revenue, so a
     // clan's income falls. Factor applied to the vanilla income calculation.

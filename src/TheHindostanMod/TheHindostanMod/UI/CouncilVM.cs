@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.Library;
 
-namespace TheHindostanMod.UI
+namespace TakhtyaTaboot.UI
 {
     // Root view model for the Council screen ("the Darbar"). The left list holds the
     // councils you can see — the Imperial Darbar, your liege's council, and your own;

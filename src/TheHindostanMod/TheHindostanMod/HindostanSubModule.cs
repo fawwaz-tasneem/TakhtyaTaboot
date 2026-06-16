@@ -3,7 +3,7 @@ using TaleWorlds.CampaignSystem;
 using TaleWorlds.Core;
 using TaleWorlds.MountAndBlade;
 
-namespace TheHindostanMod
+namespace TakhtyaTaboot
 {
     public class HindostanSubModule : MBSubModuleBase
     {

@@ -5,7 +5,7 @@ using HarmonyLib;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.CampaignSystem.ViewModelCollection.CharacterCreation;
 
-namespace TheHindostanMod
+namespace TakhtyaTaboot
 {
     // Forces the Hindostan culture names onto the character-creation selection
     // screen. The screen reads CharacterCreationCultureVM.NameText, which is set

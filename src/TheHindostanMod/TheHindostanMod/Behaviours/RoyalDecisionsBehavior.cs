@@ -2,9 +2,9 @@ using TaleWorlds.CampaignSystem;
 using TaleWorlds.CampaignSystem.Actions;
 using TaleWorlds.CampaignSystem.Election;
 using TaleWorlds.Library;
-using TheHindostanMod.UI;
+using TakhtyaTaboot.UI;
 
-namespace TheHindostanMod
+namespace TakhtyaTaboot
 {
     // Conveys the great acts of state through Royal Farmaans, so that war, peace and
     // every court vote reaches the player as a sealed proclamation rather than a silent

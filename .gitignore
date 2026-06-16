@@ -38,6 +38,10 @@ EmAssetPackages/
 **/Backups/
 **/*_HOLD/
 
+# ── Release build artifacts (distributed via GitHub Releases, not committed) ──
+release/
+*.zip
+
 # ── OS junk ──
 Thumbs.db
 desktop.ini

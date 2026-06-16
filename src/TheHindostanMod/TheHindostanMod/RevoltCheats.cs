@@ -3,7 +3,7 @@ using TaleWorlds.CampaignSystem;
 using TaleWorlds.CampaignSystem.Settlements;
 using TaleWorlds.Library;
 
-namespace TheHindostanMod
+namespace TakhtyaTaboot
 {
     // Developer console commands for testing the Revolt Cascade. Enable cheats, open the
     // console (tilde ~), and type:

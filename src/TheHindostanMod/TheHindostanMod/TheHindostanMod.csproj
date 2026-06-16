@@ -1,6 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <AssemblyName>TakhtyaTaboot</AssemblyName>
+    <RootNamespace>TakhtyaTaboot</RootNamespace>
     <TargetFramework>net481</TargetFramework>
     <PlatformTarget>x64</PlatformTarget>
     <LangVersion>9.0</LangVersion>

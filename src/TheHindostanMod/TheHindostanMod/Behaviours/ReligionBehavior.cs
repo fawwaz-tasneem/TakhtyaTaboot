@@ -9,7 +9,7 @@ using TaleWorlds.Library;
 using TaleWorlds.Localization;
 using TaleWorlds.ModuleManager;
 
-namespace TheHindostanMod
+namespace TakhtyaTaboot
 {
     public enum Religion { None, Islam, Hindu, Sikh }
 
@@ -19,7 +19,7 @@ namespace TheHindostanMod
     // (tolerance, marriage, conversion) — GetReligion is the stable entry point.
     public class ReligionBehavior : CampaignBehaviorBase
     {
-        private const string ModuleId = "TheHindostanMod";
+        private const string ModuleId = "TakhtyaTaboot";
 
         public static ReligionBehavior Instance { get; private set; }
 

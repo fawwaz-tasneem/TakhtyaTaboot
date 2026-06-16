@@ -3,7 +3,7 @@ using System.Linq;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.Library;
 
-namespace TheHindostanMod
+namespace TakhtyaTaboot
 {
     // Developer console commands for testing the succession system.
     // Open the console with the tilde key (cheats must be enabled) and type:

@@ -9,9 +9,9 @@ using TaleWorlds.CampaignSystem.Settlements;
 using TaleWorlds.Core;
 using TaleWorlds.Library;
 using TaleWorlds.Localization;
-using TheHindostanMod.UI;
+using TakhtyaTaboot.UI;
 
-namespace TheHindostanMod
+namespace TakhtyaTaboot
 {
     // The Mughal mansabdari rank ladder. A clan QUALIFIES for a rank by its sawar
     // (total field troops), but the rank must be GRANTED by the kingdom's ruler

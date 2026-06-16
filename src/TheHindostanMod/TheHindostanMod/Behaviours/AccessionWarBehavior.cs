@@ -7,9 +7,9 @@ using TaleWorlds.CampaignSystem.Party;
 using TaleWorlds.CampaignSystem.Settlements;
 using TaleWorlds.Core;
 using TaleWorlds.Library;
-using TheHindostanMod.UI;
+using TakhtyaTaboot.UI;
 
-namespace TheHindostanMod
+namespace TakhtyaTaboot
 {
     // The War of Accession. When an Amir-ul-Umara challenges the throne, he raises the
     // standard of revolt: he and every house that backs him secede into a temporary

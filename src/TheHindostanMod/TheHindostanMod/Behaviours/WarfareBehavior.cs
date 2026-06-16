@@ -10,9 +10,9 @@ using TaleWorlds.CampaignSystem.Settlements;
 using TaleWorlds.Core;
 using TaleWorlds.Library;
 using TaleWorlds.Localization;
-using TheHindostanMod.UI;
+using TakhtyaTaboot.UI;
 
-namespace TheHindostanMod
+namespace TakhtyaTaboot
 {
     // Makes wars MEAN something. Every war the player's realm fights carries a war goal
     // and a running war score (battles won, forts taken). Peace is no blank handshake —

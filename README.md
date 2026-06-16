@@ -1,4 +1,6 @@
-# The Hindostan Mod
+# Takht ya Taboot
+
+*(Takht ya Taboot — "the Throne or the Coffin")*
 
 A work-in-progress overhaul mod for **Mount & Blade II: Bannerlord** (`v1.4.6`) that reimagines the campaign as **1719 Mughal India** — the twilight of imperial unity, when the Padshah's authority frays and zamindars, mansabdars, Sikhs, and the Marathas contend for the soul of Hindostan.
 
@@ -62,12 +64,12 @@ All of the following are working C# systems (or data/text changes), independent 
 ## Installation
 
 1. Install the required library mods above.
-2. Download the latest `TheHindostanMod-vX.X.X.zip` from the [**Releases**](../../releases) page.
-3. Extract it so the `TheHindostanMod` folder sits inside your Bannerlord `Modules` directory:
+2. Download the latest `TakhtyaTaboot-vX.X.X.zip` from the [**Releases**](../../releases) page.
+3. Extract it so the `TakhtyaTaboot` folder sits inside your Bannerlord `Modules` directory:
    ```
-   Mount & Blade II Bannerlord\Modules\TheHindostanMod\SubModule.xml
+   Mount & Blade II Bannerlord\Modules\TakhtyaTaboot\SubModule.xml
    ```
-4. Launch the game, open the **Mods** tab, enable the library mods **and** *The Hindostan Mod* (libraries ordered above it).
+4. Launch the game, open the **Mods** tab, enable the library mods **and** *Takht ya Taboot* (libraries ordered above it).
 5. Start a new campaign.
 
 ## Building from source
@@ -78,7 +80,7 @@ Only source, game-data XML, and GUI prefabs are kept in this repository. The com
 "C:/Program Files/dotnet/dotnet.exe" build src/TheHindostanMod/TheHindostanMod/TheHindostanMod.csproj -c Release
 ```
 
-This outputs `TheHindostanMod.dll` into `bin/Win64_Shipping_Client/`.
+This outputs `TakhtyaTaboot.dll` into `bin/Win64_Shipping_Client/`.
 
 To assemble a clean, runtime-only release zip (source, wiki, and tooling excluded):
 

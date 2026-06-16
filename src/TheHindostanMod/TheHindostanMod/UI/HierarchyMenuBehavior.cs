@@ -3,7 +3,7 @@ using TaleWorlds.CampaignSystem;
 using TaleWorlds.CampaignSystem.GameMenus;
 using TaleWorlds.Library;
 
-namespace TheHindostanMod.UI
+namespace TakhtyaTaboot.UI
 {
     // Adds an entry point for the hierarchy viewer in settlement menus, and a
     // developer console command (hindostan.hierarchy).

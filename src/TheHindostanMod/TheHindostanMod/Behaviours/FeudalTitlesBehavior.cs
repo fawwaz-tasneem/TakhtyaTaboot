@@ -9,9 +9,9 @@ using TaleWorlds.CampaignSystem.Settlements;
 using TaleWorlds.Core;
 using TaleWorlds.Library;
 using TaleWorlds.Localization;
-using TheHindostanMod.UI;
+using TakhtyaTaboot.UI;
 
-namespace TheHindostanMod
+namespace TakhtyaTaboot
 {
     // The complete feudal ladder of Hindostan, as a layer over vanilla ownership.
     // Vanilla decides who holds the town or castle (the mansabdar); we add the rung

@@ -5,7 +5,7 @@ using TaleWorlds.CampaignSystem;
 using TaleWorlds.CampaignSystem.Settlements;
 using TaleWorlds.Localization;
 
-namespace TheHindostanMod
+namespace TakhtyaTaboot
 {
     // Adds a "At the Imperial Court" section to a lord's encyclopedia entry, showing
     // their mansab rank and title, any council office they hold, and the fiefs they

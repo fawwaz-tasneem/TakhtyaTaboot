@@ -6,7 +6,7 @@ using TaleWorlds.InputSystem;
 using TaleWorlds.Library;
 using TaleWorlds.ScreenSystem;
 
-namespace TheHindostanMod.UI
+namespace TakhtyaTaboot.UI
 {
     // Issues royal farmaans as a focus layer over whatever screen is current
     // (usually the map). Adding a layer to the top screen — rather than pushing a

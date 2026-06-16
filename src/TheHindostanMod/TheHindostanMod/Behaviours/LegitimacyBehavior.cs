@@ -5,7 +5,7 @@ using TaleWorlds.CampaignSystem;
 using TaleWorlds.Core;
 using TaleWorlds.Library;
 
-namespace TheHindostanMod
+namespace TakhtyaTaboot
 {
     // Legitimacy (0-100) is attached to the RULER of each kingdom: how widely their
     // right to rule is accepted. Separate from personal popularity. Low legitimacy

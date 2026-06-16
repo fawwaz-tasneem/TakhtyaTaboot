@@ -1,7 +1,7 @@
 <Module>
-	<Name value="The Hindostan Mod"/>
-	<Id value="TheHindostanMod"/>
-	<Version value="v1.2.9"/>
+	<Name value="Takht ya Taboot"/>
+	<Id value="TakhtyaTaboot"/>
+	<Version value="v1.0.0"/>
 	<DefaultModule value="false"/>
 	<ModuleCategory value="Singleplayer"/>
 	<Official value="false"/>
@@ -27,9 +27,9 @@
 	</DependedModuleMetadatas>
 	<SubModules>
 		<SubModule>
-			<Name value="TheHindostanMod"/>
-			<DLLName value="TheHindostanMod.dll"/>
-			<SubModuleClassType value="TheHindostanMod.HindostanSubModule"/>
+			<Name value="TakhtyaTaboot"/>
+			<DLLName value="TakhtyaTaboot.dll"/>
+			<SubModuleClassType value="TakhtyaTaboot.HindostanSubModule"/>
 			<Assemblies/>
 		</SubModule>
 	</SubModules>

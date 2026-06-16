@@ -4,7 +4,7 @@ using TaleWorlds.InputSystem;
 using TaleWorlds.Library;
 using TaleWorlds.ScreenSystem;
 
-namespace TheHindostanMod.UI
+namespace TakhtyaTaboot.UI
 {
     // Hosts the Council ("Darbar") screen as a focus layer over the current screen.
     public class CouncilScreen : ScreenBase

@@ -7,7 +7,7 @@ using TaleWorlds.CampaignSystem.Settlements;
 using TaleWorlds.CampaignSystem.ViewModelCollection.Map.MapBar;
 using TaleWorlds.Core.ViewModelCollection.Information;
 
-namespace TheHindostanMod
+namespace TakhtyaTaboot
 {
     // Injects the mod's empire stats (Authority, Legitimacy, Mansab, Unrest) into the
     // vanilla bottom info bar, rendered exactly like gold/influence — same icons,

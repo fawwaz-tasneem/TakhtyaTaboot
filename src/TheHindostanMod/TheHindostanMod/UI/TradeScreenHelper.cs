@@ -6,7 +6,7 @@ using TaleWorlds.CampaignSystem.Settlements;
 using TaleWorlds.Core;
 using TaleWorlds.Library;
 
-namespace TheHindostanMod.UI
+namespace TakhtyaTaboot.UI
 {
     // Opens the REAL vanilla trade screen for a settlement (village or town), using
     // the game's own InventoryManager.OpenScreenAsTrade. We removed nothing from the

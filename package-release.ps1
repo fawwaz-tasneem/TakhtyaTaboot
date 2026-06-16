@@ -1,10 +1,10 @@
 <#
 .SYNOPSIS
-    Packages a clean, runtime-only release of The Hindostan Mod.
+    Packages a clean, runtime-only release of Takht ya Taboot.
 
 .DESCRIPTION
     Stages ONLY the files needed to run the mod (no source, no wiki, no docs,
-    no data-tooling scripts) into a folder named "TheHindostanMod" and zips it
+    no data-tooling scripts) into a folder named "TakhtyaTaboot" and zips it
     for distribution via GitHub Releases.
 
     Users extract the zip into:  Mount & Blade II Bannerlord\Modules\
@@ -19,14 +19,14 @@ param(
 
 $ErrorActionPreference = "Stop"
 $root  = $PSScriptRoot
-$stage = Join-Path $root "release\TheHindostanMod"
+$stage = Join-Path $root "release\TakhtyaTaboot"
 
 # Derive version from SubModule.xml if not supplied.
 if (-not $Version) {
     [xml]$sm = Get-Content (Join-Path $root "SubModule.xml")
     $Version = $sm.Module.Version.value
 }
-Write-Host "Packaging The Hindostan Mod $Version" -ForegroundColor Cyan
+Write-Host "Packaging Takht ya Taboot $Version" -ForegroundColor Cyan
 
 # Clean previous staging.
 if (Test-Path (Join-Path $root "release")) {
@@ -59,12 +59,12 @@ Copy-Item (Join-Path $root "SubModule.xml") (Join-Path $stage "SubModule.xml") -
 Write-Host "  + SubModule.xml" -ForegroundColor DarkGray
 
 # 2. Compiled assembly (DLL only - no .pdb debug symbols).
-$dll = Join-Path $root "bin\Win64_Shipping_Client\TheHindostanMod.dll"
+$dll = Join-Path $root "bin\Win64_Shipping_Client\TakhtyaTaboot.dll"
 if (-not (Test-Path $dll)) { throw "Built DLL not found - build the project in Release first: $dll" }
 $dllDest = Join-Path $stage "bin\Win64_Shipping_Client"
 New-Item -ItemType Directory -Path $dllDest -Force | Out-Null
 Copy-Item $dll $dllDest -Force
-Write-Host "  + bin\Win64_Shipping_Client\TheHindostanMod.dll" -ForegroundColor DarkGray
+Write-Host "  + bin\Win64_Shipping_Client\TakhtyaTaboot.dll" -ForegroundColor DarkGray
 
 # 3. ModuleData - runtime XML + localization only. Drop the data-authoring
 #    tooling (.py/.xslt/.csv/.xlsx), the project file, and dev readmes/working data.
@@ -81,10 +81,10 @@ Copy-Tree "SceneObj"         -excludeDirs @("Backups", "_HOLD") -excludeExt @()
 Copy-Tree "RuntimeDataCache" -excludeDirs @("Backups", "_HOLD") -excludeExt @()
 
 # Zip it.
-$zip = Join-Path $root "TheHindostanMod-$Version.zip"
+$zip = Join-Path $root "TakhtyaTaboot-$Version.zip"
 if (Test-Path $zip) { Remove-Item $zip -Force }
 Compress-Archive -Path $stage -DestinationPath $zip -CompressionLevel Optimal
 $mb = [math]::Round((Get-Item $zip).Length / 1MB, 1)
 Write-Host ""
 Write-Host "Release built: $zip ($mb MB)" -ForegroundColor Green
-Write-Host "Top-level folder inside the zip is 'TheHindostanMod' - users extract it straight into Modules\." -ForegroundColor Green
+Write-Host "Top-level folder inside the zip is 'TakhtyaTaboot' - users extract it straight into Modules\." -ForegroundColor Green

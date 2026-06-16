@@ -1,7 +1,7 @@
 using System;
 using TaleWorlds.Library;
 
-namespace TheHindostanMod.UI
+namespace TakhtyaTaboot.UI
 {
     // One node in the feudal tree: a person with a name and a one-line description,
     // preceded by a gutter of connector-line columns ({Guides}) that draw the branches

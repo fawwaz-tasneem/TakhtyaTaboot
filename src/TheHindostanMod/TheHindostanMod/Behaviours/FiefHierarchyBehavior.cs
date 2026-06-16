@@ -9,9 +9,9 @@ using TaleWorlds.Core;
 using TaleWorlds.Core.ImageIdentifiers;
 using TaleWorlds.Library;
 using TaleWorlds.Localization;
-using TheHindostanMod.UI;
+using TakhtyaTaboot.UI;
 
-namespace TheHindostanMod
+namespace TakhtyaTaboot
 {
     // The feudal backbone. Resolves the liege/vassal chain from fief ownership
     // (NOT settlement.Governor — see wiki Ch.15), and drives the two obligations a

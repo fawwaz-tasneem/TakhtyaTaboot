@@ -9,7 +9,7 @@ using TaleWorlds.Localization;
 using TaleWorlds.ModuleManager;
 using TaleWorlds.ObjectSystem;
 
-namespace TheHindostanMod
+namespace TakhtyaTaboot
 {
     // Root cause of Calradic NPC names:
     //  (1) Per-culture name lists from tyt_spcultures.xml MERGE with Native's lists
@@ -23,7 +23,7 @@ namespace TheHindostanMod
     [HarmonyPatch(typeof(NameGenerator), "InitializePersonNames")]
     public static class NameOverridePatch
     {
-        private const string ModuleId = "TheHindostanMod";
+        private const string ModuleId = "TakhtyaTaboot";
         private static readonly string DebugPath =
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory),
                          "hindostan_name_debug.txt");

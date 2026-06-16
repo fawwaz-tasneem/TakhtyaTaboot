@@ -1,7 +1,7 @@
 using System;
 using TaleWorlds.Library;
 
-namespace TheHindostanMod.UI
+namespace TakhtyaTaboot.UI
 {
     // One council seat row: the office, its current holder, and (when it is your own
     // council or your liege's) a click to appoint or petition for it.

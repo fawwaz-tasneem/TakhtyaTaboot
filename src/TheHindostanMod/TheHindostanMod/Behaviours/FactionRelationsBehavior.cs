@@ -4,7 +4,7 @@ using TaleWorlds.CampaignSystem;
 using TaleWorlds.CampaignSystem.Actions;
 using TaleWorlds.Library;
 
-namespace TheHindostanMod
+namespace TakhtyaTaboot
 {
     // Sets and keeps the geopolitical fault-lines of 1719 Hindostan:
     //   • The three Mughal-successor realms (the Empire, Bengal, Hyderabad) are kin —

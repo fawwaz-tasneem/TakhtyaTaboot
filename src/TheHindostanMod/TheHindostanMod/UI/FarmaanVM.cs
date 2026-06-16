@@ -1,7 +1,7 @@
 using System;
 using TaleWorlds.Library;
 
-namespace TheHindostanMod.UI
+namespace TakhtyaTaboot.UI
 {
     // A royal decree (farmaan) presented as a parchment popup. Supports a single
     // acknowledge button, or two buttons for an actionable summons (heed / defy).

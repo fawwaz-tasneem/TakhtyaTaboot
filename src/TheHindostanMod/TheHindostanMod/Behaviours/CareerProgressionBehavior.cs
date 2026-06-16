@@ -6,9 +6,9 @@ using TaleWorlds.CampaignSystem.Actions;
 using TaleWorlds.CampaignSystem.Settlements;
 using TaleWorlds.Core;
 using TaleWorlds.Library;
-using TheHindostanMod.UI;
+using TakhtyaTaboot.UI;
 
-namespace TheHindostanMod
+namespace TakhtyaTaboot
 {
     // The career ladder: a noble must EARN the rank before he holds the fief. A lord
     // climbs village (zamindar) -> castle (Qiledar) -> town (Subahdar), and may never

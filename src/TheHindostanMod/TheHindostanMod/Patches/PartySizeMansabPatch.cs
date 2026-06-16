@@ -4,7 +4,7 @@ using TaleWorlds.CampaignSystem.Party;
 using TaleWorlds.CampaignSystem.GameComponents;
 using TaleWorlds.Localization;
 
-namespace TheHindostanMod
+namespace TakhtyaTaboot
 {
     // Military benefit of rank: a larger personal contingent. Each mansab step adds
     // to the party member-size limit of any clan leader who holds that rank.

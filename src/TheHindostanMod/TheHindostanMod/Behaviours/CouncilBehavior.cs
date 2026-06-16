@@ -9,9 +9,9 @@ using TaleWorlds.CampaignSystem.Settlements;
 using TaleWorlds.Core;
 using TaleWorlds.Library;
 using TaleWorlds.Localization;
-using TheHindostanMod.UI;
+using TakhtyaTaboot.UI;
 
-namespace TheHindostanMod
+namespace TakhtyaTaboot
 {
     // The councils of Hindostan, at every landed rung of the feudal ladder. Each lord
     // who holds a town or castle — and the sovereign above them all — keeps a council

@@ -2,7 +2,7 @@ using TaleWorlds.CampaignSystem;
 using TaleWorlds.Core;
 using TaleWorlds.Library;
 
-namespace TheHindostanMod
+namespace TakhtyaTaboot
 {
     // Delete this file once you have verified the culture selection screen looks correct.
     public class CultureVerificationBehavior : CampaignBehaviorBase

@@ -5,7 +5,7 @@ using TaleWorlds.CampaignSystem;
 using TaleWorlds.CampaignSystem.Settlements;
 using TaleWorlds.Library;
 
-namespace TheHindostanMod.UI
+namespace TakhtyaTaboot.UI
 {
     // Root view model for the imperial hierarchy viewer. The left list holds every
     // kingdom; selecting one builds a branching feudal TREE on the right — the sovereign

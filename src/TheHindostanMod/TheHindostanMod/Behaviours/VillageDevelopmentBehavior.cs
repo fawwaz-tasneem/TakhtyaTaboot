@@ -10,7 +10,7 @@ using TaleWorlds.Core;
 using TaleWorlds.Library;
 using TaleWorlds.Localization;
 
-namespace TheHindostanMod
+namespace TakhtyaTaboot
 {
     // Village fief mechanics (design: wiki Chapter 15). A village the player's clan
     // holds carries a living bandit threat that the player must keep down by patrol

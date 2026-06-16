@@ -34,6 +34,9 @@ namespace TakhtyaTaboot
 
         // villageId -> zamindar heroId
         private Dictionary<string, string> _zamindar = new Dictionary<string, string>();
+        // heroId -> liege heroId: an explicit feudal bond (e.g. a new vassal placed under a
+        // castle lord on joining a realm), overriding the default bound-lord/sovereign rule.
+        private Dictionary<string, string> _liegeOverride = new Dictionary<string, string>();
         private int _lastSummonDay = -100;
         private const int SummonCooldownDays = 21;
 
@@ -44,6 +47,7 @@ namespace TakhtyaTaboot
             CampaignEvents.OnNewGameCreatedEvent.AddNonSerializedListener(this, OnNewGame);
             CampaignEvents.WeeklyTickEvent.AddNonSerializedListener(this, OnWeeklyTick);
             CampaignEvents.HeroKilledEvent.AddNonSerializedListener(this, OnHeroKilled);
+            CampaignEvents.OnClanChangedKingdomEvent.AddNonSerializedListener(this, OnClanChangedKingdom);
         }
 
         // ── Village levies: every zamindar commands a small body of men ─────────────
@@ -75,7 +79,19 @@ namespace TakhtyaTaboot
         public void AssignZamindar(Settlement village, Hero hero)
         {
             if (village == null || !village.IsVillage || hero == null) return;
+            // Mercenaries hold no land — they serve for pay, not for fiefs.
+            if (hero == Hero.MainHero && (Clan.PlayerClan?.IsUnderMercenaryService ?? false)) return;
+
             _zamindar[village.StringId] = hero.StringId;
+
+            // The PLAYER's zamindari is a real village fief: it then shows among the clan's
+            // holdings (clan management screen), names the player as the village's owner in
+            // the encyclopedia, and can be administered and developed through the fief menu.
+            // AI zamindars remain a flavour layer over a local notable, with no transfer.
+            if (hero == Hero.MainHero && village.OwnerClan != Clan.PlayerClan)
+            {
+                try { ChangeOwnerOfSettlementAction.ApplyByGift(village, hero); } catch { }
+            }
         }
 
         public List<Settlement> GetVillagesLordedBy(Hero hero)
@@ -121,6 +137,26 @@ namespace TakhtyaTaboot
             }
         }
 
+        // An explicit feudal bond placed on a hero (a new vassal under a castle lord),
+        // or null. Validated: the liege must be alive, landed, and of the same realm.
+        public Hero GetLiegeOverride(Hero hero)
+        {
+            if (hero == null || !_liegeOverride.TryGetValue(hero.StringId, out string id) || string.IsNullOrEmpty(id))
+                return null;
+            Hero liege = Hero.AllAliveHeroes.FirstOrDefault(h => h.StringId == id);
+            if (liege == null || !liege.IsAlive || liege == hero) return null;
+            if (liege.Clan?.Kingdom == null || liege.Clan.Kingdom != hero.Clan?.Kingdom) return null;
+            if (!HoldsTownOrCastle(liege)) return null;
+            return liege;
+        }
+
+        public void SetLiege(Hero hero, Hero liege)
+        {
+            if (hero == null) return;
+            if (liege == null) _liegeOverride.Remove(hero.StringId);
+            else _liegeOverride[hero.StringId] = liege.StringId;
+        }
+
         // Who a hero answers to in OUR feudal hierarchy.
         public Hero GetFeudalLiege(Hero hero)
         {
@@ -128,6 +164,10 @@ namespace TakhtyaTaboot
             Kingdom k = hero.Clan?.Kingdom ?? BoundKingdomOfZamindar(hero);
             if (k == null) return null;
             if (k.Leader == hero) return null;
+
+            // An explicit bond (e.g. a new vassal placed under a castle lord) takes precedence.
+            Hero forced = GetLiegeOverride(hero);
+            if (forced != null) return forced;
 
             // A village zamindar answers to the lord who holds the bound town/castle.
             if (IsVillageZamindar(hero) && (hero.Clan == null || !HoldsTownOrCastle(hero.Clan)))
@@ -147,7 +187,7 @@ namespace TakhtyaTaboot
             AssignAllVillages();
             AddSummonMenus(starter);
         }
-        private void OnWeeklyTick() => AssignAllVillages();
+        private void OnWeeklyTick() { AssignAllVillages(); EnsurePlayerPlacement(); }
 
         // ── Call your vassals to war (from a town or castle you hold) ────────────────
         private void AddSummonMenus(CampaignGameStarter starter)
@@ -253,6 +293,77 @@ namespace TakhtyaTaboot
                 }
                 else _zamindar.Remove(village.StringId);
             }
+        }
+
+        // ── New vassal placement: a liege and a village on joining a realm ───────────
+        private void OnClanChangedKingdom(Clan clan, Kingdom oldKingdom, Kingdom newKingdom,
+            ChangeKingdomAction.ChangeKingdomActionDetail detail, bool showNotification)
+        {
+            if (clan == Clan.PlayerClan) EnsurePlayerPlacement();
+        }
+
+        // Place a landless player-vassal beneath a castle lord and grant him a village.
+        // Mercenaries are skipped (they hold no land) until they swear as full vassals — the
+        // weekly tick catches that transition, since it does not raise a kingdom-change event.
+        private void EnsurePlayerPlacement()
+        {
+            Clan pc = Clan.PlayerClan;
+            Kingdom k = pc?.Kingdom;
+            if (k == null || pc.IsUnderMercenaryService) return;
+            if (k.Leader == Hero.MainHero) return;   // the sovereign answers to none
+            if (HoldsTownOrCastle(pc)) return;       // a great lord in his own right
+
+            Hero existing = GetLiegeOverride(Hero.MainHero);
+            Hero liege = existing ?? ChooseLiege(k);
+            if (liege == null || liege == Hero.MainHero) return;
+            if (existing == null) SetLiege(Hero.MainHero, liege);
+
+            bool hasVillage = GetVillagesLordedBy(Hero.MainHero).Count > 0 || pc.Settlements.Any(s => s.IsVillage);
+            Settlement granted = hasVillage ? null : GrantVillageUnder(liege);
+
+            if (granted != null)
+                RoyalFarmaan.FromRuler(k, "A Place in the Realm",
+                    $"You enter the service of {k.Name}. You are placed beneath {liege.Name}, who is your liege, and granted " +
+                    $"the zamindari of {granted.Name}. Serve him well — petition for a seat on his council, and rise.",
+                    "I am honoured");
+            else if (existing == null)
+                RoyalFarmaan.FromRuler(k, "A Place in the Realm",
+                    $"You enter the service of {k.Name}, beneath {liege.Name}, who is your liege. Serve him well and rise.",
+                    "I am honoured");
+        }
+
+        // A castle lord by preference (the rung directly above a new vassal), else a town
+        // lord, else the sovereign.
+        private Hero ChooseLiege(Kingdom k)
+        {
+            var castleLords = k.Clans.Where(c => !c.IsEliminated && c.Leader != null && c.Leader != Hero.MainHero
+                && c.Settlements.Any(s => s.IsCastle)).ToList();
+            if (castleLords.Count > 0)
+                return castleLords.OrderByDescending(c => CharacterRelationManager.GetHeroRelation(Hero.MainHero, c.Leader))
+                    .ThenByDescending(c => c.Settlements.Count(s => s.IsCastle)).First().Leader;
+
+            var townLords = k.Clans.Where(c => !c.IsEliminated && c.Leader != null && c.Leader != Hero.MainHero
+                && c.Settlements.Any(s => s.IsTown)).ToList();
+            if (townLords.Count > 0)
+                return townLords.OrderByDescending(c => CharacterRelationManager.GetHeroRelation(Hero.MainHero, c.Leader)).First().Leader;
+
+            return k.Leader != Hero.MainHero ? k.Leader : null;
+        }
+
+        // Make the player zamindar of a village beneath the liege's seat.
+        private Settlement GrantVillageUnder(Hero liege)
+        {
+            if (liege?.Clan == null) return null;
+            foreach (Settlement seat in liege.Clan.Settlements.Where(s => s.IsCastle || s.IsTown))
+                foreach (Village v in seat.Town?.Villages ?? Enumerable.Empty<Village>())
+                {
+                    Settlement vs = v?.Settlement;
+                    if (vs == null) continue;
+                    if (GetVillageLord(vs) == Hero.MainHero) return vs; // already ours
+                    AssignZamindar(vs, Hero.MainHero);
+                    return vs;
+                }
+            return null;
         }
 
         // ── Player appointment / dismissal (with cost) ───────────────────────────────
@@ -379,10 +490,19 @@ namespace TakhtyaTaboot
             dataStore.SyncData("hind_zamindar_villages", ref ids);
             dataStore.SyncData("hind_zamindar_lords", ref vals);
             dataStore.SyncData("hind_zamindar_lastsummon", ref _lastSummonDay);
+
+            var lIds = _liegeOverride.Keys.ToList();
+            var lVals = _liegeOverride.Values.ToList();
+            dataStore.SyncData("hind_liege_heroes", ref lIds);
+            dataStore.SyncData("hind_liege_lieges", ref lVals);
+
             if (!dataStore.IsSaving)
             {
                 _zamindar = new Dictionary<string, string>();
                 for (int i = 0; i < ids.Count && i < vals.Count; i++) _zamindar[ids[i]] = vals[i];
+
+                _liegeOverride = new Dictionary<string, string>();
+                for (int i = 0; i < lIds.Count && i < lVals.Count; i++) _liegeOverride[lIds[i]] = lVals[i];
             }
         }
 

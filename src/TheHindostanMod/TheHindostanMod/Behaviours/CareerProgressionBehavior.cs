@@ -170,6 +170,7 @@ namespace TakhtyaTaboot
             if (M == null) { reason = "The court is not in session."; return false; }
             Kingdom k = Clan.PlayerClan?.Kingdom;
             if (k == null) { reason = "You must serve an empire to be granted a fief."; return false; }
+            if (Clan.PlayerClan.IsUnderMercenaryService) { reason = "As a mercenary you hold no fiefs. Swear as a full vassal first."; return false; }
             if (PlayerIsSovereign()) { reason = "As sovereign, you bestow fiefs — you do not petition for them."; return false; }
 
             int rank = M.GetRankIndex(Clan.PlayerClan);

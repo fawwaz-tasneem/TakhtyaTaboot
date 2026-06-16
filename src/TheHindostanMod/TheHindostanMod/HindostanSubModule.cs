@@ -71,6 +71,7 @@ namespace TakhtyaTaboot
 
             // Phase 7 — Military/political depth
             starter.AddBehavior(new CouncilBehavior());
+            starter.AddBehavior(new ImperialCourtBehavior());
             // starter.AddBehavior(new CivilWarBehavior());
             // starter.AddBehavior(new ReligiousToleranceBehavior());
 

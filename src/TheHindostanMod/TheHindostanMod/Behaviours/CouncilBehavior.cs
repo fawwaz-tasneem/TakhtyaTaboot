@@ -26,22 +26,31 @@ namespace TakhtyaTaboot
     // stipend and influence. Councils are viewed in the Council screen (the "Darbar").
     public class CouncilBehavior : CampaignBehaviorBase
     {
-        public enum Post { Vizier = 0, MirBakshi = 1, Diwan = 2 }
-        private static readonly Post[] AllPosts = { Post.Vizier, Post.MirBakshi, Post.Diwan };
+        public enum Post { PrimeMinister = 0, Commander = 1, Treasurer = 2, Spymaster = 3 }
+        public static readonly Post[] AllPosts = { Post.PrimeMinister, Post.Commander, Post.Treasurer, Post.Spymaster };
+        public const int PostCount = 4;
 
         public static CouncilBehavior Instance { get; private set; }
 
         public const int PetitionInfluenceCost = 30;
 
-        public static string PostTitle(Post p) => p == Post.Vizier ? "Diwan-i-Ala (Vizier)"
-            : p == Post.MirBakshi ? "Mir Bakshi (Paymaster)" : "Diwan-i-Kul (Treasurer)";
+        // Culture- and rank-appropriate title. The holder decides the register (a sovereign's
+        // council uses the king's titles; a lord's council the vassal titles) and the culture.
+        public static string PostTitle(Post p, Hero holder)
+        {
+            bool king = holder?.Clan?.Kingdom != null && holder.Clan.Kingdom.Leader == holder;
+            return CouncilTitles.Title(holder?.Culture?.StringId, (int)p, king);
+        }
+        // Context-free fallback (default Persianate, lord register) for places without a holder.
+        public static string PostTitle(Post p) => CouncilTitles.Title(null, (int)p, false);
 
-        public static string PostPerk(Post p) => p == Post.Vizier
-            ? "Stipend of influence; the lord's right hand."
-            : p == Post.MirBakshi ? "Influence and a soldier's stipend."
-            : "A treasurer's stipend of gold.";
+        public static string PostPerk(Post p) => p == Post.PrimeMinister
+            ? "The lord's right hand; a stipend of influence."
+            : p == Post.Commander ? "Marshal of the host; influence and a soldier's stipend."
+            : p == Post.Treasurer ? "Master of the treasury; a stipend of gold."
+            : "Master of spies; influence and the lord's confidence.";
 
-        // councilHolderHeroId -> [viziderId, bakshiId, diwanId]
+        // councilHolderHeroId -> [primeMinisterId, commanderId, treasurerId, spymasterId]
         private Dictionary<string, string[]> _council = new Dictionary<string, string[]>();
 
         public override void RegisterEvents()
@@ -74,7 +83,7 @@ namespace TakhtyaTaboot
         public Hero GetCouncillor(Hero holder, Post p)
         {
             if (holder == null) return null;
-            if (!_council.TryGetValue(holder.StringId, out string[] ids) || ids == null) return null;
+            if (!_council.TryGetValue(holder.StringId, out string[] ids) || ids == null || (int)p >= ids.Length) return null;
             string id = ids[(int)p];
             Hero h = string.IsNullOrEmpty(id) ? null : Hero.AllAliveHeroes.FirstOrDefault(x => x.StringId == id);
             return h != null && h.IsAlive ? h : null;
@@ -89,13 +98,13 @@ namespace TakhtyaTaboot
             if (hero == null) return null;
             foreach (var kv in _council)
             {
-                for (int i = 0; i < 3; i++)
+                for (int i = 0; i < PostCount && i < kv.Value.Length; i++)
                     if (kv.Value[i] == hero.StringId)
                     {
                         Hero holder = Hero.AllAliveHeroes.FirstOrDefault(h => h.StringId == kv.Key);
                         string who = holder == Hero.MainHero ? "you"
                             : holder != null ? holder.Name.ToString() : "a lord";
-                        return $"{PostTitle((Post)i)} to {who}";
+                        return $"{PostTitle((Post)i, holder)} to {who}";
                     }
             }
             return null;
@@ -107,7 +116,7 @@ namespace TakhtyaTaboot
             foreach (Post p in AllPosts)
             {
                 Hero h = GetCouncillor(holder, p);
-                sb.AppendLine($"  {PostTitle(p)}: {(h != null ? h.Name.ToString() : "— vacant —")}");
+                sb.AppendLine($"  {PostTitle(p, holder)}: {(h != null ? h.Name.ToString() : "— vacant —")}");
             }
             return sb.ToString().Replace("\r\n", "\n");
         }
@@ -116,8 +125,12 @@ namespace TakhtyaTaboot
         private void Set(Hero holder, Post p, Hero councillor)
         {
             if (holder == null) return;
-            if (!_council.TryGetValue(holder.StringId, out string[] ids) || ids == null)
-            { ids = new[] { "", "", "" }; _council[holder.StringId] = ids; }
+            if (!_council.TryGetValue(holder.StringId, out string[] ids) || ids == null || ids.Length < PostCount)
+            {
+                var grown = new[] { "", "", "", "" };
+                if (ids != null) for (int i = 0; i < ids.Length && i < PostCount; i++) grown[i] = ids[i];
+                ids = grown; _council[holder.StringId] = ids;
+            }
             ids[(int)p] = councillor?.StringId ?? "";
         }
 
@@ -195,9 +208,14 @@ namespace TakhtyaTaboot
 
         private static float Score(Hero h, Post p, Hero holder)
         {
-            float skill = p == Post.Vizier ? h.GetSkillValue(DefaultSkills.Steward) + h.GetSkillValue(DefaultSkills.Charm)
-                : p == Post.MirBakshi ? h.GetSkillValue(DefaultSkills.Leadership) + h.GetSkillValue(DefaultSkills.Tactics)
-                : h.GetSkillValue(DefaultSkills.Steward) + h.GetSkillValue(DefaultSkills.Trade);
+            float skill;
+            switch (p)
+            {
+                case Post.PrimeMinister: skill = h.GetSkillValue(DefaultSkills.Steward) + h.GetSkillValue(DefaultSkills.Charm); break;
+                case Post.Commander:     skill = h.GetSkillValue(DefaultSkills.Leadership) + h.GetSkillValue(DefaultSkills.Tactics); break;
+                case Post.Treasurer:     skill = h.GetSkillValue(DefaultSkills.Steward) + h.GetSkillValue(DefaultSkills.Trade); break;
+                default:                 skill = h.GetSkillValue(DefaultSkills.Roguery) + h.GetSkillValue(DefaultSkills.Scouting); break; // Spymaster
+            }
             float rel = holder != null ? CharacterRelationManager.GetHeroRelation(h, holder) : 0;
             return skill + rel * 2f;
         }
@@ -205,22 +223,25 @@ namespace TakhtyaTaboot
         private void ApplyCouncilEffects(Hero holder)
         {
             bool sovereign = holder.Clan?.Kingdom != null && holder.Clan.Kingdom.Leader == holder;
-            Hero vizier = GetCouncillor(holder, Post.Vizier);
-            Hero bakshi = GetCouncillor(holder, Post.MirBakshi);
-            Hero diwan = GetCouncillor(holder, Post.Diwan);
+            Hero pm = GetCouncillor(holder, Post.PrimeMinister);
+            Hero commander = GetCouncillor(holder, Post.Commander);
+            Hero treasurer = GetCouncillor(holder, Post.Treasurer);
+            Hero spymaster = GetCouncillor(holder, Post.Spymaster);
 
             if (sovereign)
             {
                 Kingdom k = holder.Clan.Kingdom;
-                if (vizier != null) ImperialAuthorityBehavior.Instance?.ModifyAuthority(k, 1.5f, "the Vizier's administration");
-                if (bakshi != null && holder.Clan != null) ChangeClanInfluenceAction.Apply(holder.Clan, 2f);
-                if (diwan != null) holder.ChangeHeroGold(400);
+                if (pm != null) ImperialAuthorityBehavior.Instance?.ModifyAuthority(k, 1.5f, "the Prime Minister's administration");
+                if (commander != null && holder.Clan != null) ChangeClanInfluenceAction.Apply(holder.Clan, 2f);
+                if (treasurer != null) holder.ChangeHeroGold(400);
+                if (spymaster != null) ImperialAuthorityBehavior.Instance?.ModifyAuthority(k, 1f, "the Spymaster's vigilance");
             }
             else
             {
-                if (vizier != null && holder.Clan != null) ChangeClanInfluenceAction.Apply(holder.Clan, 1.5f);
-                if (bakshi != null && holder.Clan != null) ChangeClanInfluenceAction.Apply(holder.Clan, 1f);
-                if (diwan != null) holder.ChangeHeroGold(300);
+                if (pm != null && holder.Clan != null) ChangeClanInfluenceAction.Apply(holder.Clan, 1.5f);
+                if (commander != null && holder.Clan != null) ChangeClanInfluenceAction.Apply(holder.Clan, 1f);
+                if (treasurer != null) holder.ChangeHeroGold(300);
+                if (spymaster != null && holder.Clan != null) ChangeClanInfluenceAction.Apply(holder.Clan, 0.5f);
             }
 
             // Councillors' perks.
@@ -229,7 +250,7 @@ namespace TakhtyaTaboot
                 Hero c = GetCouncillor(holder, p);
                 if (c?.Clan == null) continue;
                 ChangeClanInfluenceAction.Apply(c.Clan, 1f);
-                if (p == Post.Diwan) c.ChangeHeroGold(200);
+                if (p == Post.Treasurer) c.ChangeHeroGold(200);
             }
         }
 
@@ -247,13 +268,14 @@ namespace TakhtyaTaboot
             {
                 int rel = CharacterRelationManager.GetHeroRelation(holder, h);
                 string hint = $"Relation {rel}. Steward {h.GetSkillValue(DefaultSkills.Steward)}, " +
-                              $"Leadership {h.GetSkillValue(DefaultSkills.Leadership)}, Tactics {h.GetSkillValue(DefaultSkills.Tactics)}.";
+                              $"Leadership {h.GetSkillValue(DefaultSkills.Leadership)}, Tactics {h.GetSkillValue(DefaultSkills.Tactics)}, " +
+                              $"Roguery {h.GetSkillValue(DefaultSkills.Roguery)}.";
                 elements.Add(new InquiryElement(h, $"{h.Name} — rel {rel}", null, true, hint));
             }
 
             MBInformationManager.ShowMultiSelectionInquiry(new MultiSelectionInquiryData(
-                $"Appoint your {PostTitle(p)}",
-                $"Name a vassal, kinsman or companion to the office of {PostTitle(p)} in your council.",
+                $"Appoint your {PostTitle(p, holder)}",
+                $"Name a vassal, kinsman or companion to the office of {PostTitle(p, holder)} in your council.",
                 elements, true, 1, 1, "Appoint", "Cancel",
                 sel => { if (sel != null && sel.Count > 0 && sel[0].Identifier is Hero hero) AppointOwn(p, hero); },
                 _ => { }, "", false), false, false);
@@ -268,7 +290,7 @@ namespace TakhtyaTaboot
             if (previous != null && previous != hero)
                 ChangeRelationAction.ApplyRelationChangeBetweenHeroes(holder, previous, -3);
             RoyalFarmaan.Issue("Appointment to your Council", $"By order of {holder.Name}",
-                $"{hero.Name} is raised to the office of {PostTitle(p)} in your council, to serve you with counsel and diligence.",
+                $"{hero.Name} is raised to the office of {PostTitle(p, Hero.MainHero)} in your council, to serve you with counsel and diligence.",
                 "Sealed by your hand");
         }
 
@@ -291,7 +313,7 @@ namespace TakhtyaTaboot
                 string status = seated == null ? "vacant" : (seated == Hero.MainHero ? "held by you" : $"held by {seated.Name}");
                 string hint = $"{PostPerk(p)} Presently {status}. Costs {PetitionInfluenceCost} influence to petition.";
                 bool enabled = seated != Hero.MainHero;
-                elements.Add(new InquiryElement(p, $"{PostTitle(p)} — {status}", null, enabled, hint));
+                elements.Add(new InquiryElement(p, $"{PostTitle(p, liege)} — {status}", null, enabled, hint));
             }
 
             MBInformationManager.ShowMultiSelectionInquiry(new MultiSelectionInquiryData(
@@ -323,7 +345,7 @@ namespace TakhtyaTaboot
             if (!granted)
             {
                 RoyalFarmaan.FromLiege(liege, "Petition Denied",
-                    $"Your petition for the office of {PostTitle(p)} is declined. " +
+                    $"Your petition for the office of {PostTitle(p, liege)} is declined. " +
                     (rel < req ? "You have not yet earned my trust for so high a charge." : "The office is held by one I will not displace.") +
                     " Serve me better, and ask again.",
                     "As you will, my lord");
@@ -335,7 +357,7 @@ namespace TakhtyaTaboot
             Set(liege, p, Hero.MainHero);
             ChangeRelationAction.ApplyRelationChangeBetweenHeroes(Hero.MainHero, liege, 5);
             RoyalFarmaan.FromLiege(liege, "Petition Granted",
-                $"I name you my {PostTitle(p)}. Serve my council faithfully, and the office's stipend and honours are yours. " +
+                $"I name you my {PostTitle(p, liege)}. Serve my council faithfully, and the office's stipend and honours are yours. " +
                 PostPerk(p),
                 "I am honoured to serve");
         }
@@ -470,16 +492,23 @@ namespace TakhtyaTaboot
                 bad ? Color.FromUint(0xFFCC4400) : Color.FromUint(0xFFD4AF37)));
 
         // ── Save / load ────────────────────────────────────────────────────────────
+        private static string Slot(string[] a, int i) => a != null && i < a.Length ? (a[i] ?? "") : "";
+
         public override void SyncData(IDataStore dataStore)
         {
             var ids = _council.Keys.ToList();
-            var v = new List<string>(); var b = new List<string>(); var d = new List<string>();
-            foreach (string id in ids) { var a = _council[id]; v.Add(a[0]); b.Add(a[1]); d.Add(a[2]); }
+            var v = new List<string>(); var b = new List<string>(); var d = new List<string>(); var s = new List<string>();
+            foreach (string id in ids)
+            {
+                var a = _council[id];
+                v.Add(Slot(a, 0)); b.Add(Slot(a, 1)); d.Add(Slot(a, 2)); s.Add(Slot(a, 3));
+            }
 
             dataStore.SyncData("hind_council_holders", ref ids);
-            dataStore.SyncData("hind_council_vizier", ref v);
-            dataStore.SyncData("hind_council_bakshi", ref b);
-            dataStore.SyncData("hind_council_diwan", ref d);
+            dataStore.SyncData("hind_council_vizier", ref v);   // Prime Minister
+            dataStore.SyncData("hind_council_bakshi", ref b);   // Commander
+            dataStore.SyncData("hind_council_diwan", ref d);    // Treasurer
+            dataStore.SyncData("hind_council_spymaster", ref s);
 
             if (!dataStore.IsSaving)
             {
@@ -487,7 +516,8 @@ namespace TakhtyaTaboot
                 for (int i = 0; i < ids.Count; i++)
                     _council[ids[i]] = new[]
                     {
-                        i < v.Count ? v[i] : "", i < b.Count ? b[i] : "", i < d.Count ? d[i] : "",
+                        i < v.Count ? v[i] : "", i < b.Count ? b[i] : "",
+                        i < d.Count ? d[i] : "", i < s.Count ? s[i] : "",
                     };
             }
         }

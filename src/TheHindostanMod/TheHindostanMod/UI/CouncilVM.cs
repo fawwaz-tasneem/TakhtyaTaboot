@@ -79,13 +79,12 @@ namespace TakhtyaTaboot.UI
             bool isMine = holder == Hero.MainHero;
             bool isLiege = holder == cb.PlayerLiege();
 
-            foreach (CouncilBehavior.Post p in new[]
-                { CouncilBehavior.Post.Vizier, CouncilBehavior.Post.MirBakshi, CouncilBehavior.Post.Diwan })
+            foreach (CouncilBehavior.Post p in CouncilBehavior.AllPosts)
             {
                 CouncilBehavior.Post post = p;
                 Hero seated = cb.GetCouncillor(holder, post);
                 string who = seated != null ? (seated == Hero.MainHero ? "you" : seated.Name.ToString()) : "— vacant —";
-                string name = $"{CouncilBehavior.PostTitle(post)}: {who}";
+                string name = $"{CouncilBehavior.PostTitle(post, holder)}: {who}";
 
                 string action;
                 bool clickable;

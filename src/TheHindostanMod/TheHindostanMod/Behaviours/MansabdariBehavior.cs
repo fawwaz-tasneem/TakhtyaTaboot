@@ -179,6 +179,16 @@ namespace TakhtyaTaboot
             _rankIndex[clan.StringId] = Math.Max(0, Math.Min(MaxIndex, idx));
         }
 
+        // Ruler-driven adjustment (used by the imperial council to grant or revoke a
+        // vassal's mansab). Returns the new title.
+        public string AdjustRank(Clan clan, int delta)
+        {
+            if (clan == null) return null;
+            int n = Math.Max(0, Math.Min(MaxIndex, GetRankIndex(clan) + delta));
+            SetRankIndex(clan, n);
+            return Ranks[n].Title;
+        }
+
         // For console testing: set a clan's mansab rank directly.
         public string DebugSetRank(Clan clan, int idx)
         {

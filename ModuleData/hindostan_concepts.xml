@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Encyclopedia concept pages explaining the mod's systems. They appear under
+     Encyclopedia > Concepts and can be linked from other text via their link_id. -->
+<Concepts>
+
+	<Concept
+		title="{=!}Imperial Authority"
+		id="str_hind_concept_authority"
+		group="The Empire"
+		link_id="HIND_AUTHORITY_LINK"
+		text="{=!}Imperial Authority (Padshahi Hukm) measures how far the emperor's writ actually runs across his realm, from 0 to 100. High authority means taxes flow, governors obey, and lords answer the call to war. As it falls, the provinces drift: the treasury collects less, summons are ignored, and unrest festers until governors break away entirely. Authority rises by winning wars, crushing rebellions, and ruling at peace with a legitimate claim; it falls through lost battles, lost settlements, disloyal lords, and every revolt. Below 25 it begins to feed revolt across the whole realm. You can review it under State of the Empire in any town." />
+
+	<Concept
+		title="{=!}Legitimacy"
+		id="str_hind_concept_legitimacy"
+		group="The Empire"
+		link_id="HIND_LEGITIMACY_LINK"
+		text="{=!}Legitimacy belongs to the ruler personally — how widely their right to the throne is accepted, from 0 to 100. It is distinct from popularity. A ruler with high legitimacy commands obedience and faces few challenges; a low-legitimacy ruler sees lords answer half-heartedly, succession crises ignite when they die, and breakaway states consolidate against them. Legitimacy erodes naturally toward the middle and falls sharply when authority collapses. A new ruler crowned in a succession crisis begins with shaky legitimacy. See {HIND_AUTHORITY_LINK} and {HIND_SUCCESSION_LINK}." />
+
+	<Concept
+		title="{=!}Mansabdari Rank"
+		id="str_hind_concept_mansab"
+		group="The Empire"
+		link_id="HIND_MANSAB_LINK"
+		text="{=!}The mansabdari is the Mughal ladder of rank. A clan qualifies for a rank by its sawar — the total field troops it musters — but the rank must be granted by the emperor. The ranks rise from Zamindar through Mansabdar-e-Panjsad, Qiledar, Faujdar and Subahdar to the supreme Amir-ul-Umara. Your rank sets which fiefs you may hold (villages, then castles, then towns), grants a party-size bonus and weekly influence, and the Amir-ul-Umara may broker successions. Petition for promotion at the Mansabdari Court in any town; fall below a rank's troop floor and the court demotes you by Royal Farmaan. See {HIND_FARMAAN_LINK}." />
+
+	<Concept
+		title="{=!}Royal Farmaan"
+		id="str_hind_concept_farmaan"
+		group="The Empire"
+		link_id="HIND_FARMAAN_LINK"
+		text="{=!}A farmaan is a royal decree. Every formal communication from your liege lord or the sovereign arrives as one: a summons to war, a demand for tribute, a grant of a jagir or a mansab, a reduction of rank, the proclamation of a new emperor, or the call to judge captured rebels. A farmaan may simply be acknowledged, or it may demand a choice — to heed or defy, to pay or withhold, to crush or grant autonomy. Your answers shape your standing at court and the fate of the realm." />
+
+	<Concept
+		title="{=!}Liege and Vassal"
+		id="str_hind_concept_hierarchy"
+		group="The Empire"
+		link_id="HIND_HIERARCHY_LINK"
+		text="{=!}Every fief is held within a chain of obligation. A village holder answers to whoever holds the bound town; town and castle holders answer directly to the sovereign. As a vassal you owe two duties upward: tribute each season, and military service when the realm goes to war — both delivered to you by {HIND_FARMAAN_LINK}. Meeting them keeps your standing at court; defying them earns the resentment of your liege, erodes {HIND_AUTHORITY_LINK}, and pushes your fiefs toward revolt. Survey the whole realm's hierarchy from the Survey the Imperial Hierarchy option in any town." />
+
+	<Concept
+		title="{=!}Succession and the War of Princes"
+		id="str_hind_concept_succession"
+		group="The Empire"
+		link_id="HIND_SUCCESSION_LINK"
+		text="{=!}When a ruler dies weak or heirless, is held captive too long, or sees authority collapse beneath a doubted claim, a succession crisis erupts. Princes of the dynasty become claimants; the great lords align by kinship, faith and rank. If no claimant wins broad support, the realm falls into civil war until one prevails or a kingmaker — the Amir-ul-Umara — brokers the throne. The victor decides the fate of the deposed: execution, banishment, or pardon. Every crisis scars {HIND_AUTHORITY_LINK} and leaves the new ruler's {HIND_LEGITIMACY_LINK} fragile." />
+
+	<Concept
+		title="{=!}Revolt and Unrest"
+		id="str_hind_concept_revolt"
+		group="The Empire"
+		link_id="HIND_REVOLT_LINK"
+		text="{=!}Each province carries an unrest level. It rises under a collapsing empire — low {HIND_AUTHORITY_LINK}, a disloyal or absent holder, banditry, a ruler of a different faith from the populace, weak {HIND_LEGITIMACY_LINK}, and wars that draw the armies away. Garrisons and a lord's presence calm it. Left to fester, a province ignites: a clan secedes into a provisional rebel kingdom and disloyal lords rally to it. If the rebellion holds out it becomes a permanent breakaway state; if crushed, its lords are imprisoned and the bitterest executed. As emperor you may crush a revolt by force or grant it autonomy; as a vassal you may raise the standard of revolt yourself." />
+
+	<Concept
+		title="{=!}Your Jagir (Village Fief)"
+		id="str_hind_concept_village"
+		group="The Empire"
+		link_id="HIND_VILLAGE_LINK"
+		text="{=!}A village you hold is a living responsibility. Bandit threat rises there day by day — faster in wartime, slower with a watchtower or militia, and it falls when you patrol or are present. Left high, it halts and then reverses the village's growth. From Oversee your Fief in the village you may patrol the territory and order works — a granary, watchtower, irrigation canal, militia post or trade post — each costing gold and time but strengthening the land. A neglected, lawless village feeds {HIND_REVOLT_LINK}." />
+
+	<Concept
+		title="{=!}Faith"
+		id="str_hind_concept_religion"
+		group="The Empire"
+		link_id="HIND_RELIGION_LINK"
+		text="{=!}Hindostan is a land of many faiths — Islam, Hindu dharma, and the Sikh panth. A person's faith follows their father's line, and shapes the names they bear. Faith also shapes loyalty: when a province's people follow a different faith from their ruler, resentment simmers and feeds {HIND_REVOLT_LINK}, and lords of a shared faith more readily rally to one another's banners." />
+
+	<Concept
+		title="{=!}The Darbar (Imperial Council)"
+		id="str_hind_concept_darbar"
+		group="The Empire"
+		link_id="HIND_DARBAR_LINK"
+		text="{=!}Every kingdom is governed through three great offices of state, filled from its noble houses. The Diwan-i-Ala (Vizier) is chief minister and steadies imperial authority; the Mir Bakshi (Paymaster) heads the military pay office and gathers influence for the crown; the Diwan-i-Kul (Treasurer) is master of revenue and fills the privy purse. Rival rulers keep their councils full automatically. When you yourself hold a throne, enter any town or castle and choose Hold court (Darbar): there you appoint your council from your vassals and issue Royal Farmaans of state — remitting taxes, demanding levies, or proclaiming a grand Darbar — each reshaping {HIND_AUTHORITY_LINK} and {HIND_LEGITIMACY_LINK}. Holding an office is an honour recorded in a noble's encyclopedia entry." />
+
+	<Concept
+		title="{=!}The Career Ladder"
+		id="str_hind_concept_career"
+		group="The Empire"
+		link_id="HIND_CAREER_LINK"
+		text="{=!}Rank and fief rise together. A noble must hold the mansab before he may hold the land: a Zamindar may hold a village, a Qiledar a castle, a Subahdar a town. Should you come to hold a fief above your station — by conquest or grant — the court gives you a season to rise to the proper rank; fail, and the fief is reclaimed and bestowed on a worthier noble. When your mansab entitles you to more, choose 'Claim a fief befitting your rank' at the Mansabdari court to be granted your due — your first a village, then a castle, then a town. Climb by mustering troops and petitioning for promotion. See {HIND_MANSAB_LINK}." />
+
+	<Concept
+		title="{=!}War and Peace"
+		id="str_hind_concept_warfare"
+		group="The Empire"
+		link_id="HIND_WARFARE_LINK"
+		text="{=!}Wars are fought for a purpose and end on terms. When your realm goes to war the sovereign sets an aim — conquest, tribute, or chastisement — and a war score climbs with every battle won and fortress taken. When you sue for peace from a town or castle ('Direct the war effort'), the score decides what you may dictate: a nazrana indemnity, a ceded province, or the enemy's tributary submission. A long war wearies the realm, and the council will press you for peace. The fighting is personal too: valour in battle earns mansab; a stormed city may be sacked for gold (at the cost of unrest and legitimacy) or spared for the people's love; a captured lord may be ransomed or held hostage. A sovereign may 'Call the realm's banners' to muster his vassals — the loyal bring their men, the defiant are marked. See {HIND_MANSAB_LINK} and {HIND_AUTHORITY_LINK}." />
+
+	<Concept
+		title="{=!}The War of Accession"
+		id="str_hind_concept_accession"
+		group="The Empire"
+		link_id="HIND_ACCESSION_LINK"
+		text="{=!}An Amir-ul-Umara — the highest mansab — may challenge the emperor for the throne. This is no bloodless tally: the realm splits, each noble taking the side of the rival he favours more, while council members and the emperor's kin hold firm to the crown. The emperor raises his host and marches to crush you. Bring him to battle: defeat or capture the emperor on the field and the amirs acclaim you sovereign. Be captured or broken, and your bid collapses — your mansab is stripped and your standing at court ruined. If neither host is broken within a season, the greater coalition prevails. Raise the challenge from Review your mansabdari rank in any town." />
+
+</Concepts>

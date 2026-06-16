@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Phase 2 — hero overrides. Bannerlord merges <Hero> entries by id. Each entry below
+  restates its vanilla faction (clan) as a safety anchor, then overrides bio text and,
+  where needed, family relations. This fixes:
+   (a) encyclopedia bios (vanilla heroes.xml still had Calradic text like "Lucon")
+   (b) key family relations (Hyder Ali -> Tipu Sultan; the Sayyid brothers).
+-->
+<Heroes>
+
+	<!-- ============ RULER BIOS (replace vanilla Calradic encyclopedia text) ============ -->
+
+	<Hero id="lord_1_1" faction="Faction.clan_empire_north_1" text="{=!}The twenty-ninth Mughal Emperor and the last to rule a nominally united Hindustan, Muhammad Shah inherited a crumbling empire and a court in open chaos. Known as Rangila, the Colourful, for his love of music, art, and poetry, he is not the warrior the moment demands. Yet behind the hedonism lies a canny survivor who has outlasted multiple coups and palace intrigues. He knows he cannot fight the Marathas, the Afghans, and his own Nawabs simultaneously, so he haggles, delays, and plays factions against each other, buying time for an empire whose time may already have passed." />
+
+	<Hero id="lord_1_7" faction="Faction.clan_empire_west_1" text="{=!}The first independent Nawab of Bengal and its most capable administrator, Murshid Quli Khan built Bengal into the wealthiest province in the known world. A converted Hindu orphan raised at the Mughal court, his genius was for revenue collection and commercial policy. He restructured the zamindari system, imposed disciplined tax reforms, and drew the European trading companies into arrangements that made Bengal prosper without making it dependent on them. He rules the province as a private kingdom while paying nominal deference to Delhi. The fiction of Mughal suzerainty satisfies both parties." />
+
+	<Hero id="lord_1_47" faction="Faction.clan_empire_south_1" text="{=!}Mir Qamar ud-Din Khan, titled Asaf Jah and Nizam ul-Mulk, is perhaps the most capable administrator alive in Hindostan. A veteran of four emperors' courts, he escaped the viper pit of Delhi to carve out the Deccan Plateau as his own domain. Methodical, cold-blooded, and patient, Asaf Jah combined Persian administrative traditions with locally recruited Deccani cavalry to build Hyderabad into a formidable state. He views the Maratha Confederacy as the primary existential threat and has organised his entire kingdom around containing it. He legitimizes his de facto independence by always bowing, very formally, toward Shahjahanabad." />
+
+	<Hero id="lord_2_1" faction="Faction.clan_sturgia_1" text="{=!}Born of the Abdali clan of Pashtuns, Ahmad Shah rose through the ranks of the Persian imperial army to command its finest Afghan cavalry contingent. A natural horseman with a general's instinct, he united the fractious Pashtun tribes under his banner through equal measures of iron diplomacy and relentless force. His vision extends far beyond raiding the plains of India. He intends to build a lasting Durrani Sultanate that controls the great mountain passes between east and west, commanding the trade routes that have made conquerors rich since Alexander marched through Kandahar." />
+
+	<Hero id="lord_3_1" faction="Faction.clan_aserai_1" text="{=!}The ruling Maharaja of Mysore and heir to an ancient dynasty tracing its lineage to the medieval Yadava kings, Krishnaraja Wodeyar represents the sacred legitimacy of the Gaddi of Srirangapatna. A man of gentle disposition and genuine scholarly learning, his reign has been increasingly shaped by the military ambitions of his powerful Dalvai commanders. Under Krishnaraja, Mysore has expanded its revenue base, reformed its armies, and asserted independence from both the Mughal Deccan Sultanates and the Maratha Confederacy. He rules from the throne; his commanders have made that throne something others fear." />
+
+	<Hero id="lord_3_5" faction="Faction.clan_aserai_3" text="{=!}A soldier who rose from an ordinary trooper to Dalvai of Mysore by sheer talent, Hyder Ali cannot read or write, yet his grasp of logistics, terrain, and human nature is extraordinary. He rebuilt Mysore's infantry on European lines, hired French officers to train his gunners, and developed supply chains that allow his armies to campaign in terrain that would starve any other force. His strategic vision is decades ahead of his contemporaries: he understands that the coming wars will be won by economic organisation and disciplined musketry, not ancestral cavalry charges. Utterly self-made, he is the true architect of Mysore's power." />
+
+	<Hero id="lord_4_1" faction="Faction.clan_vlandia_1" text="{=!}The Maharaja of Jaipur and paramount leader of the Rajputana Federation, Sawai Jai Singh is a man who contains multitudes. As a warrior, he commanded Mughal cavalry with distinction across the Deccan campaigns. As a scholar, he constructed five great astronomical observatories, the Jantar Mantars, and corresponded with European scientists as an intellectual equal. As a politician, he has navigated the collapse of Mughal authority with greater skill than any of his peers, using marriages, alliances, and patient negotiation where others reached for the sword. He knows the age of pure martial tradition is ending, and he is positioning Rajputana for the world that comes next." />
+
+	<Hero id="lord_5_1" faction="Faction.clan_battania_1" text="{=!}The Peshwa of the Maratha Confederacy and its greatest battlefield commander, Bajirao I has never lost a battle. From his early twenties he has commanded the Maratha horse with a genius that is simultaneously terrifying and elegant, moving armies the way a chess master moves pieces, always three turns ahead. His strategy of Hindu Pad Padshahi, a Hindu sovereign empire of Hindostan, is both military objective and political creed. Of magnetic personal courage and extraordinary physical endurance, Bajirao represents a new kind of Indian leadership: not the inherited kingship of the Rajputs, but authority earned through unbroken victory and the loyalty of men who would follow him into the jaws of death." />
+
+	<Hero id="lord_6_1" faction="Faction.clan_khuzait_1" text="{=!}Sirdar of the Sukerchakia Misl and one of the most formidable commanders of the Sikh Dal Khalsa, Charat Singh built his warband from a handful of horsemen into a force that dominates the Rechna Doab between the Chenab and Ravi rivers. He combines the Khalsa code's egalitarianism with a chieftain's ruthless pragmatism, surviving assassination attempts, imperial campaigns, and inter-Misl feuds to emerge as the dominant figure in the confederation. It is his bloodline, through his grandson Ranjit Singh, that will one day unite all the Misls into a single Sikh empire. Charat Singh himself is already, unknowingly, laying that foundation." />
+
+	<!-- ============ FAMILY RELATIONS ============ -->
+
+	<!-- Tipu Sultan is the son of Hyder Ali (vanilla had them unrelated). -->
+	<Hero id="lord_3_3" faction="Faction.clan_aserai_2" father="Hero.lord_3_5" text="{=!}Son of Hyder Ali and already acclaimed as a commander of rare brilliance, Tipu Sultan has mastered both traditional Nayaka cavalry tactics and modern musketry with a speed that astonishes veterans twice his age. His particular genius lies in rocket warfare: he has championed iron-cased rockets deployed in massed batteries as a weapon to break enemy formations before cavalry closes. Deeply religious and fiercely independent, Tipu understands what few other lords yet grasp: that the European trading companies arriving on India's coasts are not merely merchants, but the vanguard of something far more dangerous. He has made it his life's work to stop them." />
+
+	<!-- The Sayyid Brothers of Barha: Abdullah Khan (lord_1_58, clan owner) and
+	     Hussain Ali Khan (lord_NE7_u) are brothers, via a shared mother (Ruqaiya
+	     Begum = lord_1_70, the clan's only female). -->
+	<Hero id="lord_1_58" faction="Faction.clan_empire_north_7" mother="Hero.lord_1_70" />
+	<Hero id="lord_NE7_u" faction="Faction.clan_empire_north_7" mother="Hero.lord_1_70" />
+
+</Heroes>

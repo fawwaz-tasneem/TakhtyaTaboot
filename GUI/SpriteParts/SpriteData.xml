@@ -1,0 +1,29 @@
+<SpriteData>
+    <SpriteCategories>
+        <SpriteCategory Name="gauntletui">
+            <SpriteSheetCount>1</SpriteSheetCount>
+            <SpriteSheetSize ID="1" Width="4096" Height="4096" />
+            <AlwaysLoad/>
+        </SpriteCategory>
+    </SpriteCategories>
+
+    <Sprites>
+        <Sprite Name="loading_screen_1" CategoryName="gauntletui" SheetID="1" SpriteAt="0,0"       Width="1920" Height="1080" />
+        <Sprite Name="loading_screen_2" CategoryName="gauntletui" SheetID="1" SpriteAt="1920,0"    Width="1920" Height="1080" />
+        
+        <Sprite Name="loading_screen_3" CategoryName="gauntletui" SheetID="1" SpriteAt="0,1080"    Width="1920" Height="1080" />
+        <Sprite Name="loading_screen_4" CategoryName="gauntletui" SheetID="1" SpriteAt="1920,1080" Width="1920" Height="1080" />
+        
+        <Sprite Name="loading_screen_5" CategoryName="gauntletui" SheetID="1" SpriteAt="0,2160"    Width="1920" Height="1080" />
+        <Sprite Name="loading_screen_6" CategoryName="gauntletui" SheetID="1" SpriteAt="1920,2160" Width="1920" Height="1080" />
+
+        <Sprite Name="loading_screen_7" CategoryName="gauntletui" SheetID="2" SpriteAt="0,0"       Width="1920" Height="1080" />
+        <Sprite Name="loading_screen_8" CategoryName="gauntletui" SheetID="2" SpriteAt="1920,0"    Width="1920" Height="1080" />
+        
+        <Sprite Name="loading_screen_9" CategoryName="gauntletui" SheetID="2" SpriteAt="0,1080"    Width="1920" Height="1080" />
+        <Sprite Name="loading_screen_10" CategoryName="gauntletui" SheetID="2" SpriteAt="1920,1080" Width="1920" Height="1080" />
+        
+        <Sprite Name="loading_screen_11" CategoryName="gauntletui" SheetID="2" SpriteAt="0,2160"    Width="1920" Height="1080" />
+        <Sprite Name="loading_screen_empire_1" CategoryName="gauntletui" SheetID="2" SpriteAt="1920,2160" Width="1920" Height="1080" />
+    </Sprites>
+</SpriteData>

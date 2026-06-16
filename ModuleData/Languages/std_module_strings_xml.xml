@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="utf-8"?>
+<base xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" type="string">
+  <tags>
+    <tag language="English" />
+  </tags>
+  <strings>
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         NOBLE TITLES — overrides Calradic titles per culture
+         ══════════════════════════════════════════════════════════════════════ -->
+
+    <!-- Mughal / Bengal / Hyderabad lords (empire culture): Archon → Mir -->
+    <string id="nAaT19CC" text="{?RULER.GENDER}Begum{?}Mir{\?} {RULER.NAME}" />
+    <!-- "an archon" / "an archoness" in dialogue -->
+    <string id="2CgZVkDj" text="a Mir" />
+    <string id="u3c9M8vx" text="a Begum" />
+
+    <!-- Emperor/Empress for the Mughal Shahenshah -->
+    <string id="7pAZatbz" text="{?RULER.GENDER}Malika-i-Muazzam{?}Shahenshah{\?} {RULER.NAME}" />
+    <string id="lpbDPuuW" text="{?RULER.GENDER}the Malika{?}the Shahenshah{\?} {RULER.NAME}" />
+
+    <!-- Coronation text: "of Calradia" → "of Hindostan" -->
+    <string id="Jw4oiIM4" text="On {DAY_OF_YEAR}, {YEAR}, {KING_NAME} was acclaimed {?IS_KING_MALE}Shahenshah{?}Malika{\?} of Hindostan" />
+
+    <!-- Afghan / Durrani lords (sturgia culture): Knyaz → Khan -->
+    <string id="lqm9PfF1" text="{?RULER.GENDER}Begum{?}Khan{\?} {RULER.NAME}" />
+    <!-- Grand Prince → Amir-e-Azam -->
+    <string id="nojcK4ia" text="{?RULER.GENDER}Malika{?}Amir-e-Azam{\?} {RULER.NAME}" />
+
+    <!-- Sikh lords (khuzait culture): Khan/Khatun → Sardar/Sardarni -->
+    <string id="VoZBLWay" text="{RULER.NAME} {?RULER.GENDER}Sardarni{?}Sardar{\?}" />
+
+    <!-- Mysore lords (aserai culture): Emir → Raja/Rani -->
+    <string id="jM9KGCIa" text="{?RULER.GENDER}Rani{?}Raja{\?} {RULER.NAME}" />
+
+    <!-- Maratha lords (battania culture): Mormaer → Desai -->
+    <string id="X4qO3jBf" text="{?RULER.GENDER}Desain{?}Desai{\?} {RULER.NAME}" />
+    <!-- High King → Peshwa -->
+    <string id="lb13ceVM" text="{?RULER.GENDER}Peshwayini{?}Peshwa{\?} {RULER.NAME}" />
+
+    <!-- Rajput lords (vlandia culture): Baron → Thakur -->
+    <string id="veiFupWz" text="{?RULER.GENDER}Thakurani{?}Thakur{\?} {RULER.NAME}" />
+
+    <!-- Generic minor-faction lord title -->
+    <string id="GPW3ku2Y" text="{?RULER.GENDER}Begum{?}Sahib{\?} {RULER.NAME}" />
+
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         CHARACTER CREATION SCREEN — str_culture_rich_name.{id}
+         This is the ONLY string the culture selection list actually reads.
+         The name= attribute in SPCultures.xml sets CultureObject.Name used
+         elsewhere (encyclopedia, dialogue), but NOT this screen.
+         ══════════════════════════════════════════════════════════════════════ -->
+
+    <string id="str_culture_rich_name.empire"   text="Mughals" />
+    <string id="str_culture_rich_name.empire_w" text="Bengalis" />
+    <string id="str_culture_rich_name.empire_s" text="Hyderabadis" />
+    <string id="str_culture_rich_name.sturgia"  text="Afghans" />
+    <string id="str_culture_rich_name.aserai"   text="Mysoreans" />
+    <string id="str_culture_rich_name.vlandia"  text="Rajputs" />
+    <string id="str_culture_rich_name.battania" text="Marathas" />
+    <string id="str_culture_rich_name.khuzait"  text="Sikhs" />
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         CULTURE NAMES — CultureObject.Name, used in encyclopaedia, dialogue,
+         clan screens. The {=!} literal in SPCultures.xml handles this, but
+         keep these for any UI that resolves the old faction string IDs.
+         ══════════════════════════════════════════════════════════════════════ -->
+
+    <!-- empire: name="{=empirefaction}Empire" -->
+    <string id="empirefaction" text="Mughal" />
+    <!-- aserai: name="{=aseraifaction}Aserai" -->
+    <string id="aseraifaction" text="Mysore" />
+    <!-- sturgia: name="{=PjO7oY16}Sturgia" -->
+    <string id="PjO7oY16" text="Afghan" />
+    <!-- vlandia: name="{=FjwRsf1C}Vlandia" -->
+    <string id="FjwRsf1C" text="Rajput" />
+    <!-- battania: name="{=0B27RrYJ}Battania" -->
+    <string id="0B27RrYJ" text="Maratha" />
+    <!-- khuzait: name="{=sZLd6VHi}Khuzait" -->
+    <string id="sZLd6VHi" text="Sikh" />
+
+    <!-- Secondary labels used in faction lists and UI -->
+    <string id="empiremembers" text="Mughal" />
+    <string id="NaNMRPv4" text="Mysore" />
+    <string id="Ohdrbpiw" text="Rajput" />
+    <string id="OxiaKT0G" text="Afghan" />
+    <string id="ZvoyX6DX" text="Maratha" />
+
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         CULTURE DESCRIPTIONS (SandBoxCore) — from std_spcultures_xml.xml
+         These are the lore paragraphs shown in character creation
+         ══════════════════════════════════════════════════════════════════════ -->
+
+    <!-- Vlandian lore → Rajput lore (string ID: 1Ww5lg6I) -->
+    <string id="1Ww5lg6I" text="The Rajputs are the ancient warrior aristocracy of Hindostan, a martial caste whose codes of honour predate the Mughal conquest by a thousand years. Each clan traces its lineage to the sun, the moon, or the sacred fire — genealogies that are simultaneously mythology and legal title to the land. For two centuries they served the Mughal emperors faithfully, exchanging daughters for imperial rank and commanding the finest cavalry divisions in the subcontinent. Now, with the Peacock Throne weakening, the Rajput lords have retreated to their desert strongholds and hill forts to rule as kings again. Their heavy cavalry is without equal on open ground. Their stone fortresses are near-impregnable. What they lack is unity — the very pride of lineage that makes each clan a force of nature also makes them constitutionally incapable of agreeing with their neighbours." />
+
+    <!-- Aserai lore → Mysore lore (string ID: a2AjI8nc) -->
+    <string id="a2AjI8nc" text="The Kingdom of Mysore guards the southern plateau, a land of ancient temples, sandalwood forests, and formidable hill forts that have resisted every invader since the time of the Vijayanagara kings. The Wodeyar dynasty rules from Srirangapatna, commanding the fertile Cauvery basin and the trade routes that carry silk, spice, and pepper to both coasts. Mysore is a kingdom in transformation: the traditional Nayaka cavalry and temple armies are being supplemented by disciplined infantry drilled on European lines, and the Dalvai commanders who lead them grow more powerful with every campaign. The forests of the Western Ghats and the broken terrain of the Deccan edge have always favoured the defender, and Mysorean warriors exploit that advantage with a tactical ingenuity that has frustrated larger armies for generations." />
+
+    <!-- Battanian lore → Maratha lore (string ID: Ax9OkgL5) -->
+    <string id="Ax9OkgL5" text="The Marathas were born in the folds of the Sahyadri range, the hard-edged Western Ghats where the Deccan plateau drops to the Konkan coast. What began as Chhatrapati Shivaji's defiant insurgency against the Mughal colossus has become a confederacy that threatens every throne in Hindostan. Their military philosophy is the antithesis of the Mughal set-piece: instead of massed cavalry and artillery trains, the Marathas use speed, terrain, and the psychological weight of knowing they can be anywhere at any moment. Maratha Bargir cavalry can cover sixty miles in a single day and appear where no army is expected. Their hill forts, hundreds of them perched on the crags of the Deccan, are the backbone of a defensive system that no army has yet cracked. Their great ambition is Hindavi Swarajya: the sovereign rule of the Hindu realm, which brings them into inevitable conflict with every Muslim power on the subcontinent." />
+
+    <!-- Sturgian lore → Afghan lore (string ID: Ud1AMybr) -->
+    <string id="Ud1AMybr" text="The Afghans come from the high plateau of Khorasan and the mountain passes of the Hindu Kush, where the winters are brutal and the only reliable crop is courage. A warrior people organised into proud, fiercely independent tribes, they have served as the shock cavalry of half a dozen empires without ever being truly conquered by any of them. Ahmad Shah Abdali has changed that dynamic: for the first time the Pashtun clans are united under a single Amir, bound by the code of Pashtunwali and the shared ambition of carving a permanent Sultanate from the crumbling edges of Mughal and Persian territory. Their armies move fast and hit hard. Their Jezailchi musketeers fire long-barrelled rifles from mountain positions with a precision that makes formal siege-lines irrelevant. They do not fight for the old empire; they fight to build a new one." />
+
+    <!-- Khuzait lore → Sikh lore (string ID: v5bWtXj1) -->
+    <string id="v5bWtXj1" text="The Sikhs of the Punjab were forged into a martial order by persecution. The ten Gurus of the faith created not merely a religion but a warrior brotherhood, the Khalsa, the Pure, sworn to defend the helpless and resist tyranny by any worldly power. Organised into Misls, independent warbands each controlling their own territory in the fertile doabs between the rivers, they have turned the Punjab into a patchwork of fighting fiefdoms that no empire has been able to hold for long. Sikh cavalry are among the fastest horsemen in the subcontinent: they strike hard, scatter before the response, and reassemble miles away for the next raid. Each baptised warrior carries the Five Ks as articles of faith. Their battle-cry, Sat Sri Akal, truth is timeless, precedes charges that have broken imperial armies. They seek not merely survival but the establishment of the Sikh Raj across the rivers of the Punjab." />
+
+    <!-- Empire lore → Mughal lore (string ID: X0kKBzsW) -->
+    <string id="X0kKBzsW" text="The Mughal Empire — the Gurkani Sultanate, heirs of Timur and Babur — once commanded the allegiance of kings from Kabul to the Kaveri. The Mansabdari system ranked every nobleman in the empire into a military hierarchy; the imperial court conducted itself in refined Persian; the great cities of Delhi, Agra, and Lahore were among the wealthiest in the world. The death of Aurangzeb shattered that unity. Three factions now fly the Mughal banner: the court at Shahjahanabad, the Nawabs of Bengal, and the Nizams of Hyderabad. All three still mint coins in the Emperor's name and read the Khutba in his honour, but none of them sends revenue to the central treasury. The Mughal ideal, an empire of universal administration uniting Muslim and Hindu under a single law, remains powerful as legitimising myth even as the reality disintegrates. Whoever can claim that mantle most convincingly will have the best claim to rule Hindostan." />
+
+    <!-- Bengal lore → Nawab of Bengal (empire_w, string ID: OJYBEQy9) -->
+    <string id="OJYBEQy9" text="The Nawabs of Bengal govern the richest province in Hindostan from their court at Murshidabad. Bengal produces the finest muslin in the world, trades in silk and saltpetre, and collects tax revenues that dwarf those of the imperial court at Delhi. The Nawab Nazim rules as a fully autonomous sovereign — striking coins, commanding armies, and administering justice — while nominally acknowledging the Emperor's suzerainty. In practice, Bengal has been independent since the death of Aurangzeb. The great rivers of the delta define the economy: Bengal is a riverine civilization, and its armies, trade routes, and logistics all revolve around the mastery of waterways. In the civil war, Bengal's wealth makes it the most coveted prize — whoever controls Murshidabad controls the treasury of Hindostan." />
+
+    <!-- Hyderabad lore → Nizam of Hyderabad (empire_s, string ID: a9Ty3YXa) -->
+    <string id="a9Ty3YXa" text="The Nizam of Hyderabad rules the Deccan from his court at Aurangabad, commanding the vast plateau that separates the Mughal north from the Mysorean south. The Nizam-ul-Mulk Asaf Jah was the ablest administrator of his generation — the man who effectively ran the Mughal Empire for two decades before walking south to found his own state. The Deccan is a fortress in itself: the plateau's broken terrain, dotted with hill forts that took Aurangzeb thirty years to reduce, makes invasion costly and occupation precarious. Hyderabadi armies fight a mobile, attritional war, using the terrain to bleed advancing enemies. The Nizam's strength comes not from overwhelming numbers but from a network of loyal Paigah nobles and a financial administration that keeps his treasury solvent even when Delhi's is empty. In the civil war, Hyderabad is the fulcrum: too strong to be crushed by any single enemy, too exposed on multiple fronts to go on the offensive." />
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         CULTURE DESCRIPTIONS (Native) — from std_module_strings_xml.xml
+         Used in encyclopaedia tooltips and other UI contexts
+         ══════════════════════════════════════════════════════════════════════ -->
+
+    <!-- Mughal Empire (empire culture) -->
+    <string id="iLEhyGI8" text="The Mughal Empire — the Gurkani Sultanate — once unified the entire subcontinent under the Peacock Throne. Built on the Mansabdari system of ranked nobles and administered in Persian, it was the wealthiest realm in the world. The death of Aurangzeb has fractured that unity, leaving three factions flying the Mughal banner: the court at Shahjahanabad, the Nawabs of Bengal, and the Nizams of Hyderabad. Masters of Sowar cavalry and bronze siege cannon, the Mughals fight with overwhelming force — yet their armies are slow to mobilise, and the speed that once made them unconquerable is bleeding away. The next Shahenshah must reunite what Aurangzeb's rigid reign shattered." />
+
+    <!-- Afghan / Durrani (sturgia culture) -->
+    <string id="HD2wzAxz" text="The Durrani Afghans are a warrior people of the mountain passes and high plateaux of Khorasan and the Hindu Kush. Ahmad Shah Abdali has forged the Daulat e Durrani from the Pashtun clans, disciplined by decades of service in the Mughal and Persian armies and hardened by the cold of the mountains. Their Jezailchi musketeers fire long-barrelled rifles with deadly precision; their heavy cavalry sweeps across plains with terrifying speed. Born into a culture of the Jirga council and blood-oath loyalty, the Afghans seek not merely to raid but to establish a lasting Sultanate to anchor their power in the east." />
+
+    <!-- Sikh Confederation (khuzait culture) -->
+    <string id="HkZ4E94O" text="The Sikh Confederation was forged in the fires of Mughal persecution. The ten Gurus built not merely a faith but a martial order — the Khalsa, the Pure — who refuse to submit to any earthly tyranny. Organised into Misls, warrior brotherhoods each controlling their own territory, the Sikhs of the Punjab are masters of swift cavalry warfare and guerrilla tactics. Each baptised warrior carries kirpan and shield as articles of faith. United by the doctrine of Sarbat da Bhala — the prosperity of all — the Khalsa fight to build the Sikh Raj in the fertile lands between the Indus and the Sutlej." />
+
+    <!-- Kingdom of Mysore (aserai culture) -->
+    <string id="Khr5yETv" text="The Kingdom of Mysore controls the Deccan plateau's fertile highlands, astride the trade routes carrying sandalwood, silk, and pepper to both coasts. Under the Wodeyar dynasty, Mysore fields Nayaka cavalry and well-drilled infantry, fighting in a landscape of dense jungle and ancient hill forts. The kingdom's growing power has drawn the attention of the Marathas and the Nizam of Hyderabad alike. Within Mysore itself, the Dalvai commanders hold increasing real authority, and ambitious figures like Hyder Ali are transforming its armies into one of the most formidable fighting forces on the subcontinent." />
+
+    <!-- Rajputana Federation (vlandia culture) -->
+    <string id="ZPaw3WuO" text="The Rajputs are warrior clans bound by Kshatriya dharma — a code of honour that holds death in battle as the highest glory. Each great house, the Sisodia of Mewar, the Rathore of Marwar, the Kachwaha of Jaipur, rules its home territory as a near-sovereign fiefdom. For two centuries they served the Mughal emperors, wedding their daughters into the imperial family in exchange for military commands and autonomy. With Mughal power crumbling, the Rajput lords now see their opportunity: to reclaim the independence their ancestors surrendered to Akbar, and perhaps to fill the vacuum at the heart of Hindostan." />
+
+    <!-- Maratha Saamrajya (battania culture) -->
+    <string id="c1Ag8YJS" text="The Maratha Saamrajya began as the defiant insurgency of Chhatrapati Shivaji, who carved a kingdom from the Deccan with hill-fort strategy, guerrilla raids, and an audacious Konkan navy. The Peshwa in Pune now guides what has become an empire. Maratha Bargir cavalry — among the fastest horsemen in the world — can cover sixty miles in a day, striking where least expected. Their ambition is Hindavi Swarajya: the self-rule of the Hindu realm. That vision brings them into inevitable conflict with every Muslim sultanate from Hyderabad to Kabul. The Marathas do not merely fight; they transform every conquest into a base for the next campaign." />
+
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         CALRADIA → HINDOSTAN: World name and empire references
+         ══════════════════════════════════════════════════════════════════════ -->
+
+    <!-- "the Empire" → "the Mughal Raj" -->
+    <string id="6UUymZhL" text="the Mughal Raj" />
+
+    <!-- "Calradian Empire" → "Mughal Empire" -->
+    <string id="AIh1Ik4A" text="Mughal Empire" />
+
+    <!-- Imperial culture adjective forms -->
+    <string id="5S1zPgTm" text="Mughal" />
+    <string id="CXUXk5ai" text="Mughals" />
+    <string id="3EGllWkd" text="Bengali" />
+    <string id="dGDYBpzz" text="Bengali" />
+    <string id="Vvo92lyj" text="Hyderabadi" />
+
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         FACTION REFERENCE STRINGS — "the Aserai", "the Vlandians", etc.
+         ══════════════════════════════════════════════════════════════════════ -->
+
+    <string id="fApjg2ae" text="the Mysoreans" />
+    <string id="eRqURgZY" text="the Marathas" />
+    <string id="2UCptBFi" text="the Afghans" />
+    <string id="vZRYAvYH" text="the Rajputs" />
+    <string id="OzazmGBi" text="the Sikhs" />
+
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         TUTORIAL AND UI STRINGS — "Welcome to Calradia" etc.
+         ══════════════════════════════════════════════════════════════════════ -->
+
+    <!-- "Navigating Calradia" tutorial title -->
+    <string id="3RqEmB15" text="Navigating Hindostan" />
+
+    <!-- "Welcome to Calradia!" (controller version) -->
+    <string id="B5MNWr0J" text="Welcome to Hindostan!{newline}{newline}You can explore the world map by moving the camera with {CONSOLE_MOVEMENT_KEY}, panning your view with {CONSOLE_CAMERA_KEY} and zooming in and out with {MAP_ZOOM_OUT_KEY} and {MAP_ZOOM_IN_KEY}.{newline}{newline}Give it a try." />
+
+    <!-- "Welcome to Calradia!" (keyboard/mouse version) -->
+    <string id="f6xYa3c4" text="Welcome to Hindostan!{newline}{newline}You can explore the world map by moving the camera with {FORWARD_KEY}{BACKWARDS_KEY}{LEFT_KEY}{RIGHT_KEY}, panning your view by right clicking and dragging your mouse and zooming in and out with the mouse wheel.{newline}{newline}Give it a try." />
+
+    <!-- "Tutorial is over. You are now free to explore Calradia." -->
+    <string id="GCbqpeDs" text="Tutorial is over. You are now free to explore Hindostan." />
+
+    <!-- "You have conquered Calradia!" -->
+    <string id="jKn9B0bh" text="You have conquered Hindostan!" />
+
+    <!-- Encyclopedia tooltip: "...troops of the Calradia." -->
+    <string id="BV5gL8SK" text="If you know what or who you are looking for you can use the search bar and type in. The search bar lists all the persons, settlements, and troops of Hindostan." />
+
+    <!-- Encyclopedia tooltip: "towns, castles, and villages of Calradia" -->
+    <string id="VMcd4nma" text="The Encyclopedia has information on all the towns, castles, and villages of Hindostan. Once visited or revealed, you can track up-to-date information from the encyclopedia." />
+
+    <!-- Siege tooltip: "warfare in Calradia" -->
+    <string id="xFWG6uZ8" text="Sieges are an integral part of warfare in Hindostan, as they are the main way to conquer towns and castles." />
+
+    <!-- General tooltip: "world of Calradia" -->
+    <string id="sYkqpuFx" text="Hindostan has many different elements that affect the world. You can always use filters to learn more about the game concepts." />
+
+    <!-- Kingdom encyclopedia tooltip: "kingdoms of the Calradia" -->
+    <string id="zF0xUaXd" text="Investigate kingdoms to keep up with the fiefs, clans, and wars of the kingdoms of Hindostan." />
+
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         KINGDOM POLICY NAMES — Indian equivalents for all governance policies
+         ══════════════════════════════════════════════════════════════════════ -->
+
+    <!-- "Feudal Inheritance" → Jagirdari (heritable Mughal land-grant system) -->
+    <string id="xbvei0Cb" text="Jagirdari" />
+
+    <!-- "Precarial Land Tenure" → Ijaradari (temporary revenue-farming contracts) -->
+    <string id="ft08QZrA" text="Ijaradari" />
+
+    <!-- "Serfdom" → Begar (compulsory unpaid labour levied from peasants) -->
+    <string id="8FPCRv5L" text="Begar" />
+
+    <!-- "Senate" → Diwan-i-Khas (the inner select council of the court) -->
+    <string id="8pjMAqOg" text="Diwan-i-Khas" />
+
+    <!-- "Debasement Of The Currency" → Sikka Bigarna (corrupting the coin) -->
+    <string id="9lygvooT" text="Sikka Bigarna" />
+
+    <!-- "Lawspeakers" → Qazis (Islamic jurists who interpret and apply law) -->
+    <string id="EBCV0LcU" text="Qazis" />
+
+    <!-- "Bailiffs" → Amils (Mughal revenue collectors and estate managers) -->
+    <string id="HKT5MnjP" text="Amils" />
+
+    <!-- "Grazing Rights" → Charagah (formal rights to designated grazing land) -->
+    <string id="mb25Ue3f" text="Charagah" />
+
+    <!-- "Land Grants for Veterans" → Mansab (rank-and-grant system of the Mughals) -->
+    <string id="RFRVL8bK" text="Mansab" />
+
+    <!-- "Citizenship" → Praja Adhikar (rights of the subjects/raiyat) -->
+    <string id="sYNFwOVg" text="Praja Adhikar" />
+
+    <!-- "Noble Retinues" → Silahdar (personal armed retinues of the nobility) -->
+    <string id="7Pk3bFPC" text="Silahdar" />
+
+    <!-- "Royal Guard" → Khas Fauj (the ruler's personal household troops) -->
+    <string id="F41aPt80" text="Khas Fauj" />
+
+    <!-- "War Tax" → Rahdari (road and transit dues; also used as a war levy) -->
+    <string id="AlZB8WIb" text="Rahdari" />
+
+    <!-- "Council of the Commons" → Panchayat (village/community council) -->
+    <string id="bMSI9Bt3" text="Panchayat" />
+
+    <!-- "Road Tolls" → Chowki (toll-post and checkpoint tax system) -->
+    <string id="bOtYmSP8" text="Chowki" />
+
+  </strings>
+</base>

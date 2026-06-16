@@ -1,0 +1,44 @@
+# ── Claude Code local files (contain personal memory, email, session data) ──
+.claude/
+
+# ── Crash dumps / logs ──
+*.dmp
+*.log
+
+# ── Compiled mod assembly & debug symbols ──
+# The runtime DLL is distributed via GitHub Releases, not committed.
+bin/
+**/bin/Debug/
+**/bin/Release/
+*.pdb
+
+# ── Build intermediates ──
+**/obj/
+[Oo]bj/
+
+# ── Visual Studio / IDE ──
+.vs/
+*.user
+*.suo
+*.userprefs
+
+# ── Map / scene / compiled-asset binary data ──
+# Large binary game data — useless as source on GitHub and not human-editable.
+# Kept locally and shipped only via GitHub Releases (see package-release.ps1).
+# SceneEditData files also exceed GitHub's 100 MB hard limit (160–180 MB each).
+SceneObj/
+SceneEditData/
+RuntimeDataCache/
+AssetSources/
+Assets/
+AssetPackages/
+EmAssetPackages/
+
+# ── Scene & asset backups (dev scratch, not referenced at runtime) ──
+**/Backups/
+**/*_HOLD/
+
+# ── OS junk ──
+Thumbs.db
+desktop.ini
+.DS_Store

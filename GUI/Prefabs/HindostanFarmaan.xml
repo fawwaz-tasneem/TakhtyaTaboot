@@ -1,0 +1,63 @@
+<Prefab>
+  <Window>
+
+    <!-- Dim backdrop -->
+    <Widget WidthSizePolicy="StretchToParent" HeightSizePolicy="StretchToParent" Sprite="BlankWhiteSquare_9" Color="#000000ff" AlphaFactor="0.6">
+      <Children>
+
+        <!-- Decree panel -->
+        <Widget WidthSizePolicy="Fixed" HeightSizePolicy="Fixed" SuggestedWidth="780" SuggestedHeight="580" HorizontalAlignment="Center" VerticalAlignment="Center">
+          <Children>
+
+            <Widget WidthSizePolicy="StretchToParent" HeightSizePolicy="StretchToParent" Sprite="StdAssets\Popup\canvas" />
+
+            <ListPanel WidthSizePolicy="StretchToParent" HeightSizePolicy="CoverChildren" VerticalAlignment="Top" MarginTop="34" MarginLeft="46" MarginRight="46" StackLayout.LayoutMethod="VerticalTopToBottom">
+              <Children>
+
+                <!-- Decorative header -->
+                <TextWidget WidthSizePolicy="StretchToParent" HeightSizePolicy="Fixed" SuggestedHeight="22" Brush="Popup.Description.Text" Brush.FontSize="18" HorizontalAlignment="Center" Text="A DECREE OF THE IMPERIAL COURT" />
+
+                <!-- Title -->
+                <RichTextWidget WidthSizePolicy="StretchToParent" HeightSizePolicy="Fixed" SuggestedHeight="48" MarginTop="4" Brush="Popup.Title.Text" Brush.FontSize="40" HorizontalAlignment="Center" Text="@TitleText" />
+
+                <Widget WidthSizePolicy="StretchToParent" HeightSizePolicy="Fixed" SuggestedHeight="22" MarginTop="2" Sprite="StdAssets\Popup\divider" IsEnabled="false" />
+
+                <!-- Sender -->
+                <RichTextWidget WidthSizePolicy="StretchToParent" HeightSizePolicy="CoverChildren" MarginTop="6" MarginLeft="20" MarginRight="20" Brush="Popup.Description.Text" Brush.FontSize="22" HorizontalAlignment="Center" Text="@SenderText" />
+
+                <!-- Body -->
+                <RichTextWidget WidthSizePolicy="StretchToParent" HeightSizePolicy="CoverChildren" MarginTop="18" MarginLeft="16" MarginRight="16" MaxHeight="300" Brush="Popup.Tuple.Text" Brush.FontSize="24" HorizontalAlignment="Center" Text="@BodyText" />
+
+                <!-- Seal line -->
+                <RichTextWidget WidthSizePolicy="StretchToParent" HeightSizePolicy="CoverChildren" MarginTop="16" Brush="Popup.Description.Text" Brush.FontSize="18" HorizontalAlignment="Center" Text="@SealText" />
+
+              </Children>
+            </ListPanel>
+
+            <!-- Buttons -->
+            <ListPanel WidthSizePolicy="CoverChildren" HeightSizePolicy="Fixed" SuggestedHeight="64" HorizontalAlignment="Center" VerticalAlignment="Bottom" MarginBottom="26" StackLayout.LayoutMethod="HorizontalLeftToRight">
+              <Children>
+                <ButtonWidget DoNotPassEventsToChildren="true" WidthSizePolicy="CoverChildren" HeightSizePolicy="Fixed" SuggestedHeight="58" MarginLeft="10" MarginRight="10" Brush="Popup.Done.Button.NineGrid" Command.Click="ExecutePrimary">
+                  <Children>
+                    <TextWidget WidthSizePolicy="CoverChildren" HeightSizePolicy="Fixed" SuggestedHeight="40" MarginLeft="40" MarginRight="40" VerticalAlignment="Center" Brush="Popup.Button.Text" Text="@PrimaryText" IsDisabled="true" />
+                  </Children>
+                </ButtonWidget>
+                <ButtonWidget DoNotPassEventsToChildren="true" WidthSizePolicy="CoverChildren" HeightSizePolicy="Fixed" SuggestedHeight="58" MarginLeft="10" MarginRight="10" Brush="Popup.Done.Button.NineGrid" Command.Click="ExecuteSecondary" IsVisible="@HasSecondary">
+                  <Children>
+                    <TextWidget WidthSizePolicy="CoverChildren" HeightSizePolicy="Fixed" SuggestedHeight="40" MarginLeft="40" MarginRight="40" VerticalAlignment="Center" Brush="Popup.Button.Text" Text="@SecondaryText" IsDisabled="true" />
+                  </Children>
+                </ButtonWidget>
+              </Children>
+            </ListPanel>
+
+            <!-- Frame border -->
+            <Widget WidthSizePolicy="StretchToParent" HeightSizePolicy="StretchToParent" Sprite="frame_9" ExtendLeft="18" ExtendTop="18" ExtendRight="18" ExtendBottom="18" IsEnabled="false" />
+
+          </Children>
+        </Widget>
+
+      </Children>
+    </Widget>
+
+  </Window>
+</Prefab>

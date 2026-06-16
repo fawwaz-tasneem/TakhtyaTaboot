@@ -1,0 +1,613 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--Phase 1: override lord display names only. All other attributes remain vanilla.-->
+<NPCCharacters>
+	<NPCCharacter id="dead_lord_2_1" name="{=!}Mir Wais Hotak" />
+	<NPCCharacter id="dead_lord_2_2" name="{=!}Zarghuna Ana" />
+	<NPCCharacter id="dead_lord_3_1" name="{=!}Chikka Devaraja Wodeyar" />
+	<NPCCharacter id="dead_lord_6_1" name="{=!}Guru Gobind Singh" />
+	<NPCCharacter id="dead_lord_6_2" name="{=!}Banda Singh Bahadur" />
+	<NPCCharacter id="dead_lord_6_3" name="{=!}Ajit Singh" />
+	<NPCCharacter id="dead_lord_6_4" name="{=!}Zorawar Singh" />
+	<NPCCharacter id="lord_1_1" name="{=!}Muhammad Shah" text="{=!}The twenty-ninth Mughal Emperor and the last to rule a nominally united Hindustan, Muhammad Shah inherited a crumbling empire and a court in open chaos. Known as Rangila, the Colourful, for his love of music, art, and poetry, he is not the warrior the moment demands. Yet behind the hedonism lies a canny survivor who has outlasted multiple coups and palace intrigues. He knows he cannot fight the Marathas, the Afghans, and his own Nawabs simultaneously, so he haggles, delays, and plays factions against each other, buying time for an empire whose time may already have passed." />
+	<NPCCharacter id="lord_1_2" name="{=!}Qudsia Begum" />
+	<NPCCharacter id="lord_1_1_1" name="{=!}Nur Jahan" />
+	<NPCCharacter id="lord_1_1_2" name="{=!}Jahanara" />
+	<NPCCharacter id="lord_1_1_3" name="{=!}Roshanara" />
+	<NPCCharacter id="lord_1_1_4" name="{=!}Zinat" />
+	<NPCCharacter id="lord_1_1_5" name="{=!}Qudsia" />
+	<NPCCharacter id="lord_1_1_6" name="{=!}Sahiba" />
+	<NPCCharacter id="lord_1_1_7" name="{=!}Fatima" />
+	<NPCCharacter id="lord_1_1_8" name="{=!}Mumtaz" />
+	<NPCCharacter id="lord_1_1_9" name="{=!}Zeenat" />
+	<NPCCharacter id="lord_1_1_10" name="{=!}Nasiri" />
+	<NPCCharacter id="lord_1_1_11" name="{=!}Sultana" />
+	<NPCCharacter id="lord_1_1_15" name="{=!}Zubaida" />
+	<NPCCharacter id="lord_1_1_16" name="{=!}Amina" />
+	<NPCCharacter id="lord_1_3" name="{=!}Najaf Khan" />
+	<NPCCharacter id="lord_1_4" name="{=!}Khadija" />
+	<NPCCharacter id="lord_1_5" name="{=!}Ali Muhammad Khan" />
+	<NPCCharacter id="lord_1_6" name="{=!}Muhammad" />
+	<NPCCharacter id="lord_1_7" name="{=!}Murshid Quli Khan" text="{=!}The first independent Nawab of Bengal and its most capable administrator, Murshid Quli Khan built Bengal into the wealthiest province in the known world. A converted Hindu orphan raised at the Mughal court, his genius was for revenue collection and commercial policy. He restructured the zamindari system, imposed disciplined tax reforms, and drew the European trading companies into arrangements that made Bengal prosper without making it dependent on them. He rules the province as a private kingdom while paying nominal deference to Delhi. The fiction of Mughal suzerainty satisfies both parties." />
+	<NPCCharacter id="lord_1_8" name="{=!}Dilras" />
+	<NPCCharacter id="lord_1_9" name="{=!}Fateh Chand Jagat Seth" />
+	<NPCCharacter id="lord_1_10" name="{=!}Gauhar" />
+	<NPCCharacter id="lord_1_25" name="{=!}Ahmad" />
+	<NPCCharacter id="lord_1_35" name="{=!}Ibrahim" />
+	<NPCCharacter id="lord_1_11" name="{=!}Mir Jumla" />
+	<NPCCharacter id="lord_1_111" name="{=!}Husain" />
+	<NPCCharacter id="lord_1_12" name="{=!}Malika" />
+	<NPCCharacter id="lord_1_14" name="{=!}Hamida" />
+	<NPCCharacter id="lord_1_15" name="{=!}Ikhtiyar ul Mulk" />
+	<NPCCharacter id="lord_1_155" name="{=!}Abdullah" />
+	<NPCCharacter id="lord_1_16" name="{=!}Ruqaiya" />
+	<NPCCharacter id="lord_1_17" name="{=!}Rustam Dil Khan" />
+	<NPCCharacter id="lord_1_177" name="{=!}Asad" />
+	<NPCCharacter id="lord_1_18" name="{=!}Badshah Begum" />
+	<NPCCharacter id="lord_1_21" name="{=!}Bahadur" />
+	<NPCCharacter id="lord_1_22" name="{=!}Daulat" />
+	<NPCCharacter id="lord_1_23" name="{=!}Fakhruddin" />
+	<NPCCharacter id="lord_1_24" name="{=!}Ghulam" />
+	<NPCCharacter id="lord_1_75" name="{=!}Haider" />
+	<NPCCharacter id="lord_1_26" name="{=!}Imad" />
+	<NPCCharacter id="lord_1_27" name="{=!}Jafar" />
+	<NPCCharacter id="lord_1_27_1" name="{=!}Nur Jahan" />
+	<NPCCharacter id="lord_1_27_2" name="{=!}Kamaluddin" />
+	<NPCCharacter id="lord_1_27_3" name="{=!}Jahanara" />
+	<NPCCharacter id="lord_1_28" name="{=!}Liaqat" />
+	<NPCCharacter id="lord_1_29" name="{=!}Mansur" />
+	<NPCCharacter id="lord_1_31" name="{=!}Roshanara" />
+	<NPCCharacter id="lord_1_32" name="{=!}Zinat" />
+	<NPCCharacter id="lord_1_33" name="{=!}Qudsia" />
+	<NPCCharacter id="lord_1_422" name="{=!}Nasir" />
+	<NPCCharacter id="lord_1_34" name="{=!}Sahiba" />
+	<NPCCharacter id="lord_1_36" name="{=!}Fatima" />
+	<NPCCharacter id="lord_1_37" name="{=!}Mumtaz" />
+	<NPCCharacter id="lord_1_38" name="{=!}Zeenat" />
+	<NPCCharacter id="lord_1_39" name="{=!}Nasiri" />
+	<NPCCharacter id="lord_1_41" name="{=!}Qadir" />
+	<NPCCharacter id="lord_1_411" name="{=!}Rafi" />
+	<NPCCharacter id="lord_1_42" name="{=!}Sadiq" />
+	<NPCCharacter id="lord_1_43" name="{=!}Tahir" />
+	<NPCCharacter id="lord_1_44" name="{=!}Wazir" />
+	<NPCCharacter id="lord_1_47" name="{=!}Asaf Jah I" text="{=!}Mir Qamar ud-Din Khan, titled Asaf Jah and Nizam ul-Mulk, is perhaps the most capable administrator alive in Hindostan. A veteran of four emperors courts, he escaped the viper pit of Delhi to carve out the Deccan Plateau as his own domain. Methodical, cold-blooded, and patient, Asaf Jah combined Persian administrative traditions with locally recruited Deccani cavalry to build Hyderabad into a formidable state. He views the Maratha Confederacy as the primary existential threat and has organised his entire kingdom around containing it. He legitimizes his de facto independence by always bowing, very formally, toward Shahjahanabad." />
+	<NPCCharacter id="lord_1_47_1" name="{=!}Sultana" />
+	<NPCCharacter id="lord_1_47_2" name="{=!}Zubaida" />
+	<NPCCharacter id="lord_1_47_3" name="{=!}Amina" />
+	<NPCCharacter id="lord_1_49" name="{=!}Yaqub" />
+	<NPCCharacter id="lord_1_49_1" name="{=!}Khadija" />
+	<NPCCharacter id="lord_1_49_2" name="{=!}Dilras" />
+	<NPCCharacter id="lord_1_20" name="{=!}Muhammad Khan Bangash" />
+	<NPCCharacter id="lord_1_1_12" name="{=!}Gauhar" />
+	<NPCCharacter id="lord_1_64" name="{=!}Zafar" />
+	<NPCCharacter id="lord_1_1_13" name="{=!}Malika" />
+	<NPCCharacter id="lord_1_50" name="{=!}Amir Khan" />
+	<NPCCharacter id="lord_1_66" name="{=!}Shuja" />
+	<NPCCharacter id="lord_1_1_14" name="{=!}Hamida" />
+	<NPCCharacter id="lord_1_1_17" name="{=!}Mirza" />
+	<NPCCharacter id="lord_1_51" name="{=!}Qamar ud Din Khan" />
+	<NPCCharacter id="lord_1_58" name="{=!}Abdullah Khan Barha" />
+	<NPCCharacter id="lord_1_70" name="{=!}Ruqaiya" />
+	<NPCCharacter id="lord_NE7_u" name="{=!}Hussain Ali Khan Barha" />
+	<NPCCharacter id="lord_1_67" name="{=!}Azim" />
+	<NPCCharacter id="lord_1_40" name="{=!}Jafar Khan" />
+	<NPCCharacter id="lord_1_40_1" name="{=!}Badshah Begum" />
+	<NPCCharacter id="lord_1_46" name="{=!}Murad" />
+	<NPCCharacter id="lord_1_46_1" name="{=!}Siraj" />
+	<NPCCharacter id="lord_1_45" name="{=!}Reza Khan" />
+	<NPCCharacter id="lord_1_45_1" name="{=!}Nur Jahan" />
+	<NPCCharacter id="lord_1_45_2" name="{=!}Safdar" />
+	<NPCCharacter id="lord_1_45_3" name="{=!}Jahanara" />
+	<NPCCharacter id="lord_1_57" name="{=!}Sher" />
+	<NPCCharacter id="lord_1_57_1" name="{=!}Roshanara" />
+	<NPCCharacter id="lord_1_57_2" name="{=!}Zinat" />
+	<NPCCharacter id="lord_1_52" name="{=!}Kirtichar Roy" />
+	<NPCCharacter id="lord_1_52_1" name="{=!}Qudsia" />
+	<NPCCharacter id="lord_1_52_2" name="{=!}Sahiba" />
+	<NPCCharacter id="lord_1_53" name="{=!}Haibat Jung" />
+	<NPCCharacter id="lord_1_71" name="{=!}Azim ush Shan" />
+	<NPCCharacter id="lord_WE8_c" name="{=!}Fatima" />
+	<NPCCharacter id="lord_WE8_u" name="{=!}Rustam" />
+	<NPCCharacter id="lord_1_73" name="{=!}Itimad" />
+	<NPCCharacter id="lord_1_73_1" name="{=!}Mumtaz" />
+	<NPCCharacter id="lord_1_62" name="{=!}Feroz" />
+	<NPCCharacter id="lord_1_62_1" name="{=!}Zeenat" />
+	<NPCCharacter id="lord_1_30" name="{=!}Mukarram ud Daula" />
+	<NPCCharacter id="lord_1_30_1" name="{=!}Nasiri" />
+	<NPCCharacter id="lord_1_30_2" name="{=!}Sultana" />
+	<NPCCharacter id="lord_1_30_3" name="{=!}Aurangzeb" />
+	<NPCCharacter id="lord_1_48" name="{=!}Alamgir" />
+	<NPCCharacter id="lord_1_48_1" name="{=!}Zubaida" />
+	<NPCCharacter id="lord_1_48_2" name="{=!}Amina" />
+	<NPCCharacter id="lord_1_48_3" name="{=!}Khadija" />
+	<NPCCharacter id="lord_1_54" name="{=!}Yaqut Khan" />
+	<NPCCharacter id="lord_1_54_1" name="{=!}Dilras" />
+	<NPCCharacter id="lord_1_55" name="{=!}Salabat Khan" />
+	<NPCCharacter id="lord_1_55_1" name="{=!}Gauhar" />
+	<NPCCharacter id="lord_1_63" name="{=!}Saadatullah Khan" />
+	<NPCCharacter id="lord_1_63_1" name="{=!}Malika" />
+	<NPCCharacter id="lord_1_63_2" name="{=!}Hamida" />
+	<NPCCharacter id="lord_1_63_3" name="{=!}Ruqaiya" />
+	<NPCCharacter id="lord_1_56" name="{=!}Dara" />
+	<NPCCharacter id="lord_1_56_1" name="{=!}Badshah Begum" />
+	<NPCCharacter id="lord_1_56_2" name="{=!}Nur Jahan" />
+	<NPCCharacter id="lord_1_68" name="{=!}Muhammad" />
+	<NPCCharacter id="lord_1_68_1" name="{=!}Jahanara" />
+	<NPCCharacter id="lord_1_69" name="{=!}Ahmad" />
+	<NPCCharacter id="lord_1_69_1" name="{=!}Roshanara" />
+	<NPCCharacter id="lord_1_69_2" name="{=!}Zinat" />
+	<NPCCharacter id="lord_1_72" name="{=!}Wali Shah" />
+	<NPCCharacter id="lord_1_72_1" name="{=!}Qudsia" />
+	<NPCCharacter id="lord_SE8_c" name="{=!}Sahiba" />
+	<NPCCharacter id="lord_1_74" name="{=!}Ibrahim" />
+	<NPCCharacter id="lord_1_74_1" name="{=!}Fatima" />
+	<NPCCharacter id="lord_NE8_l" name="{=!}Ibrahim Khan Firuz Jung" />
+	<NPCCharacter id="lord_NE8_s" name="{=!}Mumtaz" />
+	<NPCCharacter id="lord_NE8_c1" name="{=!}Husain" />
+	<NPCCharacter id="lord_NE8_c2" name="{=!}Zeenat" />
+	<NPCCharacter id="lord_NE9_l" name="{=!}Sadullah Khan" />
+	<NPCCharacter id="lord_NE9_s" name="{=!}Abdullah" />
+	<NPCCharacter id="lord_NE9_d" name="{=!}Nasiri" />
+	<NPCCharacter id="lord_WE9_l" name="{=!}Rayan ud Daula" />
+	<NPCCharacter id="lord_WE9_u" name="{=!}Sultana" />
+	<NPCCharacter id="lord_WE9_u2" name="{=!}Asad" />
+	<NPCCharacter id="lord_SE9_l" name="{=!}Habib ur Rahman" />
+	<NPCCharacter id="lord_SE9_s" name="{=!}Zubaida" />
+	<NPCCharacter id="lord_SE9_c1" name="{=!}Bahadur" />
+	<NPCCharacter id="lord_SE9_c2" name="{=!}Amina" />
+	<NPCCharacter id="lord_2_1" name="{=!}Ahmad Shah Durrani" text="{=!}Born of the Abdali clan of Pashtuns, Ahmad Shah rose through the ranks of the Persian imperial army to command its finest Afghan cavalry contingent. A natural horseman with a generals instinct, he united the fractious Pashtun tribes under his banner through equal measures of iron diplomacy and relentless force. His vision extends far beyond raiding the plains of India. He intends to build a lasting Durrani Sultanate that controls the great mountain passes between east and west, commanding the trade routes that have made conquerors rich since Alexander marched through Kandahar." />
+	<NPCCharacter id="lord_2_2" name="{=!}Zarghuna" />
+	<NPCCharacter id="lord_2_3" name="{=!}Payinda Khan Barakzai" />
+	<NPCCharacter id="lord_2_4" name="{=!}Nazo" />
+	<NPCCharacter id="lord_2_4_1" name="{=!}Malalai" />
+	<NPCCharacter id="lord_2_5" name="{=!}Suleiman Shah Popalzai" />
+	<NPCCharacter id="lord_2_6" name="{=!}Bibi Halima" />
+	<NPCCharacter id="lord_2_7" name="{=!}Timur Shah" />
+	<NPCCharacter id="lord_2_7_1" name="{=!}Zaman Shah" />
+	<NPCCharacter id="lord_2_8" name="{=!}Mahmud Khan" />
+	<NPCCharacter id="lord_2_9" name="{=!}Dost Muhammad" />
+	<NPCCharacter id="lord_2_10" name="{=!}Shaista" />
+	<NPCCharacter id="lord_2_11" name="{=!}Gul Bibi" />
+	<NPCCharacter id="lord_2_111" name="{=!}Ashraf Khan" />
+	<NPCCharacter id="lord_2_12" name="{=!}Palwasha" />
+	<NPCCharacter id="lord_2_121" name="{=!}Azad Khan" />
+	<NPCCharacter id="lord_2_13" name="{=!}Wazir Khan" />
+	<NPCCharacter id="lord_2_13_1" name="{=!}Spozhmay" />
+	<NPCCharacter id="lord_2_13_2" name="{=!}Bakhtawara" />
+	<NPCCharacter id="lord_2_13_3" name="{=!}Roqia" />
+	<NPCCharacter id="lord_2_13_4" name="{=!}Nangialai" />
+	<NPCCharacter id="lord_2_14" name="{=!}Nasrullah" />
+	<NPCCharacter id="lord_2_14_1" name="{=!}Bibi Zarghoona" />
+	<NPCCharacter id="lord_2_14_2" name="{=!}Zarghuna" />
+	<NPCCharacter id="lord_2_14_3" name="{=!}Nazo" />
+	<NPCCharacter id="lord_2_15" name="{=!}Abdur Rahman" />
+	<NPCCharacter id="lord_2_15_1" name="{=!}Malalai" />
+	<NPCCharacter id="lord_2_15_2" name="{=!}Bibi Halima" />
+	<NPCCharacter id="lord_2_15_3" name="{=!}Shaista" />
+	<NPCCharacter id="lord_2_15_4" name="{=!}Habibullah" />
+	<NPCCharacter id="lord_2_16" name="{=!}Ali Khan Alakozai" />
+	<NPCCharacter id="lord_2_16_1" name="{=!}Gul Bibi" />
+	<NPCCharacter id="lord_2_17" name="{=!}Shahpasand Khan" />
+	<NPCCharacter id="lord_2_17_1" name="{=!}Palwasha" />
+	<NPCCharacter id="lord_2_18" name="{=!}Mir Mahmud Hotak" />
+	<NPCCharacter id="lord_2_18_1" name="{=!}Spozhmay" />
+	<NPCCharacter id="lord_2_19" name="{=!}Khushal Khan" />
+	<NPCCharacter id="lord_2_19_1" name="{=!}Bakhtawara" />
+	<NPCCharacter id="lord_2_20" name="{=!}Mir Ali Khan" />
+	<NPCCharacter id="lord_2_20_1" name="{=!}Roqia" />
+	<NPCCharacter id="lord_S8_u" name="{=!}Khushal" />
+	<NPCCharacter id="lord_2_21" name="{=!}Afzal Khan" />
+	<NPCCharacter id="lord_2_21_1" name="{=!}Nangialai" />
+	<NPCCharacter id="lord_2_22" name="{=!}Sher Ali" />
+	<NPCCharacter id="lord_2_22_1" name="{=!}Bibi Zarghoona" />
+	<NPCCharacter id="lord_2_23" name="{=!}Fateh Khan" />
+	<NPCCharacter id="lord_2_23_1" name="{=!}Zarghuna" />
+	<NPCCharacter id="lord_2_24" name="{=!}Kamran Khan" />
+	<NPCCharacter id="lord_2_24_1" name="{=!}Nazo" />
+	<NPCCharacter id="lord_S9_l" name="{=!}Nur Muhammad Ishakzai" />
+	<NPCCharacter id="lord_S9_m" name="{=!}Malalai" />
+	<NPCCharacter id="lord_S9_c" name="{=!}Akbar Khan" />
+	<NPCCharacter id="lord_S9_u" name="{=!}Jamal Khan" />
+	<NPCCharacter id="lord_3_1" name="{=!}Krishnaraja Wodeyar" text="{=!}The ruling Maharaja of Mysore and heir to an ancient dynasty tracing its lineage to the medieval Yadava kings, Krishnaraja Wodeyar represents the sacred legitimacy of the Gaddi of Srirangapatna. A man of gentle disposition and genuine scholarly learning, his reign has been increasingly shaped by the military ambitions of his powerful Dalvai commanders. Under Krishnaraja, Mysore has expanded its revenue base, reformed its armies, and asserted independence from both the Mughal Deccan Sultanates and the Maratha Confederacy. He rules from the throne; his commanders have made that throne something others fear." />
+	<NPCCharacter id="lord_3_2" name="{=!}Devaja Ammani" />
+	<NPCCharacter id="lord_3_3" name="{=!}Tipu Sultan" text="{=!}Son of Hyder Ali and already acclaimed as a commander of rare brilliance, Tipu Sultan has mastered both traditional Nayaka cavalry tactics and modern musketry with a speed that astonishes veterans twice his age. His particular genius lies in rocket warfare: he has championed iron-cased rockets deployed in massed batteries as a weapon to break enemy formations before cavalry closes. Deeply religious and fiercely independent, Tipu understands what few other lords yet grasp: that the European trading companies arriving on Indias coasts are not merely merchants, but the vanguard of something far more dangerous. He has made it his lifes work to stop them." />
+	<NPCCharacter id="lord_3_3_1" name="{=!}Krishnaraja" />
+	<NPCCharacter id="lord_3_4" name="{=!}Lakshmi Ammani" />
+	<NPCCharacter id="lord_3_5" name="{=!}Hyder Ali" text="{=!}A soldier who rose from an ordinary trooper to Dalvai of Mysore by sheer talent, Hyder Ali cannot read or write, yet his grasp of logistics, terrain, and human nature is extraordinary. He rebuilt Mysores infantry on European lines, hired French officers to train his gunners, and developed supply chains that allow his armies to campaign in terrain that would starve any other force. His strategic vision is decades ahead of his contemporaries: he understands that the coming wars will be won by economic organisation and disciplined musketry, not ancestral cavalry charges. Utterly self-made, he is the true architect of Mysores power." />
+	<NPCCharacter id="lord_3_51" name="{=!}Chamaraja" />
+	<NPCCharacter id="lord_3_6" name="{=!}Cheluvaji" />
+	<NPCCharacter id="lord_3_7" name="{=!}Narasimha" />
+	<NPCCharacter id="lord_3_8" name="{=!}Kanthirava" />
+	<NPCCharacter id="lord_3_9" name="{=!}Nanjaraja" />
+	<NPCCharacter id="lord_3_10" name="{=!}Alamelamma" />
+	<NPCCharacter id="lord_3_11" name="{=!}Krishnamma" />
+	<NPCCharacter id="lord_3_12" name="{=!}Linga Ammani" />
+	<NPCCharacter id="lord_3_13" name="{=!}Devaraja" />
+	<NPCCharacter id="lord_3_13_1" name="{=!}Gangamma" />
+	<NPCCharacter id="lord_3_13_2" name="{=!}Parvathi" />
+	<NPCCharacter id="lord_3_14" name="{=!}Madakari" />
+	<NPCCharacter id="lord_3_14_1" name="{=!}Nagalambika" />
+	<NPCCharacter id="lord_3_15" name="{=!}Kempe Gowda" />
+	<NPCCharacter id="lord_3_15_1" name="{=!}Kamalamma" />
+	<NPCCharacter id="lord_3_15_2" name="{=!}Chandramma" />
+	<NPCCharacter id="lord_3_16" name="{=!}Kanthirava Narasaraja" />
+	<NPCCharacter id="lord_3_16_1" name="{=!}Kempa Nanjammani" />
+	<NPCCharacter id="lord_3_17" name="{=!}Basappaji Nayaka" />
+	<NPCCharacter id="lord_3_17_1" name="{=!}Devaja Ammani" />
+	<NPCCharacter id="lord_3_17_2" name="{=!}Lakshmi Ammani" />
+	<NPCCharacter id="lord_3_18" name="{=!}Mana Vikrama" />
+	<NPCCharacter id="lord_3_18_1" name="{=!}Cheluvaji" />
+	<NPCCharacter id="lord_3_18_2" name="{=!}Alamelamma" />
+	<NPCCharacter id="lord_3_18_3" name="{=!}Krishnamma" />
+	<NPCCharacter id="lord_3_18_4" name="{=!}Basappaji" />
+	<NPCCharacter id="lord_3_19" name="{=!}Dodda Vira Rajendra" />
+	<NPCCharacter id="lord_3_19_1" name="{=!}Linga Ammani" />
+	<NPCCharacter id="lord_3_19_2" name="{=!}Gangamma" />
+	<NPCCharacter id="lord_3_19_3" name="{=!}Parvathi" />
+	<NPCCharacter id="lord_3_20" name="{=!}Immadi" />
+	<NPCCharacter id="lord_3_20_1" name="{=!}Nagalambika" />
+	<NPCCharacter id="lord_3_20_2" name="{=!}Kamalamma" />
+	<NPCCharacter id="lord_3_21" name="{=!}Chikka Deva" />
+	<NPCCharacter id="lord_3_21_1" name="{=!}Chandramma" />
+	<NPCCharacter id="lord_3_22" name="{=!}Hayat Quli Khan" />
+	<NPCCharacter id="lord_3_22_1" name="{=!}Kempa Nanjammani" />
+	<NPCCharacter id="lord_3_22_2" name="{=!}Devaja Ammani" />
+	<NPCCharacter id="lord_3_22_3" name="{=!}Lakshmi Ammani" />
+	<NPCCharacter id="lord_3_22_4" name="{=!}Cheluvaji" />
+	<NPCCharacter id="lord_3_23" name="{=!}Dodda Raja" />
+	<NPCCharacter id="lord_3_23_1" name="{=!}Alamelamma" />
+	<NPCCharacter id="lord_A9_l" name="{=!}Kombi Achan" />
+	<NPCCharacter id="lord_A9_s" name="{=!}Krishnamma" />
+	<NPCCharacter id="lord_A9_c" name="{=!}Linga Ammani" />
+	<NPCCharacter id="lord_A9_u" name="{=!}Timmaraja" />
+	<NPCCharacter id="lord_4_1" name="{=!}Sawai Jai Singh II" text="{=!}The Maharaja of Jaipur and paramount leader of the Rajputana Federation, Sawai Jai Singh is a man who contains multitudes. As a warrior, he commanded Mughal cavalry with distinction across the Deccan campaigns. As a scholar, he constructed five great astronomical observatories, the Jantar Mantars, and corresponded with European scientists as an intellectual equal. As a politician, he has navigated the collapse of Mughal authority with greater skill than any of his peers, using marriages, alliances, and patient negotiation where others reached for the sword. He knows the age of pure martial tradition is ending, and he is positioning Rajputana for the world that comes next." />
+	<NPCCharacter id="lord_4_2" name="{=!}Padmini" />
+	<NPCCharacter id="lord_4_3" name="{=!}Ajit Singh Rathore" />
+	<NPCCharacter id="lord_4_3_1" name="{=!}Hadi Rani" />
+	<NPCCharacter id="lord_4_4" name="{=!}Ratan Kanwar" />
+	<NPCCharacter id="lord_4_5" name="{=!}Jai Singh" />
+	<NPCCharacter id="lord_4_6" name="{=!}Hadi Rani" />
+	<NPCCharacter id="lord_4_6_1" name="{=!}Ajab Kunwar" />
+	<NPCCharacter id="lord_4_7" name="{=!}Ajit Singh" />
+	<NPCCharacter id="lord_4_8" name="{=!}Sangram Singh" />
+	<NPCCharacter id="lord_4_9" name="{=!}Bakht Singh" />
+	<NPCCharacter id="lord_4_10" name="{=!}Phool Kanwar" />
+	<NPCCharacter id="lord_4_11" name="{=!}Kishori" />
+	<NPCCharacter id="lord_4_12" name="{=!}Indira Kanwar" />
+	<NPCCharacter id="lord_4_121" name="{=!}Amar Singh" />
+	<NPCCharacter id="lord_4_13" name="{=!}Udai Singh" />
+	<NPCCharacter id="lord_4_14" name="{=!}Prithviraj" />
+	<NPCCharacter id="lord_4_141" name="{=!}Zorawar Singh" />
+	<NPCCharacter id="lord_4_15" name="{=!}Bhim Singh" />
+	<NPCCharacter id="lord_4_16" name="{=!}Budh Singh Hada" />
+	<NPCCharacter id="lord_4_16_1" name="{=!}Mriganaini" />
+	<NPCCharacter id="lord_4_17" name="{=!}Chandrawati" />
+	<NPCCharacter id="lord_4_18" name="{=!}Gaj Singh" />
+	<NPCCharacter id="lord_4_181" name="{=!}Durgadas" />
+	<NPCCharacter id="lord_4_19" name="{=!}Rup Kanwar" />
+	<NPCCharacter id="lord_4_20" name="{=!}Man Singh" />
+	<NPCCharacter id="lord_4_20_1" name="{=!}Kamal Kunwar" />
+	<NPCCharacter id="lord_4_21" name="{=!}Swarup Singh Bhati" />
+	<NPCCharacter id="lord_4_22" name="{=!}Anand Singh Shekhawat" />
+	<NPCCharacter id="lord_4_22_1" name="{=!}Anara Devi" />
+	<NPCCharacter id="lord_4_23" name="{=!}Prithviraj Chauhan" />
+	<NPCCharacter id="lord_4_23_1" name="{=!}Gulab Kanwar" />
+	<NPCCharacter id="lord_4_23_2" name="{=!}Chand Kunwar" />
+	<NPCCharacter id="lord_4_23_3" name="{=!}Madho Singh" />
+	<NPCCharacter id="lord_4_24" name="{=!}Ratan Singh Jhala" />
+	<NPCCharacter id="lord_4_24_1" name="{=!}Jaswant Kunwar" />
+	<NPCCharacter id="lord_4_24_2" name="{=!}Padmini" />
+	<NPCCharacter id="lord_4_24_3" name="{=!}Hadi Rani" />
+	<NPCCharacter id="lord_4_24_4" name="{=!}Ratan Kanwar" />
+	<NPCCharacter id="lord_4_25" name="{=!}Budh Singh" />
+	<NPCCharacter id="lord_4_25_1" name="{=!}Ajab Kunwar" />
+	<NPCCharacter id="lord_4_26" name="{=!}Raimal" />
+	<NPCCharacter id="lord_4_27" name="{=!}Ram Singh Tanwar" />
+	<NPCCharacter id="lord_4_27_1" name="{=!}Phool Kanwar" />
+	<NPCCharacter id="lord_V9_u" name="{=!}Kumbha" />
+	<NPCCharacter id="lord_4_28" name="{=!}Jai Singh Gaur" />
+	<NPCCharacter id="lord_4_28_1" name="{=!}Kishori" />
+	<NPCCharacter id="lord_4_28_2" name="{=!}Indira Kanwar" />
+	<NPCCharacter id="lord_V11_l" name="{=!}Vikramaditya Baghel" />
+	<NPCCharacter id="lord_V11_u" name="{=!}Ratan Singh" />
+	<NPCCharacter id="lord_V11_c1" name="{=!}Mriganaini" />
+	<NPCCharacter id="lord_V11_c2" name="{=!}Jagat Singh" />
+	<NPCCharacter id="lord_5_1" name="{=!}Bajirao I" text="{=!}The Peshwa of the Maratha Confederacy and its greatest battlefield commander, Bajirao I has never lost a battle. From his early twenties he has commanded the Maratha horse with a genius that is simultaneously terrifying and elegant, moving armies the way a chess master moves pieces, always three turns ahead. His strategy of Hindu Pad Padshahi, a Hindu sovereign empire of Hindostan, is both military objective and political creed. Of magnetic personal courage and extraordinary physical endurance, Bajirao represents a new kind of Indian leadership: not the inherited kingship of the Rajputs, but authority earned through unbroken victory and the loyalty of men who would follow him into the jaws of death." />
+	<NPCCharacter id="lord_5_7" name="{=!}Shivaji" />
+	<NPCCharacter id="lord_5_1_1" name="{=!}Jijabai" />
+	<NPCCharacter id="lord_5_3" name="{=!}Shahu I" />
+	<NPCCharacter id="lord_5_4" name="{=!}Kashibai" />
+	<NPCCharacter id="lord_5_3_1" name="{=!}Tarabai" />
+	<NPCCharacter id="lord_5_3_2" name="{=!}Radhabai" />
+	<NPCCharacter id="lord_5_5" name="{=!}Ranoji Scindia" />
+	<NPCCharacter id="lord_5_5_1" name="{=!}Gopikabai" />
+	<NPCCharacter id="lord_5_6" name="{=!}Kashibai" />
+	<NPCCharacter id="lord_5_8" name="{=!}Sambhaji" />
+	<NPCCharacter id="lord_5_9" name="{=!}Rajaram" />
+	<NPCCharacter id="lord_5_91" name="{=!}Balaji" />
+	<NPCCharacter id="lord_5_10" name="{=!}Anandibai" />
+	<NPCCharacter id="lord_5_11" name="{=!}Gangabai" />
+	<NPCCharacter id="lord_5_12" name="{=!}Bhiubai" />
+	<NPCCharacter id="lord_5_13" name="{=!}Chimaji" />
+	<NPCCharacter id="lord_5_131" name="{=!}Sadashiv" />
+	<NPCCharacter id="lord_5_13_1" name="{=!}Yesubai" />
+	<NPCCharacter id="lord_5_15" name="{=!}Parashuram Patwardhan" />
+	<NPCCharacter id="lord_5_15_1" name="{=!}Savitribai" />
+	<NPCCharacter id="lord_5_15_2" name="{=!}Malhar" />
+	<NPCCharacter id="lord_5_15_3" name="{=!}Parvatibai" />
+	<NPCCharacter id="lord_5_14" name="{=!}Malhar Rao Holkar" />
+	<NPCCharacter id="lord_5_14_1" name="{=!}Laxmibai" />
+	<NPCCharacter id="lord_5_16" name="{=!}Pilaji Gaekwad" />
+	<NPCCharacter id="lord_5_16_1" name="{=!}Ahilyabai" />
+	<NPCCharacter id="lord_5_16_2" name="{=!}Umabai" />
+	<NPCCharacter id="lord_5_17" name="{=!}Raghuji Bhonsle" />
+	<NPCCharacter id="lord_5_17_1" name="{=!}Mathura" />
+	<NPCCharacter id="lord_5_18" name="{=!}Ranoji" />
+	<NPCCharacter id="lord_5_18_1" name="{=!}Jijabai" />
+	<NPCCharacter id="lord_5_19" name="{=!}Pilaji" />
+	<NPCCharacter id="lord_5_20" name="{=!}Raghuji" />
+	<NPCCharacter id="lord_5_21" name="{=!}Trimbak" />
+	<NPCCharacter id="lord_5_21_1" name="{=!}Kashibai" />
+	<NPCCharacter id="lord_5_21_2" name="{=!}Tarabai" />
+	<NPCCharacter id="lord_5_22" name="{=!}Yashwant" />
+	<NPCCharacter id="lord_B8_l" name="{=!}Laxmibai Angre" />
+	<NPCCharacter id="lord_B8_s" name="{=!}Mahadji" />
+	<NPCCharacter id="lord_B8_c" name="{=!}Vishwanath" />
+	<NPCCharacter id="lord_6_1" name="{=!}Charat Singh Sukerchakia" text="{=!}Sirdar of the Sukerchakia Misl and one of the most formidable commanders of the Sikh Dal Khalsa, Charat Singh built his warband from a handful of horsemen into a force that dominates the Rechna Doab between the Chenab and Ravi rivers. He combines the Khalsa codes egalitarianism with a chieftains ruthless pragmatism, surviving assassination attempts, imperial campaigns, and inter-Misl feuds to emerge as the dominant figure in the confederation. Students of history note that it is his bloodline, through his grandson Ranjit Singh, that will one day unite all the Misls into a single Sikh empire. Charat Singh himself is already, unknowingly, laying that foundation." />
+	<NPCCharacter id="lord_6_2" name="{=!}Sada Kaur" />
+	<NPCCharacter id="lord_6_3" name="{=!}Ranjit Singh" />
+	<NPCCharacter id="lord_6_4" name="{=!}Darshan Kaur" />
+	<NPCCharacter id="lord_6_5" name="{=!}Jassa Singh Ramgarhia" />
+	<NPCCharacter id="lord_6_51" name="{=!}Jassa Singh" />
+	<NPCCharacter id="lord_6_6" name="{=!}Hari Singh" />
+	<NPCCharacter id="lord_6_7" name="{=!}Maha Singh" />
+	<NPCCharacter id="lord_6_8" name="{=!}Baghel Singh" />
+	<NPCCharacter id="lord_6_81" name="{=!}Gulab Singh" />
+	<NPCCharacter id="lord_6_9" name="{=!}Hira Singh" />
+	<NPCCharacter id="lord_6_10" name="{=!}Mehtab Kaur" />
+	<NPCCharacter id="lord_6_101" name="{=!}Raj Kaur" />
+	<NPCCharacter id="lord_6_11" name="{=!}Daya Kaur" />
+	<NPCCharacter id="lord_6_12" name="{=!}Ram Kaur" />
+	<NPCCharacter id="lord_6_13" name="{=!}Desa Singh" />
+	<NPCCharacter id="lord_6_15" name="{=!}Kapur Singh" />
+	<NPCCharacter id="lord_6_15_1" name="{=!}Sahib Kaur" />
+	<NPCCharacter id="lord_6_15_2" name="{=!}Bibi Amro" />
+	<NPCCharacter id="lord_6_16" name="{=!}Jai Singh Singhpuria" />
+	<NPCCharacter id="lord_6_16_1" name="{=!}Ganga Kaur" />
+	<NPCCharacter id="lord_6_16_2" name="{=!}Lachmi Kaur" />
+	<NPCCharacter id="lord_6_17" name="{=!}Gulab Singh Dallewalia" />
+	<NPCCharacter id="lord_6_17_1" name="{=!}Khem Kaur" />
+	<NPCCharacter id="lord_6_17_2" name="{=!}Gurdit Kaur" />
+	<NPCCharacter id="lord_6_18" name="{=!}Hira Singh Nakai" />
+	<NPCCharacter id="lord_6_18_1" name="{=!}Hardevi" />
+	<NPCCharacter id="lord_6_18_2" name="{=!}Sada Kaur" />
+	<NPCCharacter id="lord_6_19" name="{=!}Jai Singh Kanhaiya" />
+	<NPCCharacter id="lord_6_19_1" name="{=!}Mehtab Kaur" />
+	<NPCCharacter id="lord_6_19_2" name="{=!}Raj Kaur" />
+	<NPCCharacter id="lord_6_20" name="{=!}Ala Singh" />
+	<NPCCharacter id="lord_6_20_1" name="{=!}Daya Kaur" />
+	<NPCCharacter id="lord_K8_u" name="{=!}Tara Singh" />
+	<NPCCharacter id="lord_6_21" name="{=!}Fateh Singh" />
+	<NPCCharacter id="lord_6_21_1" name="{=!}Ram Kaur" />
+	<NPCCharacter id="lord_6_22" name="{=!}Bota Singh" />
+	<NPCCharacter id="lord_6_22_1" name="{=!}Sahib Kaur" />
+	<NPCCharacter id="lord_6_23" name="{=!}Nand Singh" />
+	<NPCCharacter id="lord_6_24" name="{=!}Ram Singh" />
+	<NPCCharacter id="lord_K9_l" name="{=!}Karora Singh" />
+	<NPCCharacter id="lord_K9_s" name="{=!}Bibi Amro" />
+	<NPCCharacter id="lord_K9_c1" name="{=!}Sardar Singh" />
+	<NPCCharacter id="lord_K9_c2" name="{=!}Ganga Kaur" />
+	<NPCCharacter id="lord_4_26_1" name="{=!}Chandrawati" />
+	<!-- wanderer companion epithet and backstory overrides -->
+	<!-- Mughal / empire culture companions -->
+	<NPCCharacter id="spc_wanderer_empire_0"  name="{=!}{FIRSTNAME} Danishmand" text="{=!}Educated at the Mughal court as a munshi, {FIRSTNAME} left imperial service after witnessing one too many purges of loyal secretaries. {?HERO.GENDER}Her{?}His{\?} command of written Persian, coded correspondence, and court protocol makes {?HERO.GENDER}her{?}him{\?} invaluable to any lord seeking to navigate the politics of Hindostan." />
+	<NPCCharacter id="spc_wanderer_empire_1"  name="{=!}{FIRSTNAME} Pehlawar" text="{=!}A champion of the kushti wrestling pit who has competed before three Nawabs, {FIRSTNAME} travels the circuits of Hindostan taking on all challengers. {?HERO.GENDER}Her{?}His{\?} prodigious strength and iron constitution translate directly from the pit to the battlefield." />
+	<NPCCharacter id="spc_wanderer_empire_2"  name="{=!}{FIRSTNAME} Khamosh" text="{=!}{FIRSTNAME} says almost nothing, observes everything, and has survived three separate assassination attempts that killed everyone around {?HERO.GENDER}her{?}him{\?}. {?HERO.GENDER}She{?}He{\?} does not explain how." />
+	<NPCCharacter id="spc_wanderer_empire_3"  name="{=!}{FIRSTNAME} Sher Dil" text="{=!}A former Sowar cavalry officer who refused a direct order to massacre a village, {FIRSTNAME} left imperial service with nothing but a horse and a clear conscience. {?HERO.GENDER}She{?}He{\?} has since made a living fighting for those who cannot fight for themselves." />
+	<NPCCharacter id="spc_wanderer_empire_4"  name="{=!}{FIRSTNAME} Gharat Gar" text="{=!}{FIRSTNAME} has burned three towns and will explain at length why each one deserved it, if given the chance. There are those who disagree, which is why {?HERO.GENDER}she{?}he{\?} is no longer welcome in those provinces." />
+	<NPCCharacter id="spc_wanderer_empire_5"  name="{=!}{FIRSTNAME} Qassab" text="{=!}Named for a trade {?HERO.GENDER}she{?}he{\?} once practised, {FIRSTNAME} found that the required skills, calm efficiency and a steady hand under pressure, translate remarkably well to war. {?HERO.GENDER}She{?}He{\?} seldom speaks of the transition." />
+	<NPCCharacter id="spc_wanderer_empire_6"  name="{=!}{FIRSTNAME} Pahari" text="{=!}Born in the Himalayan foothills, {FIRSTNAME} came down to the plains seeking fortune and found mostly conflict. {?HERO.GENDER}Her{?}His{\?} knowledge of mountain terrain and high passes has saved many employers from disasters they never saw coming." />
+	<NPCCharacter id="spc_wanderer_empire_7"  name="{=!}{FIRSTNAME} Qalandar" text="{=!}A wandering Sufi dervish who answers to no worldly authority and follows no predictable path, {FIRSTNAME} fights when the spirit moves {?HERO.GENDER}her{?}him{\?}. The spirit, it turns out, is moved quite frequently." />
+	<NPCCharacter id="spc_wanderer_empire_8"  name="{=!}{FIRSTNAME} Mardud" text="{=!}Expelled from {?HERO.GENDER}her{?}his{\?} clan for reasons {?HERO.GENDER}she{?}he{\?} calls political and others call criminal, {FIRSTNAME} has made peace with the outsider life. The work is steady and the questions are few." />
+	<NPCCharacter id="spc_wanderer_empire_9"  name="{=!}{FIRSTNAME} Siyah" text="{=!}Known across the Deccan bazaars for {?HERO.GENDER}her{?}his{\?} black armor and midnight raids, {FIRSTNAME} was a shadow operative until {?HERO.GENDER}her{?}his{\?} patron decided {?HERO.GENDER}she{?}he{\?} had grown too capable to retain and too dangerous to dismiss. The situation resolved itself in {FIRSTNAME}s favour." />
+	<NPCCharacter id="spc_wanderer_empire_10" name="{=!}{FIRSTNAME} Hakim" text="{=!}A physician trained in the Yunani tradition, {FIRSTNAME} drifts between campaigns treating wounds and asking uncomfortable questions about how they were inflicted. {?HERO.GENDER}She{?}He{\?} carries a sword for cases where the conversation goes poorly." />
+	<NPCCharacter id="spc_wanderer_empire_11" name="{=!}{FIRSTNAME} Beghar" text="{=!}{FIRSTNAME} once owned a respectable house in Agra, three good horses, and a library. Now {?HERO.GENDER}she{?}he{\?} owns the horses and has traded the rest for freedom, which {?HERO.GENDER}she{?}he{\?} considers the better bargain." />
+	<!-- Afghan / Durrani culture companions -->
+	<NPCCharacter id="spc_wanderer_sturgia_0" name="{=!}{FIRSTNAME} Darya Dil" text="{=!}A Pashtun chieftain who lost {?HERO.GENDER}her{?}his{\?} clan in an inter-tribal feud, {FIRSTNAME} now leads a freelance warband across the frontier. The reckless courage that cost {?HERO.GENDER}her{?}him{\?} the clan has paradoxically made {?HERO.GENDER}her{?}him{\?} legendary among soldiers of fortune." />
+	<NPCCharacter id="spc_wanderer_sturgia_1" name="{=!}{FIRSTNAME} Sarkob" text="{=!}Undefeated champion of three consecutive Eid wrestling festivals in Kandahar, {FIRSTNAME} found the transition from the pit to the battlefield straightforward. The principles are identical: close the distance, seize control, end it quickly." />
+	<NPCCharacter id="spc_wanderer_sturgia_2" name="{=!}{FIRSTNAME} Bakhtawar" text="{=!}By every rational accounting, {FIRSTNAME} should have died at least nine times. {?HERO.GENDER}She{?}He{\?} maintains a tally and attributes the outcome to divine favour. Those who have fought beside {?HERO.GENDER}her{?}him{\?} have stopped arguing with the conclusion." />
+	<NPCCharacter id="spc_wanderer_sturgia_3" name="{=!}{FIRSTNAME} Khun Rizan" text="{=!}Enforcer for three successive Khans, none of whom survived their tenure, {FIRSTNAME} is careful about new employers but has never been out of work. Word travels fast in the Afghan passes." />
+	<NPCCharacter id="spc_wanderer_sturgia_4" name="{=!}{FIRSTNAME} Daryai" text="{=!}A river-people fighter from the great waterways of the northwest frontier, {FIRSTNAME} is as capable on fast-moving water as on land. {?HERO.GENDER}Her{?}His{\?} knowledge of crossings, fords, and seasonal floods has tipped more than one battle." />
+	<NPCCharacter id="spc_wanderer_sturgia_5" name="{=!}{FIRSTNAME} Ahangar" text="{=!}A master armorer who took up weapons after the destruction of {?HERO.GENDER}her{?}his{\?} forge, {FIRSTNAME} knows the precise weak points in every type of armor by professional experience. It shows in combat." />
+	<NPCCharacter id="spc_wanderer_sturgia_6" name="{=!}{FIRSTNAME} Barfani" text="{=!}Raised in the high passes above Kabul where winter kills the unprepared, {FIRSTNAME} fights best in the conditions that reduce other soldiers to uselessness. The cold is an old companion." />
+	<NPCCharacter id="spc_wanderer_sturgia_7" name="{=!}{FIRSTNAME} Malun" text="{=!}Three warlords have sworn blood vengeance against {FIRSTNAME}. None have collected yet. {?HERO.GENDER}She{?}He{\?} has stopped counting and started wearing the name as a badge." />
+	<NPCCharacter id="spc_wanderer_sturgia_8" name="{=!}{FIRSTNAME} Qilahdar" text="{=!}A former fort commander who surrendered a mountain pass to the highest bidder and then discovered the bidder could not pay, {FIRSTNAME} now resolves to accept payment in advance and fight for coin rather than principle." />
+	<NPCCharacter id="spc_wanderer_sturgia_9" name="{=!}{FIRSTNAME} Khanjar" text="{=!}Short, fast, and lethal at arm reach, {FIRSTNAME} fights with paired long knives and a preference for spaces too confined for swords. Employers have learned to stand well back during the opening moments." />
+	<!-- Mysore / aserai culture companions -->
+	<NPCCharacter id="spc_wanderer_aserai_0"  name="{=!}{FIRSTNAME} Panditji" text="{=!}A Brahmin scholar who studied in the maths of Srirangapatna before the death of {?HERO.GENDER}her{?}his{\?} patron left {?HERO.GENDER}her{?}him{\?} without support, {FIRSTNAME} turned to arms reluctantly and proved disturbingly capable at them." />
+	<NPCCharacter id="spc_wanderer_aserai_1"  name="{=!}{FIRSTNAME} Suvarna" text="{=!}Known for the gold jewelry {?HERO.GENDER}she{?}he{\?} wears into battle, stripped from enemies {?HERO.GENDER}she{?}he{\?} insists rather than purchased, {FIRSTNAME} treats war as a commercial enterprise and keeps meticulous accounts of the returns." />
+	<NPCCharacter id="spc_wanderer_aserai_2"  name="{=!}{FIRSTNAME} Rajali" text="{=!}A former Nayaka cavalry officer dismissed for winning a battle through methods the generals called irregular, {FIRSTNAME} has since found that minor lords and merchants value results over military orthodoxy." />
+	<NPCCharacter id="spc_wanderer_aserai_3"  name="{=!}{FIRSTNAME} Khangila" text="{=!}{FIRSTNAME} is honest about not being sure what {?HERO.GENDER}she{?}he{\?} is. The sword came naturally; everything else has been improvised. {?HERO.GENDER}She{?}He{\?} is at peace with the uncertainty." />
+	<NPCCharacter id="spc_wanderer_aserai_4"  name="{=!}{FIRSTNAME} Kumara" text="{=!}Young, eager, and uncertain whether the stories of {?HERO.GENDER}her{?}his{\?} own bravery are accurate or simply what people decided to believe, {FIRSTNAME} keeps fighting partly to find out." />
+	<NPCCharacter id="spc_wanderer_aserai_5"  name="{=!}{FIRSTNAME} Tarakasi" text="{=!}Named for the silver filigree craft of Cuttack that {?HERO.GENDER}her{?}his{\?} mother practised, {FIRSTNAME} has the patience and precision of a master artisan applied to entirely different materials." />
+	<NPCCharacter id="spc_wanderer_aserai_6"  name="{=!}{FIRSTNAME} Aranyaka" text="{=!}A forest-dwelling ascetic who left the jungle when logging companies arrived with Mughal permits and armed escorts, {FIRSTNAME} discovered that the skills of the hermit, stillness, acute observation, subsistence survival, are the skills of the scout." />
+	<NPCCharacter id="spc_wanderer_aserai_7"  name="{=!}{FIRSTNAME} Parivrajaka" text="{=!}A perpetually wandering ascetic who has resolved no philosophical questions in twenty years of seeking, {FIRSTNAME} has stopped worrying about it and fights for whoever makes the most interesting proposition." />
+	<NPCCharacter id="spc_wanderer_aserai_8"  name="{=!}{FIRSTNAME} Vaishya" text="{=!}A merchant robbed of everything by a corrupt toll-collector under Hyderabadi license, {FIRSTNAME} resolved the matter through channels that have since made official commerce unavailable. The recovered sum exceeded the original loss." />
+	<NPCCharacter id="spc_wanderer_aserai_9"  name="{=!}{FIRSTNAME} Veerabhadra" text="{=!}Named for the fierce form of Shiva the Destroyer, {FIRSTNAME} takes the name literally. {?HERO.GENDER}Her{?}His{\?} reputation in the Deccan is for absolute commitment to the objective regardless of what stands in the way." />
+	<NPCCharacter id="spc_wanderer_aserai_10" name="{=!}{FIRSTNAME} Shilpi" text="{=!}A master craftsperson who built siege engines for three kingdoms before concluding that the best way to learn how things break is to break them personally, {FIRSTNAME} is now available for demolition work of all varieties." />
+	<!-- Rajput / vlandia culture companions -->
+	<NPCCharacter id="spc_wanderer_vlandia_0"  name="{=!}{FIRSTNAME} Kadva" text="{=!}The name means bitter, and {FIRSTNAME} has earned it through long experience with unreliable employers and broken promises. {?HERO.GENDER}She{?}He{\?} now demands half in advance and has not been surprised since." />
+	<NPCCharacter id="spc_wanderer_vlandia_1"  name="{=!}{FIRSTNAME} Badnam" text="{=!}Notoriously expelled from the Sisodia household troops for a reason the official record calls a misunderstanding, {FIRSTNAME} has built a second reputation in exile that has eclipsed the first." />
+	<NPCCharacter id="spc_wanderer_vlandia_2"  name="{=!}{FIRSTNAME} Veera" text="{=!}A straightforward warrior of remarkable physical capability who does not overthink objectives, {FIRSTNAME} has found this quality rarer and more valued than it sounds in the great courts of Rajputana." />
+	<NPCCharacter id="spc_wanderer_vlandia_3"  name="{=!}{FIRSTNAME} Puratan" text="{=!}A keeper of ancient fighting traditions predating the Mughal era, {FIRSTNAME} practises techniques from manuscripts most warriors consider folklore. The opponents who underestimated the old ways did not survive the lesson." />
+	<NPCCharacter id="spc_wanderer_vlandia_4"  name="{=!}{FIRSTNAME} Makara" text="{=!}Named for the sea-creature on the banner of a Rajput house that no longer exists, {FIRSTNAME} carried the name out of the ruins and has made it mean something new." />
+	<NPCCharacter id="spc_wanderer_vlandia_5"  name="{=!}{FIRSTNAME} Manorath" text="{=!}{FIRSTNAME} pursued one specific goal for fifteen years and achieved it. The achievement proved unsatisfying. {?HERO.GENDER}She{?}He{\?} is now available and without fixed purpose, which makes {?HERO.GENDER}her{?}him{\?} an excellent mercenary." />
+	<NPCCharacter id="spc_wanderer_vlandia_6"  name="{=!}{FIRSTNAME} Pahadiya" text="{=!}A hill-fort defender who held {?HERO.GENDER}her{?}his{\?} position for seven months before being ordered to surrender by the very army {?HERO.GENDER}she{?}he{\?} was defending, {FIRSTNAME} left that service and has not worked for any great noble since." />
+	<NPCCharacter id="spc_wanderer_vlandia_7"  name="{=!}{FIRSTNAME} Shikarni" text="{=!}Hunter by training, fighter by necessity, {FIRSTNAME} approaches battle with the patience of someone who has waited three days motionless for game that may never come, and remained still the entire time." />
+	<NPCCharacter id="spc_wanderer_vlandia_8"  name="{=!}{FIRSTNAME} Lohar" text="{=!}A weaponsmith who grew tired of making swords for people with inferior skills, {FIRSTNAME} decided to demonstrate proper usage. {?HERO.GENDER}She{?}He{\?} maintains {?HERO.GENDER}her{?}his{\?} own equipment to standards that shame most armorers." />
+	<NPCCharacter id="spc_wanderer_vlandia_9"  name="{=!}{FIRSTNAME} Kaalu" text="{=!}The name was a childhood taunt that {FIRSTNAME} reclaimed as {?HERO.GENDER}her{?}his{\?} own. {?HERO.GENDER}She{?}He{\?} is direct about {?HERO.GENDER}her{?}his{\?} origins, direct about {?HERO.GENDER}her{?}his{\?} terms, and direct in combat. Complexity, {?HERO.GENDER}she{?}he{\?} has concluded, is usually a form of dishonesty." />
+	<NPCCharacter id="spc_wanderer_vlandia_10" name="{=!}{FIRSTNAME} Gharela" text="{=!}A former domestic servant who discovered, upon being conscripted into a Rajput household army, that {?HERO.GENDER}she{?}he{\?} was considerably better at war than at household management. The army shared this assessment." />
+	<NPCCharacter id="spc_wanderer_vlandia_11" name="{=!}{FIRSTNAME} Agni Mukha" text="{=!}The name was given by survivors. {FIRSTNAME} set fire to a Maratha supply column three times the size of {?HERO.GENDER}her{?}his{\?} own force and made it away clean. {?HERO.GENDER}She{?}He{\?} considers it an ordinary days work." />
+	<NPCCharacter id="spc_wanderer_vlandia_12" name="{=!}{FIRSTNAME} Shikar" text="{=!}Hunter-born and accustomed to patience and sudden violence in alternation, {FIRSTNAME} finds the rhythms of mercenary work comfortable. The pay is better than game and the prey at least fights back." />
+	<!-- Maratha / battania culture companions -->
+	<NPCCharacter id="spc_wanderer_battania_0" name="{=!}{FIRSTNAME} Vaidya" text="{=!}An Ayurvedic physician who served Maratha field armies for a decade before deciding that preventing wounds was more interesting than treating them, {FIRSTNAME} now leads rather than follows." />
+	<NPCCharacter id="spc_wanderer_battania_1" name="{=!}{FIRSTNAME} Lal" text="{=!}Red-turbaned and impossible to miss on a battlefield, {FIRSTNAME} treats the visibility as a tactical asset: if enemies are focusing on {?HERO.GENDER}her{?}him{\?}, they are focusing on the wrong target." />
+	<NPCCharacter id="spc_wanderer_battania_2" name="{=!}{FIRSTNAME} Suvarachuda" text="{=!}Named for {?HERO.GENDER}her{?}his{\?} gold-crested helmet, which {?HERO.GENDER}she{?}he{\?} will fight any challenger to keep, {FIRSTNAME} has won that particular argument thirty-seven times and is not interested in losing the thirty-eighth." />
+	<NPCCharacter id="spc_wanderer_battania_3" name="{=!}{FIRSTNAME} Tambdi" text="{=!}The deepest red, the colour of Maratha battle-flags, is how {?HERO.GENDER}her{?}his{\?} clan describes the hue of {FIRSTNAME}s reputation across the Deccan. {?HERO.GENDER}She{?}He{\?} takes it as a compliment." />
+	<NPCCharacter id="spc_wanderer_battania_4" name="{=!}{FIRSTNAME} Ghoda Chor" text="{=!}A former cavalry raider whose epithet arose from a series of incidents considerably more complicated than the name suggests, {FIRSTNAME} is now employed strictly as a legitimate fighting force. The emphasis on strictly is {?HERO.GENDER}her{?}his{\?} own." />
+	<NPCCharacter id="spc_wanderer_battania_5" name="{=!}{FIRSTNAME} Pheratwala" text="{=!}An itinerant trader who abandoned commerce after realising that the profits from walking between settlements went almost entirely to toll-collectors and bandits, {FIRSTNAME} has resolved to be the one doing the collecting." />
+	<NPCCharacter id="spc_wanderer_battania_6" name="{=!}{FIRSTNAME} Kaladant" text="{=!}The name was given young and has stuck. {FIRSTNAME} has made no effort to correct the reputation it implies, finding it useful to have opponents unsettled before the first blow." />
+	<NPCCharacter id="spc_wanderer_battania_7" name="{=!}{FIRSTNAME} Bhramanar" text="{=!}A wanderer by philosophy and practice, {FIRSTNAME} has crossed the Deccan six times in search of something {?HERO.GENDER}she{?}he{\?} cannot name. The search has made {?HERO.GENDER}her{?}him{\?} extraordinarily familiar with every terrain, road, and pass between the Vindhyas and the Cauvery." />
+	<NPCCharacter id="spc_wanderer_battania_8" name="{=!}{FIRSTNAME} Manhoos" text="{=!}Three times {FIRSTNAME} has joined a military campaign that subsequently failed catastrophically. {?HERO.GENDER}She{?}He{\?} is untroubled by the pattern and notes that {?HERO.GENDER}she{?}he{\?} personally survived all three. Potential employers draw their own conclusions." />
+	<NPCCharacter id="spc_wanderer_battania_9" name="{=!}{FIRSTNAME} Gauri Chor" text="{=!}The name attached after an incident involving a temple treasury, a corrupt administrator, and circumstances that {FIRSTNAME} explains as a misunderstanding of jurisdiction. The recovered funds went to the village; this is not disputed." />
+	<!-- Sikh / Khalsa culture companions -->
+	<NPCCharacter id="spc_wanderer_khuzait_0"  name="{=!}{FIRSTNAME} Gyani" text="{=!}A scholar of the Granth Sahib who left the gurdwara after concluding that the enemies of the Khalsa would not be defeated by reading alone, {FIRSTNAME} fights with a ferocity that surprises those who expect a philosopher." />
+	<NPCCharacter id="spc_wanderer_khuzait_1"  name="{=!}{FIRSTNAME} Baaz" text="{=!}Named for the falcon on the Khalsa battle-standard, {FIRSTNAME} fights with the birds qualities: speed, precision, and a willingness to strike something three times {?HERO.GENDER}her{?}his{\?} own size." />
+	<NPCCharacter id="spc_wanderer_khuzait_2"  name="{=!}{FIRSTNAME} Anath" text="{=!}An orphan of Mughal reprisals against Sikh villages, {FIRSTNAME} was raised by the Dal Khalsa warband that found {?HERO.GENDER}her{?}him{\?} in the ruins. {?HERO.GENDER}She{?}He{\?} has been fighting ever since and has no plans to stop." />
+	<NPCCharacter id="spc_wanderer_khuzait_3"  name="{=!}{FIRSTNAME} Lohit Nayan" text="{=!}The red-eyed warrior of the Sikh Misls has a reputation that travels ahead of {?HERO.GENDER}her{?}him{\?} into every engagement. {FIRSTNAME} encourages this: reputation is armor that costs nothing to maintain." />
+	<NPCCharacter id="spc_wanderer_khuzait_4"  name="{=!}{FIRSTNAME} Nikala" text="{=!}{FIRSTNAME} escaped from an imperial jail in Lahore under circumstances {?HERO.GENDER}she{?}he{\?} has never fully explained. The jail was considerably less intact after the escape than before. {?HERO.GENDER}She{?}He{\?} declines further details." />
+	<NPCCharacter id="spc_wanderer_khuzait_5"  name="{=!}{FIRSTNAME} Pagal" text="{=!}The name was intended as an insult. {FIRSTNAME} accepted it as an accurate description of the willingness to fight any odds without calculation. {?HERO.GENDER}Her{?}His{\?} survival record suggests the calculation was being done by someone." />
+	<NPCCharacter id="spc_wanderer_khuzait_6"  name="{=!}{FIRSTNAME} Dhusari Baaz" text="{=!}The grey falcon of the Punjab, {FIRSTNAME} is older than most warriors in {?HERO.GENDER}her{?}his{\?} trade and considerably more dangerous. Experience has not slowed {?HERO.GENDER}her{?}him{\?}; it has made {?HERO.GENDER}her{?}him{\?} more efficient." />
+	<NPCCharacter id="spc_wanderer_khuzait_7"  name="{=!}{FIRSTNAME} Baghin" text="{=!}The tigress earned {?HERO.GENDER}her{?}his{\?} name during a patrol engagement in the Himalayan foothills that the official Mughal report describes as an ambush. The Mughal commanders who survived it use a different word." />
+	<NPCCharacter id="spc_wanderer_khuzait_8"  name="{=!}{FIRSTNAME} Akela" text="{=!}The lone wolf who fought alone for three years after {?HERO.GENDER}her{?}his{\?} warband was destroyed, {FIRSTNAME} has come to accept that working alongside others is occasionally necessary. {?HERO.GENDER}She{?}He{\?} remains precise about the terms." />
+	<NPCCharacter id="spc_wanderer_khuzait_9"  name="{=!}{FIRSTNAME} Tez" text="{=!}Fast, sharp, and impatient with everything that is neither, {FIRSTNAME} ends fights in moments that other warriors would stretch into hours. Employers appreciate the economy; opponents rarely have time to form an opinion." />
+	<NPCCharacter id="spc_wanderer_khuzait_10" name="{=!}{FIRSTNAME} Gudriya" text="{=!}The name is Punjabi for a rag doll, a joke about {FIRSTNAME}s appearance that the jokers no longer repeat. {?HERO.GENDER}She{?}He{\?} took the name as {?HERO.GENDER}her{?}his{\?} own and made it something they remember with more complicated feelings." />
+	<!-- troop tree name overrides -->
+	<NPCCharacter id="imperial_recruit" name="{=!}Mughal Piyadah" />
+	<NPCCharacter id="imperial_infantryman" name="{=!}Mughal Banduqchi" />
+	<NPCCharacter id="imperial_vigla_recruit" name="{=!}Mughal Ghulam" />
+	<NPCCharacter id="imperial_equite" name="{=!}Mughal Sawar" />
+	<NPCCharacter id="imperial_heavy_horseman" name="{=!}Mughal Bhari Sawar" />
+	<NPCCharacter id="imperial_cataphract" name="{=!}Mughal Bargir" />
+	<NPCCharacter id="imperial_elite_cataphract" name="{=!}Mughal Sawari Khas" />
+	<NPCCharacter id="imperial_trained_infantryman" name="{=!}Mughal Talimi Piyadah" />
+	<NPCCharacter id="imperial_veteran_infantryman" name="{=!}Mughal Mujarrib Piyadah" />
+	<NPCCharacter id="imperial_legionary" name="{=!}Mughal Topdaar" />
+	<NPCCharacter id="imperial_archer" name="{=!}Mughal Teer Andaz" />
+	<NPCCharacter id="imperial_trained_archer" name="{=!}Mughal Talimi Teer Andaz" />
+	<NPCCharacter id="imperial_veteran_archer" name="{=!}Mughal Mujarrib Teer Andaz" />
+	<NPCCharacter id="imperial_palatine_guard" name="{=!}Mughal Khas Fauj" />
+	<NPCCharacter id="imperial_menavliaton" name="{=!}Mughal Neza Baaz" />
+	<NPCCharacter id="imperial_elite_menavliaton" name="{=!}Mughal Khas Neza Baaz" />
+	<NPCCharacter id="imperial_crossbowman" name="{=!}Mughal Nali Banduqchi" />
+	<NPCCharacter id="imperial_sergeant_crossbowman" name="{=!}Mughal Nayak Banduqchi" />
+	<NPCCharacter id="imperial_militia_archer" name="{=!}Mughal Fauj Teer Andaz" />
+	<NPCCharacter id="imperial_militia_veteran_archer" name="{=!}Mughal Mujarrib Fauj Teer Andaz" />
+	<NPCCharacter id="imperial_militia_spearman" name="{=!}Mughal Fauj Neza Baaz" />
+	<NPCCharacter id="imperial_militia_veteran_spearman" name="{=!}Mughal Mujarrib Fauj Neza Baaz" />
+	<NPCCharacter id="aserai_recruit" name="{=!}Mysore Sainik" />
+	<NPCCharacter id="aserai_tribesman" name="{=!}Mysore Palegar" />
+	<NPCCharacter id="aserai_footman" name="{=!}Mysore Kaalu Padai" />
+	<NPCCharacter id="aserai_skirmisher" name="{=!}Mysore Vedu Veeran" />
+	<NPCCharacter id="aserai_archer" name="{=!}Mysore Vil Padai" />
+	<NPCCharacter id="aserai_master_archer" name="{=!}Mysore Vil Veeran" />
+	<NPCCharacter id="aserai_infantry" name="{=!}Mysore Padai Veeran" />
+	<NPCCharacter id="aserai_veteran_infantry" name="{=!}Mysore Vallarasu" />
+	<NPCCharacter id="aserai_mameluke_soldier" name="{=!}Mysore Kumki" />
+	<NPCCharacter id="aserai_mameluke_regular" name="{=!}Mysore Kumki Veeran" />
+	<NPCCharacter id="aserai_mameluke_cavalry" name="{=!}Mysore Kudiraipadai" />
+	<NPCCharacter id="aserai_mameluke_heavy_cavalry" name="{=!}Mysore Bhari Kudiraipadai" />
+	<NPCCharacter id="aserai_mameluke_axeman" name="{=!}Mysore Vaal Veeran" />
+	<NPCCharacter id="aserai_mameluke_guard" name="{=!}Mysore Marabu Veeran" />
+	<NPCCharacter id="aserai_youth" name="{=!}Mysore Kumarar" />
+	<NPCCharacter id="aserai_tribal_horseman" name="{=!}Mysore Veeran Sawar" />
+	<NPCCharacter id="aserai_faris" name="{=!}Mysore Ulaga Veeran" />
+	<NPCCharacter id="aserai_veteran_faris" name="{=!}Mysore Tajurba Ulaga Veeran" />
+	<NPCCharacter id="aserai_vanguard_faris" name="{=!}Mysore Agni Sainya" />
+	<NPCCharacter id="aserai_militia_archer" name="{=!}Mysore Fauj Vil Padai" />
+	<NPCCharacter id="aserai_militia_veteran_archer" name="{=!}Mysore Tajurba Fauj Vil" />
+	<NPCCharacter id="aserai_militia_spearman" name="{=!}Mysore Fauj Vel Veeran" />
+	<NPCCharacter id="aserai_militia_veteran_spearman" name="{=!}Mysore Tajurba Fauj Vel" />
+	<NPCCharacter id="sturgian_recruit" name="{=!}Afghan Jazailchi" />
+	<NPCCharacter id="sturgian_warrior" name="{=!}Afghan Ghazi" />
+	<NPCCharacter id="sturgian_soldier" name="{=!}Afghan Lashkari" />
+	<NPCCharacter id="sturgian_shock_troop" name="{=!}Afghan Kuhsar" />
+	<NPCCharacter id="sturgian_veteran_warrior" name="{=!}Afghan Gardawar" />
+	<NPCCharacter id="sturgian_warrior_son" name="{=!}Afghan Nawjawan" />
+	<NPCCharacter id="sturgian_woodsman" name="{=!}Afghan Shikar" />
+	<NPCCharacter id="sturgian_hunter" name="{=!}Afghan Shikari" />
+	<NPCCharacter id="sturgian_archer" name="{=!}Afghan Teer Andaz" />
+	<NPCCharacter id="sturgian_veteran_bowman" name="{=!}Afghan Mujarrib Teer Andaz" />
+	<NPCCharacter id="sturgian_brigand" name="{=!}Afghan Lootara" />
+	<NPCCharacter id="sturgian_hardened_brigand" name="{=!}Afghan Saqt Lootara" />
+	<NPCCharacter id="sturgian_horse_raider" name="{=!}Afghan Sawari Dakait" />
+	<NPCCharacter id="sturgian_berzerker" name="{=!}Afghan Ghazi Jangi" />
+	<NPCCharacter id="sturgian_spearman" name="{=!}Afghan Neza Baaz" />
+	<NPCCharacter id="sturgian_ulfhednar" name="{=!}Afghan Surkha" />
+	<NPCCharacter id="sturgian_militia_archer" name="{=!}Afghan Fauj Teer Andaz" />
+	<NPCCharacter id="sturgian_militia_veteran_archer" name="{=!}Afghan Mujarrib Fauj Teer Andaz" />
+	<NPCCharacter id="sturgian_militia_spearman" name="{=!}Afghan Fauj Neza Baaz" />
+	<NPCCharacter id="sturgian_militia_veteran_spearman" name="{=!}Afghan Mujarrib Fauj Neza Baaz" />
+	<NPCCharacter id="vlandian_recruit" name="{=!}Rajput Naujawan" />
+	<NPCCharacter id="vlandian_footman" name="{=!}Rajput Piyadah" />
+	<NPCCharacter id="vlandian_spearman" name="{=!}Rajput Bhalaiti" />
+	<NPCCharacter id="vlandian_billman" name="{=!}Rajput Talwariya" />
+	<NPCCharacter id="vlandian_voulgier" name="{=!}Rajput Bhalait Veer" />
+	<NPCCharacter id="vlandian_pikeman" name="{=!}Rajput Barchha Baaz" />
+	<NPCCharacter id="vlandian_infantry" name="{=!}Rajput Piyadah Veer" />
+	<NPCCharacter id="vlandian_swordsman" name="{=!}Rajput Khadga Veer" />
+	<NPCCharacter id="vlandian_sergeant" name="{=!}Rajput Nayak" />
+	<NPCCharacter id="vlandian_light_cavalry" name="{=!}Rajput Ashvarohi" />
+	<NPCCharacter id="vlandian_cavalry" name="{=!}Rajput Chaval Sawar" />
+	<NPCCharacter id="vlandian_vanguard" name="{=!}Rajput Agrani Sawar" />
+	<NPCCharacter id="vlandian_levy_crossbowman" name="{=!}Rajput Dhanusha" />
+	<NPCCharacter id="vlandian_crossbowman" name="{=!}Rajput Teerchand" />
+	<NPCCharacter id="vlandian_hardened_crossbowman" name="{=!}Rajput Khas Teerchand" />
+	<NPCCharacter id="vlandian_sharpshooter" name="{=!}Rajput Teer Nishana" />
+	<NPCCharacter id="vlandian_squire" name="{=!}Rajput Kumara" />
+	<NPCCharacter id="vlandian_gallant" name="{=!}Rajput Yuva Sewa" />
+	<NPCCharacter id="vlandian_knight" name="{=!}Rajput Rathore" />
+	<NPCCharacter id="vlandian_champion" name="{=!}Rajput Veer Bahadur" />
+	<NPCCharacter id="vlandian_banner_knight" name="{=!}Rajput Jhanda Veer" />
+	<NPCCharacter id="vlandian_militia_archer" name="{=!}Rajput Fauj Dhanusha" />
+	<NPCCharacter id="vlandian_militia_veteran_archer" name="{=!}Rajput Mujarrib Fauj Dhanusha" />
+	<NPCCharacter id="vlandian_militia_spearman" name="{=!}Rajput Fauj Bhalaiti" />
+	<NPCCharacter id="vlandian_militia_veteran_spearman" name="{=!}Rajput Mujarrib Fauj Bhalaiti" />
+	<NPCCharacter id="battanian_volunteer" name="{=!}Maratha Mavali" />
+	<NPCCharacter id="battanian_clanwarrior" name="{=!}Maratha Wanarya" />
+	<NPCCharacter id="battanian_trained_warrior" name="{=!}Maratha Talimi Veer" />
+	<NPCCharacter id="battanian_picked_warrior" name="{=!}Maratha Chhuran Veer" />
+	<NPCCharacter id="battanian_oathsworn" name="{=!}Maratha Dharmaveer" />
+	<NPCCharacter id="battanian_scout" name="{=!}Maratha Bhediya" />
+	<NPCCharacter id="battanian_mounted_skirmisher" name="{=!}Maratha Chaval Tirandaz" />
+	<NPCCharacter id="battanian_horseman" name="{=!}Maratha Ashvarohi" />
+	<NPCCharacter id="battanian_woodrunner" name="{=!}Maratha Vanavasi" />
+	<NPCCharacter id="battanian_raider" name="{=!}Maratha Dhad" />
+	<NPCCharacter id="battanian_skirmisher" name="{=!}Maratha Barchi" />
+	<NPCCharacter id="battanian_wildling" name="{=!}Maratha Raan Veer" />
+	<NPCCharacter id="battanian_falxman" name="{=!}Maratha Dand Veer" />
+	<NPCCharacter id="battanian_veteran_skirmisher" name="{=!}Maratha Tajurba Barchi" />
+	<NPCCharacter id="battanian_veteran_falxman" name="{=!}Maratha Tajurba Dand Veer" />
+	<NPCCharacter id="battanian_highborn_youth" name="{=!}Maratha Deshmukh Kumara" />
+	<NPCCharacter id="battanian_highborn_warrior" name="{=!}Maratha Deshmukh Veer" />
+	<NPCCharacter id="battanian_hero" name="{=!}Maratha Mard e Maidan" />
+	<NPCCharacter id="battanian_fian" name="{=!}Maratha Silahdar" />
+	<NPCCharacter id="battanian_fian_champion" name="{=!}Maratha Sardar Silahdar" />
+	<NPCCharacter id="battanian_militia_archer" name="{=!}Maratha Fauj Tirandaz" />
+	<NPCCharacter id="battanian_militia_veteran_archer" name="{=!}Maratha Tajurba Fauj Tirandaz" />
+	<NPCCharacter id="battanian_militia_spearman" name="{=!}Maratha Fauj Barchi" />
+	<NPCCharacter id="battanian_militia_veteran_spearman" name="{=!}Maratha Tajurba Fauj Barchi" />
+	<NPCCharacter id="khuzait_nomad" name="{=!}Sikh Sewadar" />
+	<NPCCharacter id="khuzait_footman" name="{=!}Sikh Piyadah" />
+	<NPCCharacter id="khuzait_tribal_warrior" name="{=!}Sikh Gurmukhi Veer" />
+	<NPCCharacter id="khuzait_noble_son" name="{=!}Sikh Shahzada Khalsa" />
+	<NPCCharacter id="khuzait_hunter" name="{=!}Sikh Baaz" />
+	<NPCCharacter id="khuzait_spearman" name="{=!}Sikh Neza Baaz" />
+	<NPCCharacter id="khuzait_raider" name="{=!}Sikh Jarnail" />
+	<NPCCharacter id="khuzait_horseman" name="{=!}Sikh Ghorchara" />
+	<NPCCharacter id="khuzait_qanqli" name="{=!}Sikh Singh" />
+	<NPCCharacter id="khuzait_archer" name="{=!}Sikh Teer Andaz" />
+	<NPCCharacter id="khuzait_spear_infantry" name="{=!}Sikh Neza Baaz Piyadah" />
+	<NPCCharacter id="khuzait_horse_archer" name="{=!}Sikh Ghorchara Teer Andaz" />
+	<NPCCharacter id="khuzait_lancer" name="{=!}Sikh Lansi" />
+	<NPCCharacter id="khuzait_torguud" name="{=!}Sikh Akali" />
+	<NPCCharacter id="khuzait_marksman" name="{=!}Sikh Tufangchi" />
+	<NPCCharacter id="khuzait_darkhan" name="{=!}Sikh Nihang" />
+	<NPCCharacter id="khuzait_heavy_horse_archer" name="{=!}Sikh Bhari Ghorchara" />
+	<NPCCharacter id="khuzait_heavy_lancer" name="{=!}Sikh Bhari Lansi" />
+	<NPCCharacter id="khuzait_kheshig" name="{=!}Sikh Akal Sena" />
+	<NPCCharacter id="khuzait_khans_guard" name="{=!}Sikh Sardar Ki Fauj" />
+	<NPCCharacter id="khuzait_militia_archer" name="{=!}Sikh Fauj Teer Andaz" />
+	<NPCCharacter id="khuzait_militia_veteran_archer" name="{=!}Sikh Mujarrib Fauj Teer Andaz" />
+	<NPCCharacter id="khuzait_militia_spearman" name="{=!}Sikh Fauj Neza Baaz" />
+	<NPCCharacter id="khuzait_militia_veteran_spearman" name="{=!}Sikh Mujarrib Fauj Neza Baaz" />
+</NPCCharacters>

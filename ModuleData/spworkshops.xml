@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--Phase 1: override vanilla workshop display names with Urdu/Persian equivalents.-->
+<WorkshopTypes>
+	<WorkshopType id="artisans"           name="{=!}Karigar"      />
+	<WorkshopType id="brewery"            name="{=!}Sharabkhana"  />
+	<WorkshopType id="velvet_weavery"     name="{=!}Masnadbafi"   />
+	<WorkshopType id="linen_weavery"      name="{=!}Katanbafi"    />
+	<WorkshopType id="wine_press"         name="{=!}Mekhana"      />
+	<WorkshopType id="pottery_shop"       name="{=!}Kumharghar"   />
+	<WorkshopType id="olive_press"        name="{=!}Kohlughar"    />
+	<WorkshopType id="wool_weavery"       name="{=!}Pashmbafi"    />
+	<WorkshopType id="tannery"            name="{=!}Dabaghkhana"  />
+	<WorkshopType id="wood_WorkshopType"  name="{=!}Nakhshikari"  />
+	<WorkshopType id="smithy"             name="{=!}Loharghar"    />
+	<WorkshopType id="silversmithy"       name="{=!}Zargar"       />
+</WorkshopTypes>

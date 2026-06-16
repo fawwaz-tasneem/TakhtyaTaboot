@@ -1,0 +1,2 @@
+For the settlements, and kingdoms file, The xml file is not required, as xslt handles all the changes.
+In the future, however, Since I will have to change many things, I'll use the xslt to wipe the original xml, and use my xmls.

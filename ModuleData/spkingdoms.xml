@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--Overrides vanilla kingdom entries. IDs are preserved; only display names, titles, and descriptions are changed.-->
+<Kingdoms>
+
+	<Kingdom
+		id="empire"
+		initial_home_settlement="Settlement.town_EN2"
+		owner="Hero.lord_1_1"
+		banner_key="11.126.7.4345.4345.764.764.1.0.0.163.126.7.512.512.764.764.1.0.0"
+		primary_banner_color="0xff1B6B1A"
+		secondary_banner_color="0xffD4AF37"
+		color="FF1B6B1A"
+		color2="FFD4AF37"
+		culture="Culture.empire"
+		settlement_banner_mesh="encounter_flag_a"
+		flag_mesh="info_screen_flags_b"
+		name="{=!}Gurkani Alamgir"
+		short_name="{=!}Mughliya Sultanat"
+		title="{=!}The Mughal Empire"
+		ruler_title="{=!}Shahenshah"
+		text="{=!}The Mughal Empire was once the envy of the world, a superpower that commanded the loyalty of kings from Kabul to the Kaveri. Now, the Lion of the Timurids is old and toothless. While the Emperor still sits upon the Peacock Throne in Delhi, holding the exclusive right to grant titles and legitimacy, his command rarely extends beyond the city walls. The treasury is drained by centuries of war, and the court is a viper's nest of scheming nobles who care more for their own fiefs than the safety of the realm. Despite its decline, the Imperial army remains a terrifying sight on the open field, fielding the heaviest armored cavalry and the largest siege guns in the subcontinent. They fight with the desperation of a dying giant, convinced that they are the only civilized order in a world gone mad. To serve the Emperor is to uphold the ancient law; to defy him is treason.">
+		<relationships>
+			<relationship
+				kingdom="Kingdom.khuzait"
+				value="-1"
+				isAtWar="true" />
+			<relationship
+				kingdom="Kingdom.battania"
+				value="-1"
+				isAtWar="true" />
+		</relationships>
+		<policies>
+			<policy
+				id="policy_feudal_inheritance" />
+		</policies>
+	</Kingdom>
+
+	<Kingdom
+		id="empire_w"
+		initial_home_settlement="Settlement.town_EW2"
+		owner="Hero.lord_1_7"
+		banner_key="11.12.7.4345.4345.764.764.1.0.0.164.12.7.512.512.764.764.1.0.0"
+		primary_banner_color="0xff1A3A7A"
+		secondary_banner_color="0xffD4AF37"
+		color="FF1A3A7A"
+		color2="FFD4AF37"
+		culture="Culture.empire"
+		settlement_banner_mesh="encounter_flag_a"
+		flag_mesh="info_screen_flags_a"
+		name="{=!}Subah e Bangaal"
+		short_name="{=!}Bangaal"
+		title="{=!}Suba Bangaal"
+		ruler_title="{=!}Nawaab Nazim"
+		text="{=!}While the rest of the subcontinent burns in the fires of war, Bengal glitters with gold. Known as the Paradise of Nations, this province has effectively seceded from the Empire, turning its massive textile and trading revenues into a private kingdom. The Nawabs of Bengal are merchant-princes who understand that gold is sharper than steel. They maintain a delicate peace, paying lip service to Delhi while ruling as absolute monarchs in the fertile delta. Bengal's power lies not in martial tradition, but in its inexhaustible resources. Their armies are vast, comprised of well-paid professional infantry, war elephants, and vast batteries of artillery funded by the banking houses of the Jagat Seths. They may lack the warrior spirit of the north, but they can afford to lose battles that would bankrupt any other kingdom, simply buying their enemies' loyalty when force fails.">
+		<relationships>
+			<relationship
+				kingdom="Kingdom.battania"
+				value="-1"
+				isAtWar="true" />
+		</relationships>
+		<policies>
+			<policy
+				id="policy_land_grants_for_veterans" />
+		</policies>
+	</Kingdom>
+
+	<Kingdom
+		id="empire_s"
+		initial_home_settlement="Settlement.town_ES4"
+		owner="Hero.lord_1_47"
+		banner_key="11.229.126.4345.4345.764.764.1.0.0.162.229.126.512.512.764.764.1.0.0"
+		primary_banner_color="0xffE3B505"
+		secondary_banner_color="0xff145A32"
+		color="FFE3B505"
+		color2="FF145A32"
+		culture="Culture.empire"
+		settlement_banner_mesh="encounter_flag_a"
+		flag_mesh="info_screen_flags_b"
+		name="{=!}Riyasat e Hyderabad"
+		short_name="{=!}Hyderabad"
+		title="{=!}Hyderabaad"
+		ruler_title="{=!}Nizam ul Mulk"
+		text="{=!}When the court in Delhi descended into hedonism and incompetence, the Nizam-ul-Mulk marched south to save what he could of the Mughal dream. Hyderabad is not a rebellion; it is the Empire purified. Here, the administration is efficient, the soldiers are disciplined, and the law is absolute. The Nizam views himself as the true custodian of Mughal heritage, ruling independently only because the Emperor is too weak to lead. The Hyderabad military machine is a blend of heavy Turko-Persian cavalry and Deccani resilience. Situated on the rugged plateau, they are the shield that protects the south from the Maratha hordes. They value order above all else, and their generals are scholar-warriors who study logistics as intently as they study the sword.">
+		<relationships>
+			<relationship
+				kingdom="Kingdom.aserai"
+				value="-1"
+				isAtWar="true" />
+			<relationship
+				kingdom="Kingdom.battania"
+				value="-1"
+				isAtWar="true" />
+		</relationships>
+		<policies>
+			<policy
+				id="policy_royal_privilege" />
+		</policies>
+	</Kingdom>
+
+	<Kingdom
+		id="sturgia"
+		initial_home_settlement="Settlement.town_S1"
+		owner="Hero.lord_2_1"
+		banner_key="11.116.126.4345.4345.764.764.1.0.0.462.116.126.512.512.764.764.1.0.0"
+		primary_banner_color="0xff111111"
+		secondary_banner_color="0xff1B6B1A"
+		color="FF111111"
+		color2="FF244D24"
+		culture="Culture.sturgia"
+		settlement_banner_mesh="encounter_flag_b"
+		flag_mesh="info_screen_flags_c"
+		name="{=!}Daulat e Durrani"
+		short_name="{=!}Afghans"
+		title="{=!}Dawlat e Durrani"
+		ruler_title="{=!}Amir e Amiraan"
+		text="{=!}From the frozen mountain passes of the north come the Afghans, a hard and ruthless people who view the fertile plains of India as a prize waiting to be taken. United under a charismatic conqueror, they have swept down to shatter the remnants of the old order. They are not interested in administration or diplomacy; they come to conquer, plunder, and establish their dominance through sheer brute force. The Afghan war machine is a terrifying wall of iron and muscle. Their infantry, the Rohillas, are famous for their unbreakable shield walls and deadly usage of long muskets, while their heavy cavalry rides horses bred for endurance in the harsh Hindu Kush. They excel in winter warfare and sieges, grinding their opponents down with a relentlessness that civilization has forgotten how to handle.">
+		<relationships>
+			<relationship
+				kingdom="Kingdom.vlandia"
+				value="-1"
+				isAtWar="true" />
+		</relationships>
+	</Kingdom>
+
+	<Kingdom
+		id="aserai"
+		initial_home_settlement="Settlement.town_A1"
+		owner="Hero.lord_3_1"
+		banner_key="11.83.7.4345.4345.764.764.1.0.0.463.83.7.466.466.764.764.1.0.0"
+		primary_banner_color="0xffAA0000"
+		secondary_banner_color="0xffFFAA00"
+		color="FF880000"
+		color2="FFFFA500"
+		culture="Culture.aserai"
+		settlement_banner_mesh="encounter_flag_c"
+		flag_mesh="info_screen_flags_a"
+		name="{=!}Kingdom of Mysore"
+		short_name="{=!}Mysore"
+		title="{=!}Kingdom of Mysore"
+		ruler_title="{=!}Maharajadhiraja"
+		text="{=!}Isolated in the deep south, guarded by jungles and plateaus, the Kingdom of Mysore has grown strong while the north distracts itself with civil war. Ruled by an ancient dynasty but powered by ruthless military modernizers, Mysore is a state punching well above its weight. They are a compact, highly centralized kingdom that has embraced new technologies to hold off encroaching colonial powers and rival neighbors alike. Mysore's military is unique, blending traditional southern tactics with modern innovation. They are the pioneers of rocket artillery, deploying iron-cased rockets that scream across the battlefield to shatter enemy morale. Their roster includes swift infantry suited for jungle warfare and heavy war elephants that act as mobile fortresses. They are the sleeping tiger of the south, waiting for the right moment to pounce.">
+		<relationships>
+			<relationship
+				kingdom="Kingdom.empire_s"
+				value="-1"
+				isAtWar="true" />
+		</relationships>
+	</Kingdom>
+
+	<Kingdom
+		id="vlandia"
+		initial_home_settlement="Settlement.town_V1"
+		owner="Hero.lord_4_1"
+		banner_key="11.82.7.1536.1536.764.764.1.0.0.160.82.7.497.497.764.764.1.0.0"
+		primary_banner_color="0xffDD6600"
+		secondary_banner_color="0xff8B0000"
+		color="FFDD6600"
+		color2="FF8B0000"
+		culture="Culture.vlandia"
+		settlement_banner_mesh="encounter_flag_d"
+		flag_mesh="info_screen_flags_c"
+		name="{=!}The Rajputaana Federation"
+		short_name="{=!}Rajputs"
+		title="{=!}The Rajputaana Union"
+		ruler_title="{=!}Maharaja"
+		text="{=!}The Rajputs are the ancient aristocracy of the land, a warrior caste obsessed with lineage, honor, and the defense of their ancestral forts. For centuries, they served as the sword-arm of the Empire, but as Delhi falters, the Rajput clans have retreated to their desert strongholds to rule as independent kings. They are a feudal society where every hilltop fort houses a lord who claims descent from the sun or the moon. Their method of war is steeped in tradition. They field the finest shock cavalry in the known world, charging headlong into enemy lines seeking personal glory. Their infantry are stoic defenders of their massive stone fortifications. While individually they are the finest warriors on the continent, their pride is their undoing; a Rajput king would rather die than take orders from a rival clan.">
+		<relationships>
+			<relationship
+				kingdom="Kingdom.sturgia"
+				value="-1"
+				isAtWar="true" />
+		</relationships>
+	</Kingdom>
+
+	<Kingdom
+		id="battania"
+		initial_home_settlement="Settlement.town_B1"
+		owner="Hero.lord_5_1"
+		banner_key="11.223.231.6296.6296.764.764.1.0.0.460.223.231.457.457.764.764.1.0.0"
+		primary_banner_color="0xffCC5500"
+		secondary_banner_color="0xffFF9933"
+		color="FFCC5500"
+		color2="FFFF9933"
+		culture="Culture.battania"
+		settlement_banner_mesh="encounter_flag_e"
+		flag_mesh="info_screen_flags_b"
+		name="{=!}Maratha Saamrajya"
+		short_name="{=!}Marathas"
+		title="{=!}Maratha Saamrajya"
+		ruler_title="{=!}Chhatrapati"
+		text="{=!}Born from the rugged Sahyadri mountains, the Marathas are the masters of asymmetric warfare. What began as a peasant rebellion has evolved into a continent-spanning confederacy of warrior-chieftains. They despise the static, heavy warfare of the Mughals, preferring to strike like lightning and vanish into the forests before the enemy can form a line. To the established powers, they are bandits; to their people, they are the reclaimers of the homeland. Their military is built on speed and ambush. Deadly skirmishers and light cavalry dominate their ranks, capable of traversing the roughest terrain to outmaneuver heavily armored foes. While their loose confederacy structure often leads to internal squabbles between powerful chieftains, their collective cry of Har Har Mahadev is enough to strike fear into the hearts of the strongest empires.">
+		<relationships>
+			<relationship
+				kingdom="Kingdom.empire_w"
+				value="-1"
+				isAtWar="true" />
+			<relationship
+				kingdom="Kingdom.empire"
+				value="-1"
+				isAtWar="true" />
+			<relationship
+				kingdom="Kingdom.empire_s"
+				value="-1"
+				isAtWar="true" />
+		</relationships>
+	</Kingdom>
+
+	<Kingdom
+		id="khuzait"
+		initial_home_settlement="Settlement.town_K3"
+		owner="Hero.lord_6_1"
+		banner_key="11.205.223.1536.1536.764.764.1.0.0.461.205.223.497.497.764.764.1.0.0"
+		primary_banner_color="0xff002B5C"
+		secondary_banner_color="0xffD4AF37"
+		color="FF002B5C"
+		color2="FFD4AF37"
+		culture="Culture.khuzait"
+		settlement_banner_mesh="encounter_flag_f"
+		flag_mesh="info_screen_flags_b"
+		name="{=!}Sikh Confederation"
+		short_name="{=!}Sikhs"
+		title="{=!}Sikh Empire"
+		ruler_title="{=!}Sarkaar e Khalsa"
+		text="{=!}The Sikhs are a people forged in the fires of persecution. Hunted by the Mughals and Afghans alike, they have transformed their community into a mobile martial order known as the Dal Khalsa. They recognize no king but the Almighty, and their society is radically egalitarian. Organized into independent Misls or warbands, they roam the plains of the Punjab, protecting the peasantry and exacting justice on tyrants. In battle, the Sikhs are unmatched horsemen, rivaling the steppe nomads of old. They utilize hit-and-run tactics, feigning retreat to draw enemies out of formation before wheeling back to deliver a crushing volley of musket fire. They possess high morale and immense stamina, fighting not for land or coin, but for the survival of their faith and freedom.">
+		<relationships>
+			<relationship
+				kingdom="Kingdom.empire"
+				value="-1"
+				isAtWar="true" />
+		</relationships>
+	</Kingdom>
+
+</Kingdoms>

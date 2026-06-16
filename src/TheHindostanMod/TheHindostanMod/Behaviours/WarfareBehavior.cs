@@ -173,15 +173,109 @@ namespace TakhtyaTaboot
                 OfferSpoils(s);
         }
 
-        // ── Spoils: sack or show mercy ───────────────────────────────────────────────
+        // ── Spoils: sack or show mercy, then judge the notables ──────────────────────
+        private enum Fate { Pardon, Penalize, Banish, Execute }
+
         private void OfferSpoils(Settlement s)
         {
             RoyalFarmaan.Issue("The City Is Taken", $"{s.Name} falls to your arms",
                 $"{s.Name} is yours by storm. Your soldiers look to you: do you give the city over to plunder, " +
                 "or show the mercy that wins a people's hearts?",
                 seal: "By right of conquest",
-                primary: "Sack the city", onPrimary: () => Sack(s),
-                secondary: "Show mercy", onSecondary: () => Mercy(s));
+                primary: "Sack the city", onPrimary: () => { Sack(s); JudgeNotables(s); },
+                secondary: "Show mercy", onSecondary: () => { Mercy(s); JudgeNotables(s); });
+        }
+
+        // Sit in judgement over the conquered city's notables, one by one. Each fate is a
+        // trade-off between the spoils/standing you gain and the unrest and enmity you sow.
+        private void JudgeNotables(Settlement s)
+        {
+            if (s?.Notables == null) return;
+            var queue = new Queue<Hero>(s.Notables.Where(n => n != null && n.IsAlive)
+                .OrderByDescending(n => n.Power).Take(6));
+            PromptNextNotable(s, queue);
+        }
+
+        private void PromptNextNotable(Settlement s, Queue<Hero> queue)
+        {
+            while (queue.Count > 0)
+            {
+                Hero n = queue.Dequeue();
+                if (n == null || !n.IsAlive) continue;
+                int rel = CharacterRelationManager.GetHeroRelation(Hero.MainHero, n);
+                string role = FeudalTitlesBehavior.NotableRole(n);
+                var elements = new List<InquiryElement>
+                {
+                    new InquiryElement(Fate.Pardon, "Pardon him", null, true, "Win his goodwill; the city settles. Relation rises."),
+                    new InquiryElement(Fate.Penalize, "Fine him", null, true, "Seize his gold; he resents it. Relation falls, slight unrest."),
+                    new InquiryElement(Fate.Banish, "Banish him", null, true, "Strip his standing and cast him out. Real unrest and lasting enmity."),
+                    new InquiryElement(Fate.Execute, "Execute him", null, true, "Put him to death. Severe unrest; his kin and peers will not forget."),
+                };
+                MBInformationManager.ShowMultiSelectionInquiry(new MultiSelectionInquiryData(
+                    $"The Fate of {n.Name}",
+                    $"{n.Name}, {role} of {s.Name} (your relation {rel}). As conqueror, decree his fate.",
+                    elements, true, 1, 1, "Decree it", "Pardon the rest",
+                    sel => { if (sel != null && sel.Count > 0 && sel[0].Identifier is Fate f) ApplyFate(s, n, f);
+                             PromptNextNotable(s, queue); },
+                    _ => { while (queue.Count > 0) { Hero r = queue.Dequeue(); if (r != null && r.IsAlive) ApplyFate(s, r, Fate.Pardon); }
+                           ApplyFate(s, n, Fate.Pardon); },
+                    "", false), false, false);
+                return; // the rest continue from the callback
+            }
+        }
+
+        private void ApplyFate(Settlement s, Hero n, Fate f)
+        {
+            Town town = s.Town;
+            switch (f)
+            {
+                case Fate.Pardon:
+                    ChangeRelationAction.ApplyRelationChangeBetweenHeroes(Hero.MainHero, n, 10);
+                    if (town != null) town.Loyalty = MathF.Min(100f, town.Loyalty + 3f);
+                    break;
+
+                case Fate.Penalize:
+                    int fine = 500 + (int)n.Power * 2;
+                    int take = Math.Min(fine, Math.Max(0, n.Gold));
+                    if (take > 0) GiveGoldAction.ApplyBetweenCharacters(n, Hero.MainHero, take, true);
+                    ChangeRelationAction.ApplyRelationChangeBetweenHeroes(Hero.MainHero, n, -10);
+                    if (town != null) town.Loyalty = MathF.Max(0f, town.Loyalty - 3f);
+                    AddPressure(s, 5f);
+                    break;
+
+                case Fate.Banish:
+                    ChangeRelationAction.ApplyRelationChangeBetweenHeroes(Hero.MainHero, n, -20);
+                    try { n.AddPower(-n.Power * 0.85f); } catch { }
+                    if (town != null) { town.Loyalty = MathF.Max(0f, town.Loyalty - 8f); town.Prosperity = MathF.Max(0f, town.Prosperity - 300f); }
+                    AddPressure(s, 12f);
+                    AffectKinAndPeers(s, n, -12, -4);
+                    Notify($"{n.Name} is stripped of standing and cast out of {s.Name}.", false);
+                    break;
+
+                case Fate.Execute:
+                    if (town != null) { town.Loyalty = MathF.Max(0f, town.Loyalty - 15f); town.Prosperity = MathF.Max(0f, town.Prosperity - 600f); }
+                    AddPressure(s, 25f);
+                    AffectKinAndPeers(s, n, -30, -8);
+                    if (IsRuler) LegitimacyBehavior.Instance?.ModifyLegitimacy(Hero.MainHero, -4f, "an execution after conquest");
+                    try { KillCharacterAction.ApplyByMurder(n, Hero.MainHero); } catch { }
+                    Notify($"{n.Name} is put to death. {s.Name} seethes.", false);
+                    break;
+            }
+        }
+
+        private static void AddPressure(Settlement s, float delta)
+        {
+            var rc = RevoltCascadeBehavior.Instance;
+            if (rc != null) rc.SetPressure(s, MathF.Min(100f, rc.GetPressure(s) + delta));
+        }
+
+        private static void AffectKinAndPeers(Settlement s, Hero n, int kinDelta, int peerDelta)
+        {
+            if (n.Clan?.Leader != null && n.Clan.Leader != n)
+                ChangeRelationAction.ApplyRelationChangeBetweenHeroes(Hero.MainHero, n.Clan.Leader, kinDelta);
+            if (s.Notables != null)
+                foreach (Hero other in s.Notables.Where(o => o != null && o.IsAlive && o != n))
+                    ChangeRelationAction.ApplyRelationChangeBetweenHeroes(Hero.MainHero, other, peerDelta);
         }
 
         private void Sack(Settlement s)

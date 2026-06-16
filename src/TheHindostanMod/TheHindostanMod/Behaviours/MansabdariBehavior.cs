@@ -79,6 +79,22 @@ namespace TakhtyaTaboot
         public int GetMansab(Clan clan) => Ranks[GetRankIndex(clan)].Mansab;
         public string GetTitle(Clan clan) => Ranks[GetRankIndex(clan)].Title;
 
+        // ── Troop target of a rank ──────────────────────────────────────────────────
+        // Each mansab carries an ABSOLUTE troop target. The party-size patch sets the
+        // clan leader's cap to exactly this, so the rank can never demand more men than it
+        // lets you field (this is what breaks the old promote→over-cap→demote spiral).
+        public static int RequiredTroopsForIndex(int idx)
+        {
+            idx = Math.Max(0, Math.Min(MaxIndex, idx));
+            return (int)Math.Round(Ranks[idx].SawarRequired * Config.Tune.TroopCapacityMultiplier);
+        }
+
+        public int GetRequiredTroops(Clan clan) => RequiredTroopsForIndex(GetRankIndex(clan));
+
+        // The muster you must keep to avoid the demotion clock (a fraction of the target).
+        public int GetRetentionFloor(Clan clan)
+            => (int)Math.Round(GetRequiredTroops(clan) * Config.Tune.RetentionFraction);
+
         private void SetRankIndex(Clan clan, int idx)
         {
             if (clan == null) return;
@@ -380,6 +396,12 @@ namespace TakhtyaTaboot
             sb.AppendLine(" ");
             sb.AppendLine($"Your rank: {Ranks[idx].Title} (mansab {Ranks[idx].Mansab})");
             sb.AppendLine($"Your sawar: {sawar} troops");
+            if (idx >= 1)
+            {
+                int target = GetRequiredTroops(clan);
+                int floor = GetRetentionFloor(clan);
+                sb.AppendLine($"Your mansab grants a contingent of {target} men (you must keep at least {floor}).");
+            }
             string nextLine = idx < MaxIndex
                 ? $"Next rank ({Ranks[idx + 1].Title}) needs {Ranks[idx + 1].SawarRequired} sawar."
                 : "You hold the highest mansab in the empire.";

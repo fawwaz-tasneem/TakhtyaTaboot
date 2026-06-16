@@ -80,6 +80,12 @@
       <HintPath>D:\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.Engine.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <!-- MCM (Mod Configuration Menu) — provided at runtime by the Bannerlord.MBOptionScreen
+         module. Compile against the ILRepacked MCMv5 assembly; never ship it. -->
+    <Reference Include="MCMv5">
+      <HintPath>D:\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\Modules\Bannerlord.MBOptionScreen\bin\Win64_Shipping_Client\MCMv5.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
   </ItemGroup>
 
   <!-- Harmony — provided at runtime by the Bannerlord.Harmony module.

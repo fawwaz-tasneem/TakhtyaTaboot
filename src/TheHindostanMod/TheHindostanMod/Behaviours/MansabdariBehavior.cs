@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.CampaignSystem.Actions;
+using TaleWorlds.CampaignSystem.Party;
 using TaleWorlds.CampaignSystem.GameMenus;
 using TaleWorlds.CampaignSystem.Settlements;
 using TaleWorlds.Core;
@@ -47,6 +48,12 @@ namespace TakhtyaTaboot
         private const int TownIndex = 5;
 
         private Dictionary<string, int> _rankIndex = new Dictionary<string, int>(); // clanId -> rank index
+        private Dictionary<string, float> _valour = new Dictionary<string, float>(); // clanId -> battlefield valour
+
+        // Player muster/stipend bookkeeping.
+        private int _daysUnderMuster;     // consecutive days below the retention floor
+        private bool _warnedUnderMuster;  // suppresses warning spam within an under-muster spell
+        private int _lastStipendDay = -1;
 
         public static MansabdariBehavior Instance { get; private set; }
 
@@ -56,6 +63,7 @@ namespace TakhtyaTaboot
             CampaignEvents.OnSessionLaunchedEvent.AddNonSerializedListener(this, OnSessionLaunched);
             CampaignEvents.OnNewGameCreatedEvent.AddNonSerializedListener(this, OnNewGame);
             CampaignEvents.WeeklyTickEvent.AddNonSerializedListener(this, OnWeeklyTick);
+            CampaignEvents.DailyTickEvent.AddNonSerializedListener(this, OnDailyTick);
         }
 
         // ── Troop count (sawar) ───────────────────────────────────────────────────
@@ -95,6 +103,76 @@ namespace TakhtyaTaboot
         public int GetRetentionFloor(Clan clan)
             => (int)Math.Round(GetRequiredTroops(clan) * Config.Tune.RetentionFraction);
 
+        // ── Valour (battlefield achievement) ────────────────────────────────────────
+        // Earned in battle (with a large bonus for capturing or routing an enemy king),
+        // valour is the merit that — together with the clan's renown and the Emperor's
+        // favour — earns elevation. It is spent when you rise.
+        public float GetValour(Clan clan)
+            => clan != null && _valour.TryGetValue(clan.StringId, out float v) ? v : 0f;
+
+        public void AddValour(Clan clan, float amount)
+        {
+            if (clan == null || amount == 0f) return;
+            _valour[clan.StringId] = Math.Max(0f, GetValour(clan) + amount);
+            if (clan == Clan.PlayerClan) TryAutoElevatePlayer();
+        }
+
+        // ── Elevation criteria: valour AND renown AND the Emperor's favour ──────────
+        public bool MeetsElevationCriteria(Clan clan, out int nextIdx, out string reason)
+        {
+            reason = ""; nextIdx = 0;
+            if (clan == null) { reason = "No clan."; return false; }
+            int idx = GetRankIndex(clan);
+            if (idx >= MaxIndex) { reason = "You already hold the highest mansab."; return false; }
+            if (clan.Kingdom == null) { reason = "You must serve an empire to hold a mansab."; return false; }
+            nextIdx = idx + 1;
+
+            float valReq = Config.Tune.ValourPerRankStep * nextIdx;
+            float val = GetValour(clan);
+            if (val < valReq)
+            { reason = $"You need {valReq:0} valour for {Ranks[nextIdx].Title} (you have {val:0})."; return false; }
+
+            float renownReq = Config.Tune.RenownPerRankStep * nextIdx;
+            if (clan.Renown < renownReq)
+            { reason = $"Your house needs {renownReq:0} renown for {Ranks[nextIdx].Title} (you have {clan.Renown:0})."; return false; }
+
+            bool isRuler = clan.Kingdom.Leader == clan.Leader;
+            if (!isRuler)
+            {
+                int rel = CharacterRelationManager.GetHeroRelation(clan.Leader, clan.Kingdom.Leader);
+                if (rel < Config.Tune.MinRelationForElevation)
+                { reason = $"The Emperor's favour is too cold for {Ranks[nextIdx].Title} (relation {rel}, needs {Config.Tune.MinRelationForElevation})."; return false; }
+            }
+            return true;
+        }
+
+        // Raise the player one rank, consuming the valour the rise demanded.
+        private void ElevatePlayer(int nextIdx)
+        {
+            var clan = Clan.PlayerClan;
+            SetRankIndex(clan, nextIdx);
+            float spent = Config.Tune.ValourPerRankStep * nextIdx;
+            _valour[clan.StringId] = Math.Max(0f, GetValour(clan) - spent);
+
+            Kingdom k = clan.Kingdom;
+            bool isRuler = k != null && k.Leader == clan.Leader;
+            if (isRuler)
+                Notify($"You assume the mansab of {Ranks[nextIdx].Title} by your own decree.", false);
+            else if (k != null)
+                RoyalFarmaan.FromRuler(k, "Grant of Mansab",
+                    $"For your valour and the standing of your house, {clan.Leader.Name} is raised to the mansab of " +
+                    $"{Ranks[nextIdx].Title} (zat {Ranks[nextIdx].Mansab}). Your contingent swells to " +
+                    $"{RequiredTroopsForIndex(nextIdx)} men. Bear its honours and its duties faithfully.",
+                    "I am honoured");
+        }
+
+        // The court elevates the player the moment all three criteria are met.
+        public void TryAutoElevatePlayer()
+        {
+            if (Clan.PlayerClan != null && MeetsElevationCriteria(Clan.PlayerClan, out int nextIdx, out _))
+                ElevatePlayer(nextIdx);
+        }
+
         private void SetRankIndex(Clan clan, int idx)
         {
             if (clan == null) return;
@@ -110,17 +188,6 @@ namespace TakhtyaTaboot
         }
 
         public static int MaxRankIndex => MaxIndex;
-
-        // Battlefield merit can raise a clan's mansab by one step, regardless of muster.
-        // Returns the new title, or null if already at the summit.
-        public string TryMeritPromotion(Clan clan)
-        {
-            if (clan == null) return null;
-            int idx = GetRankIndex(clan);
-            if (idx >= MaxIndex) return null;
-            SetRankIndex(clan, idx + 1);
-            return Ranks[idx + 1].Title;
-        }
 
         public bool CanHold(Clan clan, Settlement s)
         {
@@ -155,33 +222,128 @@ namespace TakhtyaTaboot
         {
             foreach (Clan clan in Clan.All.Where(c => !c.IsEliminated && !c.IsBanditFaction && c.Leader != null))
             {
-                int sawar = GetClanTotalTroops(clan);
-                int idx = GetRankIndex(clan);
-
-                // Demotion (all clans): drop while below the retention floor of the current rank.
-                while (idx > 0 && sawar < Ranks[idx].Retention) idx--;
-
-                // AI auto-promotion (emperor rubber-stamps qualified vassals). Player must petition.
-                if (clan != Clan.PlayerClan && clan.Kingdom != null)
+                // The player's rank moves only through valour-based elevation (below) and
+                // the daily muster clock (OnDailyTick) — never the AI troop ladder.
+                if (clan != Clan.PlayerClan)
                 {
-                    int q = QualifiedIndex(sawar);
-                    if (q > idx) idx = q;
-                }
+                    int sawar = GetClanTotalTroops(clan);
+                    int idx = GetRankIndex(clan);
 
-                if (idx != GetRankIndex(clan))
-                {
-                    bool demoted = idx < GetRankIndex(clan);
-                    SetRankIndex(clan, idx);
-                    if (clan == Clan.PlayerClan && demoted && clan.Kingdom != null)
-                        RoyalFarmaan.FromRuler(clan.Kingdom, "Reduction of Mansab",
-                            $"Your muster no longer sustains your rank. By order of the court your mansab is reduced to " +
-                            $"{Ranks[idx].Title}. Restore your sawar to reclaim your former standing.",
-                            "As the court wills");
+                    // Demotion: drop while below the retention floor of the current rank.
+                    while (idx > 0 && sawar < Ranks[idx].Retention) idx--;
+
+                    // AI auto-promotion (emperor rubber-stamps qualified vassals).
+                    if (clan.Kingdom != null)
+                    {
+                        int q = QualifiedIndex(sawar);
+                        if (q > idx) idx = q;
+                    }
+                    if (idx != GetRankIndex(clan)) SetRankIndex(clan, idx);
                 }
 
                 // Economic benefit: weekly imperial influence scaled by rank.
-                if (idx > 0) ChangeClanInfluenceAction.Apply(clan, idx * 1f);
+                int rank = GetRankIndex(clan);
+                if (rank > 0) ChangeClanInfluenceAction.Apply(clan, rank * 1f);
             }
+
+            // The court reviews the player's merits weekly as a backstop (renown or favour
+            // may have caught up to valour already earned).
+            TryAutoElevatePlayer();
+        }
+
+        // ── Player muster clock & stipend (daily) ───────────────────────────────────
+        private void OnDailyTick()
+        {
+            var clan = Clan.PlayerClan;
+            if (clan == null) return;
+            int today = (int)CampaignTime.Now.ToDays;
+            if (_lastStipendDay < 0) _lastStipendDay = today;
+
+            int idx = GetRankIndex(clan);
+
+            // Must keep the retention floor of the current rank, or be demoted after the grace window.
+            if (idx >= 1 && MobileParty.MainParty != null)
+            {
+                int floor = GetRetentionFloor(clan);
+                int have = MobileParty.MainParty.MemberRoster.TotalManCount;
+                if (have < floor)
+                {
+                    _daysUnderMuster++;
+                    int remaining = Config.Tune.DemoteGraceDays - _daysUnderMuster;
+                    if (!_warnedUnderMuster || remaining == 7 || remaining == 3)
+                        WarnUnderMuster(remaining, floor, have);
+                    if (_daysUnderMuster >= Config.Tune.DemoteGraceDays)
+                    {
+                        _daysUnderMuster = 0; _warnedUnderMuster = false;
+                        DemotePlayerForMuster();
+                    }
+                }
+                else
+                {
+                    if (_daysUnderMuster > 0 && _warnedUnderMuster)
+                        Notify("Your muster is restored to your mansab's strength; the threat of demotion passes.", false);
+                    _daysUnderMuster = 0; _warnedUnderMuster = false;
+                }
+            }
+            else _daysUnderMuster = 0;
+
+            // A stipend from the treasury, proportional to the contingent you must keep, every 30 days.
+            if (today - _lastStipendDay >= 30)
+            {
+                _lastStipendDay = today;
+                PayStipend(clan);
+            }
+        }
+
+        private void WarnUnderMuster(int remaining, int floor, int have)
+        {
+            _warnedUnderMuster = true;
+            Hero comp = Clan.PlayerClan?.Companions?.FirstOrDefault(h => h != null && h.IsAlive)
+                        ?? Clan.PlayerClan?.Heroes?.FirstOrDefault(h => h != null && h.IsAlive && h != Hero.MainHero);
+            string who = comp != null ? comp.Name.ToString() : "Your captain";
+            string line = remaining > 0
+                ? $"{who}: \"My lord, we muster but {have} of the {floor} men your mansab demands. Fill the ranks within {remaining} days, or the court will strip your rank.\""
+                : $"{who}: \"My lord, our muster is short and the court's patience is spent.\"";
+            InformationManager.DisplayMessage(new InformationMessage(line, Color.FromUint(0xFFCC4400)));
+        }
+
+        private void DemotePlayerForMuster()
+        {
+            var clan = Clan.PlayerClan;
+            int idx = GetRankIndex(clan);
+            if (idx <= 0) return;
+            SetRankIndex(clan, idx - 1);
+            Kingdom k = clan.Kingdom;
+            if (k != null)
+                RoyalFarmaan.FromRuler(k, "Reduction of Mansab",
+                    $"For {Config.Tune.DemoteGraceDays} days your muster has fallen short of your station. By order of the court " +
+                    $"your mansab is reduced to {Ranks[idx - 1].Title}. Restore your sawar and earn your rank anew.",
+                    "As the court wills");
+            else Notify($"Your mansab is reduced to {Ranks[idx - 1].Title} for want of men.", true);
+        }
+
+        private void PayStipend(Clan clan)
+        {
+            int idx = GetRankIndex(clan);
+            if (idx < 1 || clan.Kingdom == null) return;
+            Hero king = clan.Kingdom.Leader;
+            if (king == null || king == Hero.MainHero) return; // the sovereign IS the treasury
+            int amount = (int)Math.Round(Config.Tune.StipendPerTroop * GetRequiredTroops(clan));
+            if (amount <= 0) return;
+
+            int pay = Math.Min(amount, Math.Max(0, king.Gold));
+            if (pay <= 0)
+            {
+                RoyalFarmaan.FromRuler(clan.Kingdom, "The Treasury Is Bare",
+                    "The day for your mansab's stipend comes, but the imperial treasury cannot meet it. The court regrets the lapse.",
+                    "So it is");
+                return;
+            }
+            GiveGoldAction.ApplyBetweenCharacters(king, Hero.MainHero, pay, true);
+            RoyalFarmaan.FromRuler(clan.Kingdom, "A Stipend from the Treasury",
+                $"As is owed to your mansab of {Ranks[idx].Title}, the treasury disburses {pay} dinars toward the upkeep of " +
+                $"your {GetRequiredTroops(clan)}-man contingent.",
+                "I am grateful");
         }
 
         private static int QualifiedIndex(int sawar)
@@ -193,58 +355,21 @@ namespace TakhtyaTaboot
         }
 
         // ── Player petition (called from menu) ────────────────────────────────────
+        // Elevation is normally automatic once valour, renown and the Emperor's favour
+        // all suffice (TryAutoElevatePlayer). This lets the player press the claim in
+        // person at a cost of influence — the criteria are the same.
         public bool PlayerCanPetition(out string reason)
-        {
-            reason = "";
-            var clan = Clan.PlayerClan;
-            int idx = GetRankIndex(clan);
-            if (idx >= MaxIndex) { reason = "You already hold the highest mansab."; return false; }
-            if (clan.Kingdom == null) { reason = "You must serve an empire to hold a mansab."; return false; }
-            int sawar = GetClanTotalTroops(clan);
-            if (sawar < Ranks[idx + 1].SawarRequired)
-            { reason = $"You need {Ranks[idx + 1].SawarRequired} sawar for {Ranks[idx + 1].Title} (you have {sawar})."; return false; }
-            return true;
-        }
+            => MeetsElevationCriteria(Clan.PlayerClan, out _, out reason);
 
         public void PlayerPetition()
         {
-            if (!PlayerCanPetition(out string reason)) { Notify(reason, true); return; }
-
+            if (!MeetsElevationCriteria(Clan.PlayerClan, out int nextIdx, out string reason)) { Notify(reason, true); return; }
             var clan = Clan.PlayerClan;
-            int idx = GetRankIndex(clan);
-            int nextIdx = idx + 1;
             float cost = nextIdx * 20f;
-            if (clan.Influence < cost) { Notify($"The court expects {cost:0} influence to process the petition (you have {clan.Influence:0}).", true); return; }
-
-            Hero emperor = clan.Kingdom.Leader;
-            bool isRuler = emperor == clan.Leader;
-
-            if (!isRuler)
-            {
-                int rel = CharacterRelationManager.GetHeroRelation(clan.Leader, emperor);
-                int req = nextIdx * 5;
-                // When the emperor's authority is weak, his grants come dearer — he must
-                // be cajoled harder to elevate a vassal.
-                float auth = ImperialAuthorityBehavior.Instance?.GetAuthority(clan.Kingdom) ?? 75f;
-                if (auth < 75f) req += (int)((75f - auth) / 5f);
-                if (rel < req)
-                {
-                    ChangeClanInfluenceAction.Apply(clan, -cost / 2f);
-                    string note = auth < 50f ? " His authority is too weak to elevate vassals freely." : "";
-                    Notify($"{emperor.Name} denies your petition. {Ranks[nextIdx].Title} requires standing of {req} at court (yours is {rel}).{note}", true);
-                    return;
-                }
-            }
-
+            if (clan.Influence < cost)
+            { Notify($"The court expects {cost:0} influence to process the petition (you have {clan.Influence:0}).", true); return; }
             ChangeClanInfluenceAction.Apply(clan, -cost);
-            SetRankIndex(clan, nextIdx);
-            if (isRuler)
-                Notify($"You assume the mansab of {Ranks[nextIdx].Title} by your own decree.", false);
-            else
-                RoyalFarmaan.FromRuler(clan.Kingdom, "Grant of Mansab",
-                    $"By imperial favour, {clan.Leader.Name} is raised to the mansab of {Ranks[nextIdx].Title} " +
-                    $"(zat {Ranks[nextIdx].Mansab}). Bear its honours and its duties faithfully.",
-                    "I am honoured");
+            ElevatePlayer(nextIdx);
         }
 
         // ── Amir-ul-Umara leadership challenge (simplified; full system is Chapter 16) ──
@@ -326,7 +451,7 @@ namespace TakhtyaTaboot
                 () => true, null);
 
             starter.AddPlayerLine("hind_petition_ask", "hind_petition_choice", "hind_petition_answer",
-                "{=!}I have mustered the sawar that custom demands. I ask to be raised to the next mansab.",
+                "{=!}By my valour in the field and my house's standing, I ask to be raised to the next mansab.",
                 () => true, null);
 
             starter.AddPlayerLine("hind_petition_leave", "hind_petition_choice", "hero_main_options",
@@ -357,31 +482,21 @@ namespace TakhtyaTaboot
         private void CommitPetition()
         {
             if (!_pendingGrant) return;
-            var clan = Clan.PlayerClan;
-            ChangeClanInfluenceAction.Apply(clan, -_pendingCost);
-            SetRankIndex(clan, _pendingIdx);
+            ChangeClanInfluenceAction.Apply(Clan.PlayerClan, -_pendingCost);
+            ElevatePlayer(_pendingIdx);
             _pendingGrant = false;
-            Notify($"By the Emperor's word you are raised to {Ranks[_pendingIdx].Title}.", false);
         }
 
         private bool EvaluatePetition(out int nextIdx, out float cost, out string kingLine)
         {
             nextIdx = 0; cost = 0f; kingLine = "";
             var clan = Clan.PlayerClan;
-            if (!PlayerCanPetition(out string why)) { kingLine = "I cannot grant this. " + why; return false; }
-            int idx = GetRankIndex(clan);
-            nextIdx = idx + 1;
+            if (!MeetsElevationCriteria(clan, out nextIdx, out string why)) { kingLine = "I cannot grant this. " + why; return false; }
             cost = nextIdx * 20f;
-            Hero emperor = clan.Kingdom.Leader;
             if (clan.Influence < cost)
             { kingLine = $"You lack the standing to press such a suit — the court expects {cost:0} influence at the least."; return false; }
-            int rel = CharacterRelationManager.GetHeroRelation(clan.Leader, emperor);
-            int req = nextIdx * 5;
-            float auth = ImperialAuthorityBehavior.Instance?.GetAuthority(clan.Kingdom) ?? 75f;
-            if (auth < 75f) req += (int)((75f - auth) / 5f);
-            if (rel < req)
-            { kingLine = $"You have not yet earned my favour for the rank of {Ranks[nextIdx].Title}. Serve me better, and ask again."; return false; }
-            kingLine = $"Your sword has earned it. Rise — I name you {Ranks[nextIdx].Title}, with the zat of {Ranks[nextIdx].Mansab}. Bear it well.";
+            kingLine = $"Your valour and your house's name have earned it. Rise — I name you {Ranks[nextIdx].Title}, " +
+                       $"with the zat of {Ranks[nextIdx].Mansab}. Bear it well.";
             return true;
         }
 
@@ -402,10 +517,18 @@ namespace TakhtyaTaboot
                 int floor = GetRetentionFloor(clan);
                 sb.AppendLine($"Your mansab grants a contingent of {target} men (you must keep at least {floor}).");
             }
-            string nextLine = idx < MaxIndex
-                ? $"Next rank ({Ranks[idx + 1].Title}) needs {Ranks[idx + 1].SawarRequired} sawar."
-                : "You hold the highest mansab in the empire.";
-            sb.AppendLine(nextLine);
+            if (idx < MaxIndex)
+            {
+                int n = idx + 1;
+                float val = GetValour(clan);
+                float valReq = Config.Tune.ValourPerRankStep * n;
+                float renownReq = Config.Tune.RenownPerRankStep * n;
+                int rel = clan.Kingdom?.Leader != null && clan.Kingdom.Leader != clan.Leader
+                    ? CharacterRelationManager.GetHeroRelation(clan.Leader, clan.Kingdom.Leader) : 0;
+                sb.AppendLine($"To rise to {Ranks[n].Title}, the court weighs:");
+                sb.AppendLine($"   Valour {val:0}/{valReq:0}    Renown {clan.Renown:0}/{renownReq:0}    Emperor's favour {rel} (needs {Config.Tune.MinRelationForElevation})");
+            }
+            else sb.AppendLine("You hold the highest mansab in the empire.");
             sb.AppendLine(" ");
             sb.AppendLine("You may hold: " + EligibilityLine(idx));
             sb.AppendLine(" ");
@@ -435,12 +558,55 @@ namespace TakhtyaTaboot
             var vals = _rankIndex.Values.ToList();
             dataStore.SyncData("hind_mansab_ids", ref ids);
             dataStore.SyncData("hind_mansab_vals", ref vals);
+
+            var vIds = _valour.Keys.ToList();
+            var vVals = _valour.Values.ToList();
+            dataStore.SyncData("hind_mansab_valIds", ref vIds);
+            dataStore.SyncData("hind_mansab_valVals", ref vVals);
+
+            dataStore.SyncData("hind_mansab_daysUnder", ref _daysUnderMuster);
+            dataStore.SyncData("hind_mansab_warnedUnder", ref _warnedUnderMuster);
+            dataStore.SyncData("hind_mansab_lastStipend", ref _lastStipendDay);
+
             if (!dataStore.IsSaving)
             {
                 _rankIndex.Clear();
                 for (int i = 0; i < ids.Count; i++)
                     _rankIndex[ids[i]] = i < vals.Count ? vals[i] : 0;
+
+                _valour = new Dictionary<string, float>();
+                for (int i = 0; i < vIds.Count && i < vVals.Count; i++) _valour[vIds[i]] = vVals[i];
             }
+        }
+
+        // ── Console (testing) ─────────────────────────────────────────────────────
+        [CommandLineFunctionality.CommandLineArgumentFunction("valour", "hindostan")]
+        public static string ValourStatus(List<string> args)
+        {
+            if (Campaign.Current == null || Instance == null) return "Load a campaign first.";
+            var clan = Clan.PlayerClan;
+            int idx = Instance.GetRankIndex(clan);
+            var sb = new StringBuilder();
+            sb.AppendLine($"Mansab: {Ranks[idx].Title} (index {idx})");
+            sb.AppendLine($"Valour: {Instance.GetValour(clan):0}    Renown: {clan.Renown:0}");
+            if (idx < MaxIndex)
+                sb.AppendLine(Instance.MeetsElevationCriteria(clan, out _, out string why)
+                    ? "Eligible for elevation now."
+                    : "Not yet eligible: " + why);
+            if (idx >= 1)
+                sb.AppendLine($"Contingent target: {Instance.GetRequiredTroops(clan)}, retention floor: {Instance.GetRetentionFloor(clan)}, " +
+                              $"days under muster: {Instance._daysUnderMuster}/{Config.Tune.DemoteGraceDays}");
+            return sb.ToString();
+        }
+
+        [CommandLineFunctionality.CommandLineArgumentFunction("add_valour", "hindostan")]
+        public static string AddValourCmd(List<string> args)
+        {
+            if (Campaign.Current == null || Instance == null) return "Load a campaign first.";
+            float amt = 50f;
+            if (args != null && args.Count > 0) float.TryParse(args[0], out amt);
+            Instance.AddValour(Clan.PlayerClan, amt);
+            return $"Added {amt:0} valour. Now {Instance.GetValour(Clan.PlayerClan):0}.";
         }
     }
 }

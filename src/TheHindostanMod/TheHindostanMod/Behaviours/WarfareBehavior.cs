@@ -37,7 +37,6 @@ namespace TakhtyaTaboot
         // Tributaries the player's realm has imposed: tributaryKingdomId -> day tribute ends.
         private Dictionary<string, int> _tributaryUntil = new Dictionary<string, int>();
 
-        private int _playerRenown;       // battlefield deeds toward the next mansab
         private int _lastBannerDay = -100;
         private bool _ready;
         private bool _applyingTerms;
@@ -127,21 +126,31 @@ namespace TakhtyaTaboot
             if (pk != null && opp is Kingdom ok && _score.ContainsKey(ok.StringId))
                 AddScore(ok.StringId, (win ? 1 : -1) * (siege ? 12 : 6));
 
-            // Personal deeds toward the next mansab — earned against real foes, not brigands.
-            if (win && pk != null && opp is Kingdom)
+            // Battlefield valour toward the next mansab — earned against real foes, not brigands.
+            // Capturing or routing the enemy sovereign on the field is worth a great deal.
+            if (win && pk != null && opp is Kingdom enemy)
             {
-                _playerRenown += siege ? 2 : 1;
-                if (_playerRenown >= 3)
+                float gain = Config.Tune.ValourPerWin * (siege ? Config.Tune.ValourSiegeMultiplier : 1f);
+                if (RoutedOrCapturedKing(mapEvent, enemy))
                 {
-                    _playerRenown = 0;
-                    string title = MansabdariBehavior.Instance?.TryMeritPromotion(Clan.PlayerClan);
-                    if (title != null)
-                        RoyalFarmaan.FromRuler(pk, "Honoured for Valour",
-                            $"Word of your conduct in the field reaches the court. For your valour you are raised to the mansab of {title}. " +
-                            "Bear its honours and its duties.", "I serve with honour");
-                    else ChangeClanInfluenceAction.Apply(Clan.PlayerClan, 10f);
+                    gain += Config.Tune.ValourKingCapture;
+                    Notify($"You have broken {enemy.Leader?.Name} on the field — a deed that will be sung of. Your valour soars.", false);
                 }
+                MansabdariBehavior.Instance?.AddValour(Clan.PlayerClan, gain);
             }
+        }
+
+        // True if the enemy realm's sovereign was on the losing side of this battle
+        // (captured or routed), used to award the great valour bonus.
+        private static bool RoutedOrCapturedKing(MapEvent e, Kingdom enemy)
+        {
+            if (e == null || enemy?.Leader == null) return false;
+            BattleSideEnum losing = e.WinningSide == BattleSideEnum.Attacker ? BattleSideEnum.Defender : BattleSideEnum.Attacker;
+            MapEventSide side = e.GetMapEventSide(losing);
+            if (side?.Parties == null) return false;
+            foreach (MapEventParty p in side.Parties)
+                if (p?.Party?.LeaderHero == enemy.Leader) return true;
+            return false;
         }
 
         private void OnOwnerChanged(Settlement s, bool openToClaim, Hero newOwner, Hero oldOwner, Hero capturer,
@@ -448,7 +457,6 @@ namespace TakhtyaTaboot
             dataStore.SyncData("hind_war_sIds", ref sIds); dataStore.SyncData("hind_war_sVals", ref sVals);
             dataStore.SyncData("hind_war_wIds", ref wIds); dataStore.SyncData("hind_war_wVals", ref wVals);
             dataStore.SyncData("hind_war_tIds", ref tIds); dataStore.SyncData("hind_war_tVals", ref tVals);
-            dataStore.SyncData("hind_war_renown", ref _playerRenown);
             dataStore.SyncData("hind_war_lastbanner", ref _lastBannerDay);
             if (!dataStore.IsSaving)
             {
@@ -471,8 +479,9 @@ namespace TakhtyaTaboot
             Kingdom pk = PK;
             if (pk == null) return "You serve no realm.";
             var wars = Instance._score.Keys.Select(Find).Where(k => k != null && pk.IsAtWarWith(k)).ToList();
-            if (wars.Count == 0) return $"Renown toward next mansab: {Instance._playerRenown}/3. The realm is at peace.";
-            return $"Renown toward next mansab: {Instance._playerRenown}/3\n" + string.Join("\n", wars.Select(k =>
+            float valour = MansabdariBehavior.Instance?.GetValour(Clan.PlayerClan) ?? 0f;
+            if (wars.Count == 0) return $"Valour toward next mansab: {valour:0}. The realm is at peace.";
+            return $"Valour toward next mansab: {valour:0}\n" + string.Join("\n", wars.Select(k =>
                 $"{k.Name}: goal {Instance.GoalOf(k.StringId)}, score {Instance.ScoreOf(k.StringId)} ({Standing(Instance.ScoreOf(k.StringId))})"));
         }
     }

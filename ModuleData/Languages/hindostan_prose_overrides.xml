@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<base xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" type="string">
+  <strings>
+    <string id="str___s3_price_=_reg4_calradian_average_reg6_capital_reg11_s4_base_reg1modified_by_raw_material_reg2modified_by_prosperity_reg3_calradian_average_production_base_reg5_total_reg12_consumed_reg7used_as_raw_material_reg8modified_total_reg9_calradian_consumption_base_reg10_total_reg13s1_" text="{!}^^{s3}^Price = {reg4} (Hindostani average {reg6})^Capital: {reg11} {s4}^Base {reg1}/modified by raw material {reg2}/modified by prosperity {reg3}^(Hindostani average production, base {reg5}, total {reg12}).^Consumed {reg7}/used as raw material {reg8}/modified total {reg9}^(Hindostani consumption, base: {reg10}, total: {reg13}){s1}^" />
+    <string id="str_you_will_not_be_disappointed_sirmadam_you_will_not_find_better_warriors_in_all_calradia" text="You will not be disappointed {sir/madam}. You will not find better warriors in all Hindostan." />
+    <string id="str_lord_indicted_dialog_rejected" text="Indeed? Well, perhaps your reputation is misleading. Good day, {my lord/my lady} - - I go to see if another ruler in Hindostan is more appreciative of my talents." />
+    <string id="str_mercenary_tavern_talk_hire.1" text="Well done, {?PLAYER.GENDER}madam{?}sir{\?}. Keep the money and wine coming our way, and there's no foe in Hindostan you need fear.[ib:convo_approving]" />
+    <string id="str_mercenary_tavern_talk_hire.3" text="You will not be dissapointed {?PLAYER.GENDER}madam{?}sir{\?}. You will not find better warriors in all Hindostan.[ib:convo_approving]" />
+    <string id="str_become_king_empire" text="On {DAY_OF_YEAR}, {YEAR}, {KING_NAME} was annointed {?IS_KING_MALE}Emperor{?}Empress{\?} of Hindostan" />
+    <string id="str_item_plural.battania_horse" text="Maratha ponies" />
+    <string id="str_item_plural.sturgia_horse" text="Afghan trotters" />
+    <string id="str_item_plural.t2_battania_horse" text="Maratha warmounts" />
+    <string id="str_item_plural.t2_sturgia_horse" text="Afghan hunters" />
+    <string id="str_item_plural.t2_vlandia_horse" text="Rajput coursers" />
+    <string id="str_item_plural.noble_horse_battania" text="Maratha thoroughbreds" />
+  </strings>
+</base>

@@ -107,6 +107,12 @@ namespace TakhtyaTaboot
                 LoadStrings(Path.Combine(root, "ModuleData", "Languages", "std_module_strings_xml.xml"));
                 // Bulk demonym swaps (Sturgian->Afghan, etc.) generated from vanilla strings.
                 LoadStrings(Path.Combine(root, "ModuleData", "hindostan_demonym_overrides.xml"));
+                LoadStrings(Path.Combine(root, "ModuleData", "Languages", "hindostan_demonym_overrides.xml"));
+                // Proper-noun purge in dialogue/notifications/item names (Calradia, Vlandia, Nord, ...).
+                LoadStrings(Path.Combine(root, "ModuleData", "Languages", "hindostan_prose_overrides.xml"));
+                // Complete per-culture faction/ruler/culture names (direct outer ids) — purges every
+                // remaining vanilla faction name & ruler title. Loaded LAST so it is authoritative.
+                LoadStrings(Path.Combine(root, "ModuleData", "Languages", "hindostan_faction_names.xml"));
 
                 string mapPath = Path.Combine(root, "ModuleData", "hindostan_string_map.xml");
                 if (File.Exists(mapPath))

@@ -35,8 +35,9 @@ All of the following are working C# systems (or data/text changes), independent 
 - **Empire stats in the bottom bar** — Authority, Legitimacy, Mansab, and Unrest shown inline in the vanilla map info bar.
 
 ### Feudal & career systems
-- **Mansabdari career ladder** — your rank (*mansab*) gates what you may hold: rise from an unlanded noble through a **village → castle → town → throne**, with no skipping rungs. Party size scales with mansab.
-- **Feudal hierarchy** — every village has its own lord, vassal to the lord of its castle/town, beneath the sovereign; fief-holders can be appointed and removed (at a cost), viewed in a graphical hierarchy tree screen.
+- **Mansabdari career ladder** — your rank (*mansab*) gates what you may hold: rise from an unlanded noble through a **village → castle → town → throne**, with no skipping rungs. Party size scales with mansab. Promotion is deliberately slow and weighed on multiple factors, so the court does not churn through ranks.
+- **Mansab tenure law** — fiefs are held on a tenure that can be made hereditary or kept at the crown's pleasure: a per-kingdom tenure law with inheritance, periodic rotation of holdings, and a defiance ladder for lords who refuse to give up a fief, all settled as a court edict.
+- **Feudal hierarchy** — every village has its own lord, vassal to the lord of its castle/town, beneath the sovereign; fief-holders can be appointed and removed (at a cost), viewed in a graphical hierarchy tree screen. Kingdoms have designated capitals.
 - **The Darbar (council)** — every landed lord keeps a council of vassals, kin, and companions, with a dedicated council screen; petition your liege for a seat and its perks.
 - **Village development** — villages develop over time (works, bandit-threat dynamics).
 
@@ -44,12 +45,14 @@ All of the following are working C# systems (or data/text changes), independent 
 - **Imperial Authority & Legitimacy** — empire-wide meters that shift with events and shape the campaign.
 - **Royal farmaans** — war declarations, votes, and summons arrive as sealed, **dated imperial decrees** that name the parties and use kingdom-appropriate honorifics, shown in a custom decree popup.
 - **Meaningful warfare** — war goals, a running war score, dictated peace terms (*nazrana* tribute, province cession, tributary status), war-weariness, battlefield deeds that raise your mansab, sack-or-spare choices, ransom and hostages, and a "call the banners" muster that brings vassals with their troops into your army.
-- **Succession crisis (War of Princes)** — contested successions that brew, turn active, and can erupt into civil war, with a kingmaker mechanic.
+- **Succession laws (per kingdom)** — each realm follows its own law of succession: **male primogeniture**, **election among the princes**, an open **magnate election**, or an **appointed heir** (a named *Wali Ahd*, with an optional *Naib* deputy as fallback). Laws are seeded by historical faction and can be rewritten as a legitimacy- and influence-gated darbar edict — at the cost of angering whichever estate the change wounds. The law shapes **who may claim the throne** and **how a contest resolves** (election laws settle by a weighted vote of the great lords; a near-tie still falls to civil war). A formal law with a valid heir softly lowers the odds of a crisis without ever abolishing it — death is never a guaranteed-quiet handover.
+- **Succession crisis (War of Princes)** — contested successions that brew, turn active, and can erupt into civil war, with a kingmaker mechanic. Throw your weight behind a claimant, name an heir to boost his claim, or **buy a rival out** of the contest with gold, court influence, a gift of men, or a fief — an uncertain bargain whose odds rise with the offer and the rival's regard for you, and whose refusal costs you nothing but his goodwill.
 - **Revolt cascade** — provisional rebel kingdoms that must consolidate or be crushed; rebelling lords secede with their own house; emperor responses delivered as farmaans.
-- **War of Accession** — secede with your supporters into a temporary rebel kingdom and challenge the emperor for the throne; win to take the crown, lose and be stripped of rank.
+- **War of Accession** — secede with your supporters into a temporary rebel kingdom and challenge the emperor for the throne; win to take the crown, lose and be stripped of rank. A war for the crown is **binary and fought to the finish**: there is no white peace and no permanent breakaway — the pretender wins the throne or is destroyed.
 
-### Developer tools
-- Console cheat commands for the feudal, revolt, and succession systems (see `*Cheats.cs` in the source).
+### Configuration & developer tools
+- **In-game settings (MCM)** — a Mod Configuration Menu page exposes tunable factors for the mod's systems (promotion/demotion weighting, succession-law gating, contest odds, and more), so the simulation can be dialled in without rebuilding.
+- Console cheat commands for the feudal, revolt, and succession systems (see `*Cheats.cs` in the source), including `hindostan.succlaw` to inspect each realm's succession law and `hindostan.kill_ruler` to test accessions.
 
 ## Requirements
 

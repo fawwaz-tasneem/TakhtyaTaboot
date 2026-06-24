@@ -38,6 +38,10 @@ EmAssetPackages/
 **/Backups/
 **/*_HOLD/
 
+# ── Runtime logs (the mod's own crash log, written into the module folder) ──
+Logs/
+tyt_log.txt
+
 # ── Release build artifacts (distributed via GitHub Releases, not committed) ──
 release/
 *.zip

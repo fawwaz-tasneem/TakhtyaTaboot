@@ -45,7 +45,7 @@ namespace TakhtyaTaboot
             Instance = this;
             CampaignEvents.OnSessionLaunchedEvent.AddNonSerializedListener(this, OnSessionLaunched);
             CampaignEvents.OnNewGameCreatedEvent.AddNonSerializedListener(this, OnNewGame);
-            CampaignEvents.WeeklyTickEvent.AddNonSerializedListener(this, OnWeeklyTick);
+            CampaignEvents.WeeklyTickEvent.AddNonSerializedListener(this, () => Util.TYTLog.Guard("FeudalTitles.WeeklyTick", OnWeeklyTick));
             CampaignEvents.HeroKilledEvent.AddNonSerializedListener(this, OnHeroKilled);
             CampaignEvents.OnClanChangedKingdomEvent.AddNonSerializedListener(this, OnClanChangedKingdom);
         }
@@ -90,7 +90,17 @@ namespace TakhtyaTaboot
             // AI zamindars remain a flavour layer over a local notable, with no transfer.
             if (hero == Hero.MainHero && village.OwnerClan != Clan.PlayerClan)
             {
-                try { ChangeOwnerOfSettlementAction.ApplyByGift(village, hero); } catch { }
+                try
+                {
+                    ChangeOwnerOfSettlementAction.ApplyByGift(village, hero);
+                    if (village.OwnerClan == Clan.PlayerClan)
+                        Util.TYTLog.Info($"AssignZamindar: {village.Name} is now a player-owned village fief.");
+                    else
+                        Util.TYTLog.Warn($"AssignZamindar: gift of {village.Name} did not transfer ownership " +
+                                         $"(still {village.OwnerClan?.Name?.ToString() ?? "unowned"}). " +
+                                         "Player can still oversee it via the feudal layer.");
+                }
+                catch (Exception e) { Util.TYTLog.Error($"AssignZamindar: ApplyByGift({village.Name}) threw", e); }
             }
         }
 
@@ -299,6 +309,7 @@ namespace TakhtyaTaboot
         private void OnClanChangedKingdom(Clan clan, Kingdom oldKingdom, Kingdom newKingdom,
             ChangeKingdomAction.ChangeKingdomActionDetail detail, bool showNotification)
         {
+            if (!Util.WorldGen.Ready) return; // skip the parallel world-gen distribution (see Util/WorldGen.cs)
             if (clan == Clan.PlayerClan) EnsurePlayerPlacement();
         }
 

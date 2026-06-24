@@ -15,6 +15,7 @@ namespace TakhtyaTaboot.Config
         public static float ValourPerWin => S?.ValourPerWin ?? 4f;
         public static float ValourSiegeMultiplier => S?.ValourSiegeMultiplier ?? 2f;
         public static float ValourKingCapture => S?.ValourKingCapture ?? 80f;
+        public static float ValourPerKill => S?.ValourPerKill ?? 0.5f;
         public static float ValourPerRankStep => S?.ValourPerRankStep ?? 30f;
         public static float RenownPerRankStep => S?.RenownPerRankStep ?? 60f;
         public static int MinRelationForElevation => S?.MinRelationForElevation ?? 0;
@@ -25,6 +26,21 @@ namespace TakhtyaTaboot.Config
         public static float RetentionFraction => S?.RetentionFraction ?? 0.8f;
         public static int DemoteGraceDays => S?.DemoteGraceDays ?? 30;
         public static float StipendPerTroop => S?.StipendPerTroop ?? 2f;
+
+        // Tenure edict (Feudal <-> Mansabdari)
+        public static float TenureLegitimacyFloor => S?.TenureLegitimacyFloor ?? 50f;
+        public static float TenureEdictBaseInfluence => S?.TenureEdictBaseInfluence ?? 150f;
+        public static float TenureEdictBaseGold => S?.TenureEdictBaseGold ?? 5000f;
+        public static float TenureResistThreshold => S?.TenureResistThreshold ?? 0.5f;
+        public static int TenureRotationIntervalDays => S?.TenureRotationIntervalDays ?? 1080;
+
+        // Succession law (per-kingdom constitution: primogeniture / election / appointed Wali Ahd)
+        public static float SuccLawLegitimacyFloor => S?.SuccLawLegitimacyFloor ?? 50f;
+        public static float SuccLawBaseInfluence => S?.SuccLawBaseInfluence ?? 150f;
+        public static float HeirSupportBoost => S?.HeirSupportBoost ?? 25f;
+        public static float MagnateElectionDecisiveMargin => S?.MagnateElectionDecisiveMargin ?? 1.25f;
+        public static int AiLawReviewIntervalDays => S?.AiLawReviewIntervalDays ?? 360;
+        public static float SuccessionContestFloor => S?.SuccessionContestFloor ?? 0.20f;
 
         // Council & capital
         public static int KingCouncilsPerYear => S?.KingCouncilsPerYear ?? 4;

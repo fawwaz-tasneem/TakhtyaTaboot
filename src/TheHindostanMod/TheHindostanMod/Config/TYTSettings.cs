@@ -32,6 +32,11 @@ namespace TakhtyaTaboot.Config
         public float ValourKingCapture { get; set; } = 80f;
 
         [SettingPropertyGroup("Career & Mansab")]
+        [SettingPropertyFloatingInteger("Valour per personal kill", 0f, 5f, "0.0", RequireRestart = false,
+            HintText = "Valour gained per enemy you personally cut down in battle. Deserters (bhagode) count; common bandits give nothing.", Order = 3)]
+        public float ValourPerKill { get; set; } = 0.5f;
+
+        [SettingPropertyGroup("Career & Mansab")]
         [SettingPropertyFloatingInteger("Valour needed per rank step", 5f, 200f, "0", RequireRestart = false,
             HintText = "Valour required to be eligible for the next mansab = this x the next rank index. Higher = harder.", Order = 3)]
         public float ValourPerRankStep { get; set; } = 30f;
@@ -71,6 +76,63 @@ namespace TakhtyaTaboot.Config
         [SettingPropertyFloatingInteger("Stipend per required troop (per 30 days)", 0f, 20f, "0.0", RequireRestart = false,
             HintText = "Every 30 days the treasury pays you this x your rank's troop target. 0 disables the stipend.", Order = 10)]
         public float StipendPerTroop { get; set; } = 2f;
+
+        // ── Tenure edict (Feudal <-> Mansabdari) ─────────────────────────────────────
+        [SettingPropertyGroup("Tenure & Rotation")]
+        [SettingPropertyFloatingInteger("Legitimacy needed to impose Mansabdari", 0f, 100f, "0", RequireRestart = false,
+            HintText = "A sovereign's legitimacy must clear this to rewrite tenure law. Only a secure throne may convert the realm to rotational, non-hereditary mansabs.", Order = 0)]
+        public float TenureLegitimacyFloor { get; set; } = 50f;
+
+        [SettingPropertyGroup("Tenure & Rotation")]
+        [SettingPropertyFloatingInteger("Base influence to impose Mansabdari", 0f, 1000f, "0", RequireRestart = false,
+            HintText = "Flat influence the crown spends to enact the tenure edict, on top of a little per affected noble.", Order = 1)]
+        public float TenureEdictBaseInfluence { get; set; } = 150f;
+
+        [SettingPropertyGroup("Tenure & Rotation")]
+        [SettingPropertyFloatingInteger("Base gold to impose Mansabdari", 0f, 100000f, "0", RequireRestart = false,
+            HintText = "Flat gold the crown pays to enact the edict; entrenched, resentful magnates add to this proportionally to their Rusukh and holdings.", Order = 2)]
+        public float TenureEdictBaseGold { get; set; } = 5000f;
+
+        [SettingPropertyGroup("Tenure & Rotation")]
+        [SettingPropertyFloatingInteger("Defiance threshold that resists reform", 0f, 1f, "0.00", RequireRestart = false,
+            HintText = "A noble whose defiance chance (deep Rusukh vs a weak crown) meets this will refuse the reform outright rather than be bought off.", Order = 3)]
+        public float TenureResistThreshold { get; set; } = 0.5f;
+
+        [SettingPropertyGroup("Tenure & Rotation")]
+        [SettingPropertyInteger("Mansab rotation interval (days)", 180, 3600, "0", RequireRestart = false,
+            HintText = "How long a mansabdar may hold a fief under Mansabdari tenure before the crown rotates him on. 360 days = 1 year.", Order = 4)]
+        public int TenureRotationIntervalDays { get; set; } = 1080;
+
+        // ── Succession law (per-kingdom constitution) ─────────────────────────────────
+        [SettingPropertyGroup("Succession Law")]
+        [SettingPropertyFloatingInteger("Legitimacy needed to rewrite the succession law", 0f, 100f, "0", RequireRestart = false,
+            HintText = "A sovereign's legitimacy must clear this to proclaim a new law of succession (primogeniture, election, or appointed Wali Ahd).", Order = 0)]
+        public float SuccLawLegitimacyFloor { get; set; } = 50f;
+
+        [SettingPropertyGroup("Succession Law")]
+        [SettingPropertyFloatingInteger("Base influence to change the succession law", 0f, 1000f, "0", RequireRestart = false,
+            HintText = "Flat influence the crown spends to enact a succession-law edict, on top of a little per house whose expectations it overturns.", Order = 1)]
+        public float SuccLawBaseInfluence { get; set; } = 150f;
+
+        [SettingPropertyGroup("Succession Law")]
+        [SettingPropertyFloatingInteger("Heir's claim-support boost", 0f, 100f, "0", RequireRestart = false,
+            HintText = "Starting support a named Wali Ahd or a primogeniture eldest son gains in a succession crisis (a Naib gets half).", Order = 2)]
+        public float HeirSupportBoost { get; set; } = 25f;
+
+        [SettingPropertyGroup("Succession Law")]
+        [SettingPropertyFloatingInteger("Election decisive margin", 1f, 3f, "0.00", RequireRestart = false,
+            HintText = "How far the winner of an election vote must clear the runner-up to settle the throne; a closer result throws the realm into civil war.", Order = 3)]
+        public float MagnateElectionDecisiveMargin { get; set; } = 1.25f;
+
+        [SettingPropertyGroup("Succession Law")]
+        [SettingPropertyInteger("AI law-review interval (days)", 90, 1800, "0", RequireRestart = false,
+            HintText = "How often an AI sovereign reconsiders his realm's succession law and names an heir. 360 days = 1 year.", Order = 4)]
+        public int AiLawReviewIntervalDays { get; set; } = 360;
+
+        [SettingPropertyGroup("Succession Law")]
+        [SettingPropertyFloatingInteger("Contest chance floor on a ruler's death", 0f, 1f, "0.00", RequireRestart = false,
+            HintText = "Minimum chance that a ruler's death sparks a contested succession even under a secure law with a valid heir. 0 = clean accessions allowed; higher = the war-of-princes is always a real risk.", Order = 5)]
+        public float SuccessionContestFloor { get; set; } = 0.20f;
 
         // ── Council & capital ────────────────────────────────────────────────────────
         [SettingPropertyGroup("Council & Capital")]

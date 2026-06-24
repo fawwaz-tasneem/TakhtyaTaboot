@@ -9,10 +9,15 @@ using TaleWorlds.Core.ViewModelCollection.Information;
 
 namespace TakhtyaTaboot
 {
-    // Injects the mod's empire stats (Authority, Legitimacy, Mansab, Unrest) into the
-    // vanilla bottom info bar, rendered exactly like gold/influence — same icons,
-    // warning colours and hover tooltips. Done by appending MapInfoItemVM entries to
-    // PrimaryInfoItems after the game rebuilds them each refresh.
+    // The mod's empire stats (Authority, Legitimacy, Mansab/Zat, Valour, Unrest) on the campaign
+    // info bar. They go in the bar's SECONDARY (lower) row — NOT the primary row — so the vanilla
+    // top row keeps its width, and the mod stats stack below it. The vanilla "extend" arrow on the
+    // info bar collapses/expands that lower row, which is exactly the toggle we want (collapsed =
+    // vanilla view only; expanded = full view with our stats). Each stat carries a distinct icon.
+    //
+    // (The icons are drawn from the vanilla MapBar.Right.Icons brush, which only has gameplay-stat
+    // glyphs — bespoke art, e.g. a crown for legitimacy, would need custom sprite assets and is a
+    // separate step; these are the closest-fitting distinct vanilla icons.)
     [HarmonyPatch(typeof(MapInfoVM), "RefreshValues")]
     internal static class MapBarStatsPatch
     {
@@ -26,8 +31,8 @@ namespace TakhtyaTaboot
                 if (Campaign.Current == null || Hero.MainHero == null) return;
                 MapInfoItemVM[] mine = _items.GetValue(__instance, _ => Create());
                 foreach (MapInfoItemVM it in mine)
-                    if (!__instance.PrimaryInfoItems.Contains(it))
-                        __instance.PrimaryInfoItems.Add(it);
+                    if (!__instance.SecondaryInfoItems.Contains(it))
+                        __instance.SecondaryInfoItems.Add(it);
                 foreach (MapInfoItemVM it in mine)
                     UpdateItem(it);
             }
@@ -38,10 +43,11 @@ namespace TakhtyaTaboot
         {
             return new[]
             {
-                Make("hind_authority",  "influence"),
-                Make("hind_legitimacy", "morale"),
-                Make("hind_mansab",     "troops"),
-                Make("hind_unrest",     "hit_points_sick"),
+                Make("hind_authority",  "influence"),       // imperial writ / power
+                Make("hind_legitimacy", "morale"),          // acceptance of the throne
+                Make("hind_mansab",     "troops"),          // mansab is a troop-rank
+                Make("hind_valour",     "hit_points"),      // battlefield prowess
+                Make("hind_unrest",     "hit_points_sick"), // the realm's sickness
             };
         }
 
@@ -68,6 +74,7 @@ namespace TakhtyaTaboot
                 case "influence": return "hind_authority";
                 case "morale": return "hind_legitimacy";
                 case "troops": return "hind_mansab";
+                case "hit_points": return "hind_valour";
                 default: return "hind_unrest";
             }
         }
@@ -88,6 +95,9 @@ namespace TakhtyaTaboot
                 case "hind_mansab":
                     if (MansabdariBehavior.Instance == null || Clan.PlayerClan == null) return ("—", false);
                     return ($"{MansabdariBehavior.Instance.GetMansab(Clan.PlayerClan)}", false);
+                case "hind_valour":
+                    if (MansabdariBehavior.Instance == null || Clan.PlayerClan == null) return ("—", false);
+                    return ($"{MansabdariBehavior.Instance.GetValour(Clan.PlayerClan):0}", false);
                 default: // unrest
                     float peak = 0f;
                     if (k != null && RevoltCascadeBehavior.Instance != null)
@@ -109,6 +119,7 @@ namespace TakhtyaTaboot
                 case "hind_authority":  title = "Imperial Authority"; desc = "How far the emperor's writ runs (0-100). Drives tax and obedience."; break;
                 case "hind_legitimacy": title = "Legitimacy"; desc = "How widely the ruler's right to the throne is accepted (0-100)."; break;
                 case "hind_mansab":     title = "Mansab (Zat)"; desc = "Your rank at court. Higher zat unlocks greater fiefs and command."; break;
+                case "hind_valour":     title = "Valour"; desc = "Battlefield merit earned in war and by your own kills. Spent to rise in mansab."; break;
                 default:                title = "Realm Unrest"; desc = "The peak revolt pressure in your realm. Above 80 a province may rise."; break;
             }
             return new List<TooltipProperty>

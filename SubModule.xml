@@ -6,15 +6,15 @@
 	<ModuleCategory value="Singleplayer"/>
 	<Official value="false"/>
 	<DependedModules>
-		<DependedModule Id="Bannerlord.Harmony" DependedVersion="v2.4.2.225"/>
-		<DependedModule Id="Bannerlord.ButterLib" DependedVersion="v2.10.3"/>
-		<DependedModule Id="Bannerlord.UIExtenderEx" DependedVersion="v2.13.2"/>
-		<DependedModule Id="Bannerlord.MBOptionScreen" DependedVersion="v5.11.3"/>
-		<DependedModule Id="Native" DependedVersion="v1.4.6.115439"/>
-		<DependedModule Id="SandBoxCore" DependedVersion="v1.4.6.115439"/>
-		<DependedModule Id="Sandbox" DependedVersion="v1.4.6.115439"/>
-		<DependedModule Id="CustomBattle" DependedVersion="v1.4.6.115439"/>
-		<DependedModule Id="StoryMode" DependedVersion="v1.4.6.115439"/>
+		<DependedModule Id="Bannerlord.Harmony" DependedVersion="v2.2.2"/>
+		<DependedModule Id="Bannerlord.ButterLib" DependedVersion="v2.10.2"/>
+		<DependedModule Id="Bannerlord.UIExtenderEx" DependedVersion="v2.13.1"/>
+		<DependedModule Id="Bannerlord.MBOptionScreen" DependedVersion="v5.11.4"/>
+		<DependedModule Id="Native" DependedVersion="v1.3.11"/>
+		<DependedModule Id="SandBoxCore" DependedVersion="v1.3.11"/>
+		<DependedModule Id="Sandbox" DependedVersion="v1.3.11"/>
+		<DependedModule Id="CustomBattle" DependedVersion="v1.3.11"/>
+		<DependedModule Id="StoryMode" DependedVersion="v1.3.11"/>
 	</DependedModules>
 	<!-- Load order: the standard library mods load before us so their services
 	     (Harmony, ButterLib, UIExtenderEx, MCM) are ready; Diplomacy is optional. -->
@@ -57,6 +57,20 @@
 		
 		<XmlNode>
 			<XmlName id="NPCCharacters" path="spnpccharacters"/>
+			<IncludedGameTypes>
+				<GameType value="Campaign"/>
+				<GameType value="CampaignStoryMode"/>
+			</IncludedGameTypes>
+		</XmlNode>
+		<XmlNode>
+			<XmlName id="NPCCharacters" path="tyt_troops"/>
+			<IncludedGameTypes>
+				<GameType value="Campaign"/>
+				<GameType value="CampaignStoryMode"/>
+			</IncludedGameTypes>
+		</XmlNode>
+		<XmlNode>
+			<XmlName id="NPCCharacters" path="tyt_emperors"/>
 			<IncludedGameTypes>
 				<GameType value="Campaign"/>
 				<GameType value="CampaignStoryMode"/>

@@ -58,7 +58,7 @@ namespace TakhtyaTaboot
             Instance = this;
             CampaignEvents.OnSessionLaunchedEvent.AddNonSerializedListener(this, OnSessionLaunched);
             CampaignEvents.OnNewGameCreatedEvent.AddNonSerializedListener(this, OnNewGame);
-            CampaignEvents.WeeklyTickEvent.AddNonSerializedListener(this, OnWeeklyTick);
+            CampaignEvents.WeeklyTickEvent.AddNonSerializedListener(this, () => Util.TYTLog.Guard("Council.WeeklyTick", OnWeeklyTick));
         }
 
         // ── Who keeps a council ──────────────────────────────────────────────────────
@@ -161,6 +161,20 @@ namespace TakhtyaTaboot
                     if (pick != null) Set(holder, p, pick);
                 }
             }
+        }
+
+        // Fill a single (non-player) holder's vacant council posts at once — e.g. on a new accession,
+        // so a king raised by succession governs immediately instead of sitting with a vacant council
+        // until the next weekly fill.
+        public void EnsureCouncil(Hero holder)
+        {
+            if (holder == null || holder == Hero.MainHero || !IsCouncilHolder(holder)) return;
+            foreach (Post p in AllPosts)
+                if (GetCouncillor(holder, p) == null)
+                {
+                    Hero pick = ChooseBest(holder, p);
+                    if (pick != null) Set(holder, p, pick);
+                }
         }
 
         // Candidates = the holder's vassals, kin and companions.

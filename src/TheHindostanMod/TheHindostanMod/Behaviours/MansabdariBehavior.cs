@@ -55,6 +55,9 @@ namespace TakhtyaTaboot
         private bool _warnedUnderMuster;  // suppresses warning spam within an under-muster spell
         private int _lastStipendDay = -1;
 
+        // Set on new-game; the initial rank seeding is then done in OnSessionLaunched (post-world-gen).
+        private bool _seedRanksOnLaunch;
+
         public static MansabdariBehavior Instance { get; private set; }
 
         public override void RegisterEvents()
@@ -62,7 +65,7 @@ namespace TakhtyaTaboot
             Instance = this;
             CampaignEvents.OnSessionLaunchedEvent.AddNonSerializedListener(this, OnSessionLaunched);
             CampaignEvents.OnNewGameCreatedEvent.AddNonSerializedListener(this, OnNewGame);
-            CampaignEvents.WeeklyTickEvent.AddNonSerializedListener(this, OnWeeklyTick);
+            CampaignEvents.WeeklyTickEvent.AddNonSerializedListener(this, () => Util.TYTLog.Guard("Mansabdari.WeeklyTick", OnWeeklyTick));
             CampaignEvents.DailyTickEvent.AddNonSerializedListener(this, OnDailyTick);
         }
 
@@ -221,12 +224,11 @@ namespace TakhtyaTaboot
         public string RequiredTitle(Settlement s) => Ranks[Math.Min(MaxIndex, RequiredRankIndex(s))].Title;
 
         // ── Lifecycle ─────────────────────────────────────────────────────────────
-        private void OnNewGame(CampaignGameStarter starter)
-        {
-            // Seed every clan with a rank that matches its starting army, granted by its ruler.
-            foreach (Clan clan in Clan.All.Where(c => !c.IsEliminated && !c.IsBanditFaction && c.Leader != null))
-                SetRankIndex(clan, QualifiedIndex(GetClanTotalTroops(clan)));
-        }
+        // OnNewGameCreated fires while world-gen is still creating clans/parties/fiefs on PARALLEL threads;
+        // iterating Clan.All / clan.WarPartyComponents / clan.Settlements here native-crashes (0xC0000005,
+        // no managed exception). So do NOTHING heavy here — just flag that ranks need seeding, and do the
+        // actual seeding in OnSessionLaunched once world-gen is complete and we're single-threaded.
+        private void OnNewGame(CampaignGameStarter starter) => _seedRanksOnLaunch = true;
 
         private void OnWeeklyTick()
         {
@@ -238,9 +240,10 @@ namespace TakhtyaTaboot
                 {
                     int sawar = GetClanTotalTroops(clan);
                     int idx = GetRankIndex(clan);
+                    int landFloor = FiefRankFloor(clan); // a landed lord never falls below his fiefs' demand
 
-                    // Demotion: drop while below the retention floor of the current rank.
-                    while (idx > 0 && sawar < Ranks[idx].Retention) idx--;
+                    // Demotion: drop while below the retention floor of the current rank (but not below land).
+                    while (idx > landFloor && sawar < Ranks[idx].Retention) idx--;
 
                     // AI auto-promotion (emperor rubber-stamps qualified vassals).
                     if (clan.Kingdom != null)
@@ -248,6 +251,7 @@ namespace TakhtyaTaboot
                         int q = QualifiedIndex(sawar);
                         if (q > idx) idx = q;
                     }
+                    if (idx < landFloor) idx = landFloor;
                     if (idx != GetRankIndex(clan)) SetRankIndex(clan, idx);
                 }
 
@@ -262,7 +266,9 @@ namespace TakhtyaTaboot
         }
 
         // ── Player muster clock & stipend (daily) ───────────────────────────────────
-        private void OnDailyTick()
+        private void OnDailyTick() => Util.TYTLog.Guard("Mansabdari.OnDailyTick", OnDailyTickImpl);
+
+        private void OnDailyTickImpl()
         {
             var clan = Clan.PlayerClan;
             if (clan == null) return;
@@ -364,6 +370,22 @@ namespace TakhtyaTaboot
             return idx;
         }
 
+        // A clan that HOLDS fiefs cannot be Unranked: holding a town implies at least Subahdar, a castle
+        // Qiledar, a village Zamindar. This floors a landed lord's mansab to what his greatest fief demands
+        // (so a fief-holder never shows as "Unranked"), without ever dragging a higher rank down.
+        private static int FiefRankFloor(Clan clan)
+        {
+            if (clan?.Settlements == null) return 0;
+            int floor = 0;
+            foreach (Settlement s in clan.Settlements)
+            {
+                if (s == null) continue;
+                int req = s.IsTown ? TownIndex : s.IsCastle ? CastleIndex : (s.IsVillage ? 1 : 0);
+                if (req > floor) floor = req;
+            }
+            return floor;
+        }
+
         // ── Player petition (called from menu) ────────────────────────────────────
         // Elevation is normally automatic once valour, renown and the Emperor's favour
         // all suffice (TryAutoElevatePlayer). This lets the player press the claim in
@@ -412,6 +434,22 @@ namespace TakhtyaTaboot
         // ── Menu ──────────────────────────────────────────────────────────────────
         private void OnSessionLaunched(CampaignGameStarter starter)
         {
+            // World-gen is complete and we are single-threaded now, so it is SAFE to read clans, parties and
+            // settlements. On a NEW game, seed every clan's rank from its army (floored to what its fiefs
+            // demand). On LOAD, ranks come from SyncData — only apply the fief floor, idempotently.
+            Util.TYTLog.Guard("Mansabdari.SeedRanks", () =>
+            {
+                foreach (Clan clan in Clan.All.Where(c => c != null && !c.IsEliminated && !c.IsBanditFaction && c.Leader != null))
+                {
+                    int floor = FiefRankFloor(clan);
+                    if (_seedRanksOnLaunch)
+                        SetRankIndex(clan, Math.Max(QualifiedIndex(GetClanTotalTroops(clan)), floor));
+                    else if (floor > GetRankIndex(clan))
+                        SetRankIndex(clan, floor);
+                }
+                _seedRanksOnLaunch = false;
+            });
+
             starter.AddGameMenuOption("town", "hindostan_mansab_town", "{=!}Review your mansabdari rank",
                 args => { args.optionLeaveType = GameMenuOption.LeaveType.Manage; return true; },
                 args => GameMenu.SwitchToMenu("hindostan_mansab"), false, 4);

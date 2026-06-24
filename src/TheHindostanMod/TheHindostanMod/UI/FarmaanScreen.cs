@@ -9,9 +9,12 @@ using TaleWorlds.ScreenSystem;
 namespace TakhtyaTaboot.UI
 {
     // Issues royal farmaans as a focus layer over whatever screen is current
-    // (usually the map). Adding a layer to the top screen — rather than pushing a
-    // new ScreenBase — is safe to call from campaign ticks. Farmaans are queued so
-    // only one shows at a time.
+    // (usually the map). Farmaans are queued so only one shows at a time.
+    //
+    // IMPORTANT: pushing the focus layer must NOT happen synchronously while the engine is
+    // iterating settlements (inside a daily settlement tick) — that re-enters the screen system
+    // mid-iteration and native-crashes. Callers on a settlement tick set SuppressImmediate and
+    // rely on Pump() (driven by the campaign TickEvent, off the iteration) to show the popup.
     public static class RoyalFarmaan
     {
         private class Pending
@@ -22,6 +25,20 @@ namespace TakhtyaTaboot.UI
 
         private static readonly Queue<Pending> _queue = new Queue<Pending>();
         private static bool _active;
+
+        // When set, Issue() only enqueues and does NOT push the layer synchronously. Adding a
+        // focus layer while the engine is iterating settlements (a daily settlement tick) is a
+        // native re-entrancy crash. Settlement ticks set this; Pump() (called off the iteration,
+        // from a campaign tick) drains the queue safely. Menu/dialog callers leave it false and
+        // still get an immediate popup.
+        public static bool SuppressImmediate;
+
+        // Show the next queued farmaan if one is waiting and none is on screen. Safe to call
+        // every tick; it no-ops when idle.
+        public static void Pump()
+        {
+            if (!_active && _queue.Count > 0) ShowNext();
+        }
         private static GauntletLayer _layer;
         private static ScreenBase _host;
         private static FarmaanVM _vm;
@@ -38,7 +55,7 @@ namespace TakhtyaTaboot.UI
                 Primary = primary, Secondary = secondary,
                 OnPrimary = onPrimary, OnSecondary = onSecondary,
             });
-            if (!_active) ShowNext();
+            if (!SuppressImmediate && !_active) ShowNext();
         }
 
         // A decree from a kingdom's sovereign.

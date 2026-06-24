@@ -138,4 +138,46 @@ Four different files own different parts of a lord, and confusing them wastes ti
 
 ---
 
+## 8. Parallel world-gen native crash class (NO managed exception, NO tyt_crash log)
+
+- **Symptom:** new game crashes to desktop with `0xC0000005` (access violation). **No** managed stack, **no** `TYTLog`/`tyt_crash` file — because the fault is in native code corrupting a half-built object, not a C# throw.
+- **Root cause (proven by reading handler bodies, not theorising):** at new-game start the engine creates heroes/clans/settlements **in parallel (multi-threaded)**. Any `CampaignEvent` handler that fires *during* world-gen and mutates non-thread-safe managed state (a `Dictionary`, an `MBList`, a shared field) races the engine's own writes → heap corruption → native crash. Confirmed writers were `OnSettlementOwnerChanged`/`OnClanChangedKingdom` handlers writing per-kingdom/per-settlement dictionaries (e.g. `ImperialAuthorityBehavior._authority[]`, MansabdariTenure appointedDay).
+- **The trap:** fixing ONE handler (we first fixed only MansabdariTenure) doesn't help — it's a **class** of bug. Every handler that can fire during world-gen must be gated.
+- **The fix — one shared gate:** `Util/WorldGen.cs` → `public static volatile bool Ready;` plus `WorldGenGuardBehavior` that sets `Ready=false` in `RegisterEvents` and `Ready=true` at `OnSessionLaunched`. **Register it FIRST** in `OnGameStart`. Then every world-gen-firing handler opens with `if (!Util.WorldGen.Ready) return;`. Currently gated: ImperialAuthority, RevoltCascade, ImperialCourt, FiefHierarchy, CareerProgression, Warfare, FeudalTitles, MansabdariTenure.
+- **Rule going forward:** any NEW `OnSettlementOwnerChanged` / `OnClanChangedKingdom` / `OnHeroCreated` / owner-or-kingdom-mutating handler **must** start with the `WorldGen.Ready` guard unless it provably only reads.
+
+## 9. Clan creation at runtime — there is no `InitializeClan`
+
+- `Clan.CreateClan(stringId)` returns an **empty shell**: no leader, culture, banner, home, name; `IsInitialized` false. There is **no public `InitializeClan`** on this engine build, and the generic reflection `PropertySetter("Leader", …)` **silently no-ops** (Leader has no usable setter that way).
+- **An uninitialised clan native-crashes the encyclopedia** the moment it's referenced (e.g. a temp claimant clan shown in a notification).
+- **Working recipe (all public unless noted):**
+  ```csharp
+  var clan = Clan.CreateClan("tyt_claim_" + id);
+  clan.SetLeader(hero);                       // public — the ONLY reliable leader setter
+  clan.SetInitialHomeSettlement(settlement);  // public
+  clan.Culture = culture;  clan.Banner = banner;   // public
+  // Name / InformalName: non-public setters via reflection
+  // IsInitialized: force true via reflection
+  // move a hero into the clan: non-public Hero.Clan setter via reflection
+  ```
+- Implemented in `Util/ClaimantClan.cs` (`BuildShell` + `Create` + `CreateExileHouse`). Reuse `BuildShell` for any future runtime clan (rebels, exile houses, cadet branches).
+
+## 10. War state — `IsAtWarWith` is truth; your own `_score` dict is not
+
+- **Symptom:** "Direct the war effort" reported *"the realm is at peace"* while two wars were active, and war score barely moved after a big battle.
+- **Cause:** the behaviour tracked wars only in its own `_score` dictionary, populated solely by `OnWarDeclared`. Wars that began before the behaviour loaded, or via other paths, were never tracked → invisible.
+- **Fix / rule:** never treat your own tracking dict as the source of war existence. Read engine truth: `kingdom.IsAtWarWith(other)` (or `FactionManager.IsAtWarAgainstFaction`). Add `EnsureWarTracked(kingdom)` that lazily creates a score entry from the engine's actual war list before reading/showing it. Score deltas now: battle 10 / siege 18 / enemy king captured +25.
+- **Regicide (`HeroKilledEvent`, killed hero is an enemy ruler):** `MakePeaceAction` (temporary peace from the loser), −30 relation with all their lords, register a revenge casus belli, −3 legitimacy for the perpetrator. Big consequences, as designed.
+
+## 11. Complete vanilla-name purge — culture-keyed outer ids are settable DIRECTLY
+
+- Extends §1/§3. The culture/faction/ruler strings in Native `module_strings.xml` are keyed by their **outer** id (`str_<base>.<culture>`), so `LocalizationOverride` sets them **without** needing the inner→outer `hindostan_string_map.xml` (that map is only for `std_*.xml` inner-keyed strings).
+- **The gap that leaked "Principality of Sturgia" / "King of the Vlandians":** coverage was *uneven* — some families/cultures had overrides, others didn't. The fix is **exhaustive generation**, not hand-editing. Two re-runnable generators:
+  - `tools/gen_faction_names.py` → `Languages/hindostan_faction_names.xml` (~115 rows): for **all 8 cultures**, every family — `str_faction_ruler[_f]`, `str_faction_official[_f]`, `str_faction_ruler_name_with_title`, `str_faction_ruler_term_in_speech`, `str_adjective_for_culture/faction`, `str_neutral_term_for_culture`, `str_short_term_for_faction`, `str_culture_rich_name`, `str_faction_formal_name_for_culture`, `str_faction_informal_name_for_culture`, `str_kingdom_formal_name` + `str_culture_description` for the 3 imperial cultures.
+  - `tools/gen_prose_overrides.py` → `Languages/hindostan_prose_overrides.xml` (~12 rows): proper-noun swaps (Calradia→Hindostan, Vlandia→Rajputana, Sturgia→Afghanistan, Battania→Maharashtra, Khuzait→Sikh, Aserai→Mysorean, Nord→Pathan) across all semantic-id prose; **excludes** culture-keyed ids (owned by the faction-names generator).
+- **Load order matters:** `LocalizationOverride.EnsureParsed` loads faction_names **LAST** so it wins. Adding a new term = one map entry + re-run the generator.
+- **Known remaining gap:** dialogue prose stored in `std_*.xml` under **inner `{=}` keys** is NOT covered by either generator — that needs `hindostan_string_map.xml` inner→outer entries (§1.5). If a vanilla name appears *in conversation*, it's almost certainly here.
+
+---
+
 **[Home](Home.md)**

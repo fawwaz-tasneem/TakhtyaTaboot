@@ -1,0 +1,16 @@
+15
+mesh editor_plane_low
+texture cg_50c_5b
+texture cliff_c_d
+texture cliff_c_h
+texture cliff_c_n
+texture cliff_c_s
+texture desert_floor_a
+texture lens_dirt
+texture lens_star
+texture semi_cloudy_2
+texture sun_core2
+texture vtstt_ground_grass_soil_a_d
+texture vtstt_ground_grass_soil_a_h
+texture vtstt_ground_grass_soil_a_n
+texture vtstt_ground_grass_soil_a_s

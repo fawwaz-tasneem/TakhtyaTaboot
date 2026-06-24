@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  CREATION templates for the Mughal succession emperors (the 1707 cascade). These MUST live under
+  the NPCCharacters node (same schema as vanilla lords.xml) — that is the only schema that declares
+  culture/skill_template/occupation and actually instantiates a hero. The companion <Hero> entries in
+  heroes.xml (Heroes node, override-only) supply faction + parentage + bio and DRIVE creation against
+  these templates. (A Heroes entry with no matching template here -> "Null object reference"/crash.)
+
+  Faces use BodyProperty face_key_template (age-appropriate procedural Mughal features) rather than a
+  hand-authored face key — exact historical likeness needs face codes from the in-game editor. Each
+  reuses the vanilla empire KING equipment set (battle + civilian; the civilian set is MANDATORY —
+  a missing civilian EquipmentSet native-crashes at world-gen).
+-->
+<NPCCharacters>
+
+	<!-- Aurangzeb's FACE is borrowed verbatim from the vanilla character Unqid (the Aserai sultan,
+	     vanilla lord_3_1) — a turbaned, bearded older ruler face fitting a Mughal emperor. Baked key +
+	     face_mesh_cache="true" so it renders exactly as Unqid's; aserai hair/beard tags match it. -->
+	<NPCCharacter id="tyt_aurangzeb" name="{=!}Aurangzeb Alamgir" age="88" voice="curt"
+		default_group="Infantry" is_hero="true" is_female="false"
+		culture="Culture.empire" skill_template="SkillSet.spc_politician_skills_ruler" occupation="Lord"
+		face_mesh_cache="true">
+		<face>
+			<BodyProperties version="4"
+				key="0028280FD7FC23C299C2761C4AC1A5954778548899A66659788878746A9D9629000F16530FA7699C000000000000000000000000000000000000000000F47140" />
+			<hair_tags><hair_tag name="aserai" /></hair_tags>
+			<beard_tags><beard_tag name="aserai" /></beard_tags>
+			<tattoo_tags><tattoo_tag name="Cleanface" /></tattoo_tags>
+		</face>
+		<Traits></Traits>
+		<Equipments>
+			<EquipmentRoster />
+			<EquipmentSet id="n_emp_king_template_bat_m" />
+			<EquipmentSet id="n_emp_king_template_civ_m" civilian="true" />
+		</Equipments>
+	</NPCCharacter>
+
+	<NPCCharacter id="tyt_bahadur_shah" name="{=!}Bahadur Shah I" age="68" voice="soft"
+		default_group="Cavalry" is_hero="true" is_female="false"
+		culture="Culture.empire" skill_template="SkillSet.spc_politician_skills_ruler" occupation="Lord">
+		<face>
+			<face_key_template value="BodyProperty.fighter_empire_veteran" />
+			<hair_tags><hair_tag name="empire" /></hair_tags>
+			<beard_tags><beard_tag name="empire" /></beard_tags>
+		</face>
+		<Traits></Traits>
+		<Equipments>
+			<EquipmentRoster />
+			<EquipmentSet id="n_emp_king_template_bat_m" />
+			<EquipmentSet id="n_emp_king_template_civ_m" civilian="true" />
+		</Equipments>
+	</NPCCharacter>
+
+	<NPCCharacter id="tyt_jahandar_shah" name="{=!}Jahandar Shah" age="50" voice="curt"
+		default_group="Cavalry" is_hero="true" is_female="false"
+		culture="Culture.empire" skill_template="SkillSet.spc_politician_skills_ruler" occupation="Lord">
+		<face>
+			<face_key_template value="BodyProperty.fighter_empire" />
+			<hair_tags><hair_tag name="empire" /></hair_tags>
+			<beard_tags><beard_tag name="empire" /></beard_tags>
+		</face>
+		<Traits></Traits>
+		<Equipments>
+			<EquipmentRoster />
+			<EquipmentSet id="n_emp_king_template_bat_m" />
+			<EquipmentSet id="n_emp_king_template_civ_m" civilian="true" />
+		</Equipments>
+	</NPCCharacter>
+
+	<NPCCharacter id="tyt_farrukhsiyar" name="{=!}Farrukhsiyar" age="35" voice="curt"
+		default_group="Cavalry" is_hero="true" is_female="false"
+		culture="Culture.empire" skill_template="SkillSet.spc_politician_skills_ruler" occupation="Lord">
+		<face>
+			<face_key_template value="BodyProperty.fighter_empire" />
+			<hair_tags><hair_tag name="empire" /></hair_tags>
+			<beard_tags><beard_tag name="empire" /></beard_tags>
+		</face>
+		<Traits></Traits>
+		<Equipments>
+			<EquipmentRoster />
+			<EquipmentSet id="n_emp_king_template_bat_m" />
+			<EquipmentSet id="n_emp_king_template_civ_m" civilian="true" />
+		</Equipments>
+	</NPCCharacter>
+
+	<NPCCharacter id="tyt_rafi_darajat" name="{=!}Rafi ud-Darajat" age="19" voice="soft"
+		default_group="Infantry" is_hero="true" is_female="false"
+		culture="Culture.empire" skill_template="SkillSet.spc_politician_skills_ruler" occupation="Lord">
+		<face>
+			<face_key_template value="BodyProperty.fighter_empire" />
+			<hair_tags><hair_tag name="empire" /></hair_tags>
+			<beard_tags><beard_tag name="empire" /></beard_tags>
+		</face>
+		<Traits></Traits>
+		<Equipments>
+			<EquipmentRoster />
+			<EquipmentSet id="n_emp_king_template_bat_m" />
+			<EquipmentSet id="n_emp_king_template_civ_m" civilian="true" />
+		</Equipments>
+	</NPCCharacter>
+
+	<NPCCharacter id="tyt_shah_jahan_2" name="{=!}Shah Jahan II" age="22" voice="soft"
+		default_group="Infantry" is_hero="true" is_female="false"
+		culture="Culture.empire" skill_template="SkillSet.spc_politician_skills_ruler" occupation="Lord">
+		<face>
+			<face_key_template value="BodyProperty.fighter_empire" />
+			<hair_tags><hair_tag name="empire" /></hair_tags>
+			<beard_tags><beard_tag name="empire" /></beard_tags>
+		</face>
+		<Traits></Traits>
+		<Equipments>
+			<EquipmentRoster />
+			<EquipmentSet id="n_emp_king_template_bat_m" />
+			<EquipmentSet id="n_emp_king_template_civ_m" civilian="true" />
+		</Equipments>
+	</NPCCharacter>
+
+	<!-- ===== Intermediate (non-ruling) princes — sons of Bahadur Shah I who never reigned but whose
+	     sons did. They exist solely to make the dynastic tree historically correct: Farrukhsiyar was
+	     grandson of Bahadur via Azim-ush-Shan; Rafi ud-Darajat & Shah Jahan II via Rafi-ush-Shan;
+	     Muhammad Shah via Jahan Shah. The succession cascade never crowns these three. ===== -->
+
+	<NPCCharacter id="tyt_azim_ush_shan" name="{=!}Azim-ush-Shan" age="43" voice="curt"
+		default_group="Cavalry" is_hero="true" is_female="false"
+		culture="Culture.empire" skill_template="SkillSet.spc_politician_skills_ruler" occupation="Lord">
+		<face>
+			<face_key_template value="BodyProperty.fighter_empire" />
+			<hair_tags><hair_tag name="empire" /></hair_tags>
+			<beard_tags><beard_tag name="empire" /></beard_tags>
+		</face>
+		<Traits></Traits>
+		<Equipments>
+			<EquipmentRoster />
+			<EquipmentSet id="n_emp_king_template_bat_m" />
+			<EquipmentSet id="n_emp_king_template_civ_m" civilian="true" />
+		</Equipments>
+	</NPCCharacter>
+
+	<NPCCharacter id="tyt_rafi_ush_shan" name="{=!}Rafi-ush-Shan" age="36" voice="curt"
+		default_group="Cavalry" is_hero="true" is_female="false"
+		culture="Culture.empire" skill_template="SkillSet.spc_politician_skills_ruler" occupation="Lord">
+		<face>
+			<face_key_template value="BodyProperty.fighter_empire" />
+			<hair_tags><hair_tag name="empire" /></hair_tags>
+			<beard_tags><beard_tag name="empire" /></beard_tags>
+		</face>
+		<Traits></Traits>
+		<Equipments>
+			<EquipmentRoster />
+			<EquipmentSet id="n_emp_king_template_bat_m" />
+			<EquipmentSet id="n_emp_king_template_civ_m" civilian="true" />
+		</Equipments>
+	</NPCCharacter>
+
+	<NPCCharacter id="tyt_jahan_shah" name="{=!}Jahan Shah" age="35" voice="soft"
+		default_group="Cavalry" is_hero="true" is_female="false"
+		culture="Culture.empire" skill_template="SkillSet.spc_politician_skills_ruler" occupation="Lord">
+		<face>
+			<face_key_template value="BodyProperty.fighter_empire" />
+			<hair_tags><hair_tag name="empire" /></hair_tags>
+			<beard_tags><beard_tag name="empire" /></beard_tags>
+		</face>
+		<Traits></Traits>
+		<Equipments>
+			<EquipmentRoster />
+			<EquipmentSet id="n_emp_king_template_bat_m" />
+			<EquipmentSet id="n_emp_king_template_civ_m" civilian="true" />
+		</Equipments>
+	</NPCCharacter>
+
+	<!-- ===== Imperial CONSORTS (the mothers). Bannerlord wires a family as a spouse COUPLE: every
+	     child needs a father AND a mother for siblings/uncles/nephews to resolve and to render on
+	     each member's encyclopedia page (vanilla never uses father-only). One principal consort per
+	     father; her children carry mother="Hero.<her>". Queen face/equipment (female). ===== -->
+
+	<NPCCharacter id="tyt_nawab_bai" name="{=!}Nawab Bai" age="78" voice="mild" is_female="true"
+		default_group="Infantry" is_hero="true"
+		culture="Culture.empire" skill_template="SkillSet.spc_politician_skills_ruler" occupation="Lord"
+		face_mesh_cache="true">
+		<face>
+			<BodyProperties version="4" weight="0.1" build="0.3"
+				key="0000AC0E50FC30045948A3188A41766557598897843A8925A7E38F398578987400070656077375210000000000000000000000000000000000000000011C1040" />
+			<hair_tags><hair_tag name="empire" /></hair_tags>
+			<tattoo_tags><tattoo_tag name="Cleanface" /></tattoo_tags>
+		</face>
+		<Traits></Traits>
+		<Equipments>
+			<EquipmentRoster />
+			<EquipmentSet id="s_emp_king_template_bat_f" />
+			<EquipmentSet id="s_emp_king_template_civ_f" civilian="true" />
+		</Equipments>
+	</NPCCharacter>
+
+	<NPCCharacter id="tyt_nizam_bai" name="{=!}Nizam Bai" age="62" voice="mild" is_female="true"
+		default_group="Infantry" is_hero="true"
+		culture="Culture.empire" skill_template="SkillSet.spc_politician_skills_ruler" occupation="Lord"
+		face_mesh_cache="true">
+		<face>
+			<BodyProperties version="4" weight="0.1" build="0.3"
+				key="0000AC0E50FC30045948A3188A41766557598897843A8925A7E38F398578987400070656077375210000000000000000000000000000000000000000011C1040" />
+			<hair_tags><hair_tag name="empire" /></hair_tags>
+			<tattoo_tags><tattoo_tag name="Cleanface" /></tattoo_tags>
+		</face>
+		<Traits></Traits>
+		<Equipments>
+			<EquipmentRoster />
+			<EquipmentSet id="s_emp_king_template_bat_f" />
+			<EquipmentSet id="s_emp_king_template_civ_f" civilian="true" />
+		</Equipments>
+	</NPCCharacter>
+
+	<NPCCharacter id="tyt_sahiba_niswan" name="{=!}Sahiba Niswan" age="40" voice="mild" is_female="true"
+		default_group="Infantry" is_hero="true"
+		culture="Culture.empire" skill_template="SkillSet.spc_politician_skills_ruler" occupation="Lord"
+		face_mesh_cache="true">
+		<face>
+			<BodyProperties version="4" weight="0.1" build="0.3"
+				key="0000AC0E50FC30045948A3188A41766557598897843A8925A7E38F398578987400070656077375210000000000000000000000000000000000000000011C1040" />
+			<hair_tags><hair_tag name="empire" /></hair_tags>
+			<tattoo_tags><tattoo_tag name="Cleanface" /></tattoo_tags>
+		</face>
+		<Traits></Traits>
+		<Equipments>
+			<EquipmentRoster />
+			<EquipmentSet id="s_emp_king_template_bat_f" />
+			<EquipmentSet id="s_emp_king_template_civ_f" civilian="true" />
+		</Equipments>
+	</NPCCharacter>
+
+	<NPCCharacter id="tyt_nur_un_nissa" name="{=!}Nur-un-Nissa Begum" age="38" voice="mild" is_female="true"
+		default_group="Infantry" is_hero="true"
+		culture="Culture.empire" skill_template="SkillSet.spc_politician_skills_ruler" occupation="Lord"
+		face_mesh_cache="true">
+		<face>
+			<BodyProperties version="4" weight="0.1" build="0.3"
+				key="0000AC0E50FC30045948A3188A41766557598897843A8925A7E38F398578987400070656077375210000000000000000000000000000000000000000011C1040" />
+			<hair_tags><hair_tag name="empire" /></hair_tags>
+			<tattoo_tags><tattoo_tag name="Cleanface" /></tattoo_tags>
+		</face>
+		<Traits></Traits>
+		<Equipments>
+			<EquipmentRoster />
+			<EquipmentSet id="s_emp_king_template_bat_f" />
+			<EquipmentSet id="s_emp_king_template_civ_f" civilian="true" />
+		</Equipments>
+	</NPCCharacter>
+
+	<NPCCharacter id="tyt_fakhr_un_nissa" name="{=!}Fakhr-un-Nissa Begum" age="50" voice="mild" is_female="true"
+		default_group="Infantry" is_hero="true"
+		culture="Culture.empire" skill_template="SkillSet.spc_politician_skills_ruler" occupation="Lord"
+		face_mesh_cache="true">
+		<face>
+			<BodyProperties version="4" weight="0.1" build="0.3"
+				key="0000AC0E50FC30045948A3188A41766557598897843A8925A7E38F398578987400070656077375210000000000000000000000000000000000000000011C1040" />
+			<hair_tags><hair_tag name="empire" /></hair_tags>
+			<tattoo_tags><tattoo_tag name="Cleanface" /></tattoo_tags>
+		</face>
+		<Traits></Traits>
+		<Equipments>
+			<EquipmentRoster />
+			<EquipmentSet id="s_emp_king_template_bat_f" />
+			<EquipmentSet id="s_emp_king_template_civ_f" civilian="true" />
+		</Equipments>
+	</NPCCharacter>
+
+</NPCCharacters>

@@ -26,7 +26,7 @@ namespace TakhtyaTaboot
             Instance = this;
             CampaignEvents.OnNewGameCreatedEvent.AddNonSerializedListener(this, OnNewGame);
             CampaignEvents.OnSessionLaunchedEvent.AddNonSerializedListener(this, OnSessionLaunched);
-            CampaignEvents.WeeklyTickEvent.AddNonSerializedListener(this, OnWeeklyTick);
+            CampaignEvents.WeeklyTickEvent.AddNonSerializedListener(this, () => Util.TYTLog.Guard("ImperialAuthority.WeeklyTick", OnWeeklyTick));
             CampaignEvents.OnSettlementOwnerChangedEvent.AddNonSerializedListener(this, OnSettlementOwnerChanged);
         }
 
@@ -111,6 +111,7 @@ namespace TakhtyaTaboot
         private void OnSettlementOwnerChanged(Settlement settlement, bool openToClaim, Hero newOwner,
             Hero oldOwner, Hero capturerHero, ChangeOwnerOfSettlementAction.ChangeOwnerOfSettlementDetail detail)
         {
+            if (!Util.WorldGen.Ready) return; // skip the parallel world-gen distribution (see Util/WorldGen.cs)
             if (settlement == null || settlement.IsVillage) return;
             Kingdom lost = oldOwner?.Clan?.Kingdom;
             Kingdom gained = newOwner?.Clan?.Kingdom;

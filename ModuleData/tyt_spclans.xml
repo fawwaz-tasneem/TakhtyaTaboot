@@ -142,7 +142,7 @@
   </Faction>
 -->
   <!-- Aristocratic starting kingdom -->
-  <Faction id="clan_empire_north_1" initial_home_settlement="Settlement.town_EN2" name="House of Timur" tier="6" owner="Hero.lord_1_1" culture="Culture.empire" super_faction="Kingdom.empire" is_noble="true" banner_key="11.126.7.4922.4922.764.764.1.0.0.529.5.0.152.152.872.873.0.0.0.419.5.0.510.510.764.764.0.0.0.526.5.0.152.152.656.873.0.0.0.527.5.0.152.152.651.654.0.0.0.528.5.0.152.152.877.654.0.0.0" />
+  <Faction id="clan_empire_north_1" initial_home_settlement="Settlement.town_EN2" name="House of Timur" tier="6" owner="Hero.tyt_aurangzeb" culture="Culture.empire" super_faction="Kingdom.empire" is_noble="true" banner_key="11.126.7.4922.4922.764.764.1.0.0.102.7.0.500.500.764.764.0.0.0" />
   <!--
 	Aristocratic clan - head of west empire
 	Patriarch 1_1 - Clearcos
@@ -152,7 +152,7 @@
 	"The Osticoi are one of the oldest families in the Empire, and the wealthiest. They have always resented it when the Emperor is chosen
 	from another dynasty.
 	-->
-  <Faction id="clan_empire_north_2" initial_home_settlement="Settlement.town_EN1" name="Najaf Khani" tier="5" owner="Hero.lord_1_3" culture="Culture.empire" super_faction="Kingdom.empire" is_noble="true" banner_key="11.126.7.4922.4922.764.764.1.0.0.142.5.0.502.502.764.676.0.0.1.142.5.0.502.502.764.852.0.0.179" />
+  <Faction id="clan_empire_north_2" initial_home_settlement="Settlement.town_EN1" name="Najaf Khani" tier="5" owner="Hero.lord_1_3" culture="Culture.empire" super_faction="Kingdom.empire" is_noble="true" banner_key="11.126.7.4922.4922.764.764.1.0.0.102.7.0.500.500.764.764.0.0.0" />
   <!--
 	Sympathetic: O
 	Philosophical clan? Views Osticos as most likely to restore republic
@@ -170,22 +170,22 @@
 	Stenecos is a dour man, who expects much of himself and much of others. But they are known for being trustworthy,
 	and diligent in their execution of warfare against the Empire's enemies."	
 		-->
-  <Faction id="clan_empire_north_3" initial_home_settlement="Settlement.town_EN3" name="Rohilla" tier="4" owner="Hero.lord_1_5" culture="Culture.empire" super_faction="Kingdom.empire" is_noble="true" banner_key="11.126.7.4345.4345.764.764.1.0.0.302.5.0.294.294.802.604.0.0.327.302.5.0.294.294.726.604.0.0.32.202.5.0.366.366.854.864.0.0.47.202.5.0.371.382.674.864.0.1.316.320.5.0.315.315.764.715.0.0.0" />
+  <Faction id="clan_empire_north_3" initial_home_settlement="Settlement.town_EN3" name="Rohilla" tier="4" owner="Hero.lord_1_5" culture="Culture.empire" super_faction="Kingdom.empire" is_noble="true" banner_key="11.126.7.4345.4345.764.764.1.0.0.102.7.0.500.500.764.764.0.0.0" />
   <!--
 	Unsympathetic: close-minded
 	Patriarch (1_5) is imperial blowhard
 	Heir 23 - is younger imperial blowhard
 	Lieutenant	
 	-->
-  <Faction id="clan_empire_north_4" initial_home_settlement="Settlement.town_EN6" name="Bangash" tier="4" owner="Hero.lord_1_20" culture="Culture.empire" super_faction="Kingdom.empire" is_noble="true" banner_key="11.126.7.4345.4345.764.764.1.0.0.304.5.0.454.454.914.764.0.0.0.443.5.0.510.510.764.764.0.0.0.304.5.0.426.426.614.764.0.0.0" />
-  <Faction id="clan_empire_north_5" initial_home_settlement="Settlement.town_EN5" name="House of Khas-Khel" tier="3" owner="Hero.lord_1_50" culture="Culture.empire" super_faction="Kingdom.empire" is_noble="true" banner_key="11.126.7.8690.8690.590.796.1.0.0.202.5.0.368.368.854.864.0.0.55.202.5.0.370.389.674.864.0.1.303.331.5.0.368.368.764.699.0.0.0" />
-  <Faction id="clan_empire_north_6" initial_home_settlement="Settlement.castle_EN2" name="Qamar ud Din" tier="2" owner="Hero.lord_1_51" culture="Culture.empire" super_faction="Kingdom.empire" is_noble="true" banner_key="11.126.7.4345.4345.764.764.1.0.0.502.5.0.487.487.764.764.0.0.0.300.5.0.447.447.764.764.0.0.0" />
-  <Faction id="clan_empire_north_7" initial_home_settlement="Settlement.castle_EN7" name="Barha Sayyid" tier="1" owner="Hero.lord_1_58" culture="Culture.empire" super_faction="Kingdom.empire" is_noble="true" banner_key="11.126.7.4345.4345.764.764.1.0.0.423.5.0.506.506.764.764.0.0.0.529.5.0.261.261.764.764.0.0.0" />
-  <Faction id="clan_empire_north_8" initial_home_settlement="Settlement.castle_EN8" name="Mir Atish" tier="3" owner="Hero.lord_NE8_l" culture="Culture.empire" super_faction="Kingdom.empire" is_noble="true" banner_key="11.126.7.4345.4345.764.764.1.0.0.502.5.0.510.510.764.764.0.0.0.338.5.0.487.487.764.764.0.0.0.503.5.0.109.109.764.624.0.0.0" />
-  <Faction id="clan_empire_north_9" initial_home_settlement="Settlement.castle_EN3" name="Badakshi" tier="2" owner="Hero.lord_NE9_l" culture="Culture.empire" super_faction="Kingdom.empire" is_noble="true" banner_key="11.126.7.8690.8690.764.764.1.0.0.401.5.0.287.287.764.764.0.0.15.401.5.0.145.145.764.764.0.0.29.503.5.0.50.48.764.764.0.0.15.423.5.0.428.438.764.764.0.0.0" />
+  <Faction id="clan_empire_north_4" initial_home_settlement="Settlement.town_EN6" name="Bangash" tier="4" owner="Hero.lord_1_20" culture="Culture.empire" super_faction="Kingdom.empire" is_noble="true" banner_key="11.126.7.4345.4345.764.764.1.0.0.102.7.0.500.500.764.764.0.0.0" />
+  <Faction id="clan_empire_north_5" initial_home_settlement="Settlement.town_EN5" name="House of Khas-Khel" tier="3" owner="Hero.lord_1_50" culture="Culture.empire" super_faction="Kingdom.empire" is_noble="true" banner_key="11.126.7.8690.8690.590.796.1.0.0.102.7.0.500.500.764.764.0.0.0" />
+  <Faction id="clan_empire_north_6" initial_home_settlement="Settlement.castle_EN2" name="Qamar ud Din" tier="2" owner="Hero.lord_1_51" culture="Culture.empire" super_faction="Kingdom.empire" is_noble="true" banner_key="11.126.7.4345.4345.764.764.1.0.0.102.7.0.500.500.764.764.0.0.0" />
+  <Faction id="clan_empire_north_7" initial_home_settlement="Settlement.castle_EN7" name="Barha Sayyid" tier="1" owner="Hero.lord_1_58" culture="Culture.empire" super_faction="Kingdom.empire" is_noble="true" banner_key="11.126.7.4345.4345.764.764.1.0.0.102.7.0.500.500.764.764.0.0.0" />
+  <Faction id="clan_empire_north_8" initial_home_settlement="Settlement.castle_EN8" name="Qizilbash" tier="3" owner="Hero.lord_NE8_l" culture="Culture.empire" super_faction="Kingdom.empire" is_noble="true" banner_key="11.126.7.4345.4345.764.764.1.0.0.102.7.0.500.500.764.764.0.0.0" />
+  <Faction id="clan_empire_north_9" initial_home_settlement="Settlement.castle_EN3" name="Badakshi" tier="2" owner="Hero.lord_NE9_l" culture="Culture.empire" super_faction="Kingdom.empire" is_noble="true" banner_key="11.126.7.8690.8690.764.764.1.0.0.102.7.0.500.500.764.764.0.0.0" />
   <!-- Populist starting kingdom - WEST-->
-  <Faction id="clan_empire_west_1" initial_home_settlement="Settlement.town_EW2" name="Aal Nazim" tier="6" owner="Hero.lord_1_7" culture="Culture.empire" super_faction="Kingdom.empire_w" is_noble="true" color="FF1A3A7A" color2="FFD4AF37" banner_key="11.12.7.4922.4922.776.777.1.0.0.203.5.0.305.305.764.774.0.0.0.323.5.0.509.509.764.764.0.0.0" />
-  <Faction id="clan_empire_west_2" initial_home_settlement="Settlement.town_EW4" name="Jagat Seth" tier="5" owner="Hero.lord_1_9" culture="Culture.empire" super_faction="Kingdom.empire_w" is_noble="true" color="FF1A3A7A" color2="FFD4AF37" banner_key="11.12.7.4922.4922.764.764.1.0.0.337.5.0.272.272.764.672.0.0.0.301.5.0.292.292.764.916.0.0.90.301.5.0.292.292.764.844.0.0.270" />
+  <Faction id="clan_empire_west_1" initial_home_settlement="Settlement.town_EW2" name="Nasiri" tier="6" owner="Hero.lord_1_7" culture="Culture.empire" super_faction="Kingdom.empire_w" is_noble="true" color="FF1A3A7A" color2="FFD4AF37" banner_key="11.12.7.4922.4922.776.777.1.0.0.205.7.0.500.500.764.764.0.0.0" />
+  <Faction id="clan_empire_west_2" initial_home_settlement="Settlement.town_EW4" name="Jagat Seth" tier="5" owner="Hero.lord_1_9" culture="Culture.empire" super_faction="Kingdom.empire_w" is_noble="true" color="FF1A3A7A" color2="FFD4AF37" banner_key="11.12.7.4922.4922.764.764.1.0.0.205.7.0.500.500.764.764.0.0.0" />
   <!--
 	Fully unsympathetic clan - terrorizes their valley
 	Apokos, Father - debauched, based on Alexius Apokaukos, master schemer	
@@ -193,20 +193,20 @@
 	Heiress leads armies - equally charismatic psychopath	
 	MINOR FACTION: POSITIVE ties to Hidden Ones
   -->
-  <Faction id="clan_empire_west_3" initial_home_settlement="Settlement.town_EW1" name="Aal Reza" tier="4" owner="Hero.lord_1_11" culture="Culture.empire" super_faction="Kingdom.empire_w" is_noble="true" color="FF1A3A7A" color2="FFD4AF37" banner_key="11.12.7.4922.4922.764.764.1.0.0.103.5.0.454.454.764.764.0.0.0" />
+  <Faction id="clan_empire_west_3" initial_home_settlement="Settlement.town_EW1" name="Natore Raj" tier="4" owner="Hero.lord_1_11" culture="Culture.empire" super_faction="Kingdom.empire_w" is_noble="true" color="FF1A3A7A" color2="FFD4AF37" banner_key="11.12.7.4922.4922.764.764.1.0.0.205.7.0.500.500.764.764.0.0.0" />
   <!--
 	Sympathetic - Border guards - many sacrifices but much sense of entitlement
 	Ancestor was Asurai emir
 	Draw on Akritic ballads
 	-->
-  <Faction id="clan_empire_west_4" initial_home_settlement="Settlement.town_EW5" name="Purnea" tier="4" owner="Hero.lord_1_40" culture="Culture.empire" super_faction="Kingdom.empire_w" is_noble="true" color="FF1A3A7A" color2="FFD4AF37" banner_key="11.12.7.4922.4922.764.764.1.0.0.201.5.0.454.454.914.764.0.0.180.201.5.0.454.454.764.764.0.0.0.201.5.0.454.454.614.764.0.0.180" />
-  <Faction id="clan_empire_west_5" initial_home_settlement="Settlement.town_EW6" name="Aal Qasim" tier="3" owner="Hero.lord_1_45" culture="Culture.empire" super_faction="Kingdom.empire_w" is_noble="true" color="FF1A3A7A" color2="FFD4AF37" banner_key="11.12.7.4922.4922.776.777.1.0.0.418.5.0.285.285.764.764.0.0.0.500.5.0.454.454.764.764.0.0.0.500.5.0.380.380.764.762.0.0.0" />
-  <Faction id="clan_empire_west_6" initial_home_settlement="Settlement.castle_EW8" name="Burdwan Raj" tier="3" owner="Hero.lord_1_52" culture="Culture.empire" super_faction="Kingdom.empire_w" is_noble="true" color="FF1A3A7A" color2="FFD4AF37" banner_key="11.12.7.4922.4922.764.764.1.0.0.336.5.0.454.454.764.764.0.1.180.340.5.0.171.171.764.564.0.0.0" />
-  <Faction id="clan_empire_west_7" initial_home_settlement="Settlement.castle_EW5" name="Aal Haibat" tier="3" owner="Hero.lord_1_53" culture="Culture.empire" super_faction="Kingdom.empire_w" is_noble="true" color="FF1A3A7A" color2="FFD4AF37" banner_key="11.12.7.4922.4922.764.764.1.0.0.423.5.0.454.454.764.764.0.0.1.340.5.0.300.300.764.754.0.0.0" />
-  <Faction id="clan_empire_west_8" initial_home_settlement="Settlement.castle_EW6" name="Dacca Nawabs" tier="1" owner="Hero.lord_1_71" culture="Culture.empire" super_faction="Kingdom.empire_w" is_noble="true" color="FF1A3A7A" color2="FFD4AF37" banner_key="11.12.7.4922.4922.764.764.1.0.0.419.5.0.454.454.764.764.0.0.0.335.5.0.143.143.873.642.0.0.325.335.5.0.143.143.655.642.0.0.42.335.5.0.143.143.651.882.0.0.134.335.5.0.143.143.877.882.0.0.214" />
-  <Faction id="clan_empire_west_9" initial_home_settlement="Settlement.castle_EW7" name="Aal Rayan" tier="2" owner="Hero.lord_WE9_l" culture="Culture.empire" super_faction="Kingdom.empire_w" is_noble="true" color="FF1A3A7A" color2="FFD4AF37" banner_key="11.12.7.4922.4922.776.777.1.0.0.343.5.0.419.348.764.910.0.0.0.106.5.0.422.411.764.651.0.0.0.505.5.0.87.47.764.805.0.0.0" />
+  <Faction id="clan_empire_west_4" initial_home_settlement="Settlement.town_EW5" name="Purnea" tier="4" owner="Hero.lord_1_40" culture="Culture.empire" super_faction="Kingdom.empire_w" is_noble="true" color="FF1A3A7A" color2="FFD4AF37" banner_key="11.12.7.4922.4922.764.764.1.0.0.205.7.0.500.500.764.764.0.0.0" />
+  <Faction id="clan_empire_west_5" initial_home_settlement="Settlement.town_EW6" name="Nadia Raj" tier="3" owner="Hero.lord_1_45" culture="Culture.empire" super_faction="Kingdom.empire_w" is_noble="true" color="FF1A3A7A" color2="FFD4AF37" banner_key="11.12.7.4922.4922.776.777.1.0.0.205.7.0.500.500.764.764.0.0.0" />
+  <Faction id="clan_empire_west_6" initial_home_settlement="Settlement.castle_EW8" name="Burdwan Raj" tier="3" owner="Hero.lord_1_52" culture="Culture.empire" super_faction="Kingdom.empire_w" is_noble="true" color="FF1A3A7A" color2="FFD4AF37" banner_key="11.12.7.4922.4922.764.764.1.0.0.205.7.0.500.500.764.764.0.0.0" />
+  <Faction id="clan_empire_west_7" initial_home_settlement="Settlement.castle_EW5" name="Rajshahi" tier="3" owner="Hero.lord_1_53" culture="Culture.empire" super_faction="Kingdom.empire_w" is_noble="true" color="FF1A3A7A" color2="FFD4AF37" banner_key="11.12.7.4922.4922.764.764.1.0.0.205.7.0.500.500.764.764.0.0.0" />
+  <Faction id="clan_empire_west_8" initial_home_settlement="Settlement.castle_EW6" name="Dacca Nawabs" tier="1" owner="Hero.lord_1_71" culture="Culture.empire" super_faction="Kingdom.empire_w" is_noble="true" color="FF1A3A7A" color2="FFD4AF37" banner_key="11.12.7.4922.4922.764.764.1.0.0.205.7.0.500.500.764.764.0.0.0" />
+  <Faction id="clan_empire_west_9" initial_home_settlement="Settlement.castle_EW7" name="Dinajpur Raj" tier="2" owner="Hero.lord_WE9_l" culture="Culture.empire" super_faction="Kingdom.empire_w" is_noble="true" color="FF1A3A7A" color2="FFD4AF37" banner_key="11.12.7.4922.4922.776.777.1.0.0.205.7.0.500.500.764.764.0.0.0" />
   <!-- Monarchist starting kingdom -->
-  <Faction id="clan_empire_south_1" initial_home_settlement="Settlement.town_ES4" name="Asaf Jahi" tier="6" owner="Hero.lord_1_47" culture="Culture.empire" super_faction="Kingdom.empire_s" is_noble="true" color="FFE3B505" color2="FF145A32" banner_key="11.229.126.4922.4922.764.764.1.0.0.200.5.0.237.237.683.905.0.0.0.200.5.0.247.237.844.906.0.1.0.326.5.0.215.206.764.714.0.1.0" />
+  <Faction id="clan_empire_south_1" initial_home_settlement="Settlement.town_ES4" name="Asaf Jahi" tier="6" owner="Hero.lord_1_47" culture="Culture.empire" super_faction="Kingdom.empire_s" is_noble="true" color="FFE3B505" color2="FF145A32" banner_key="11.229.172.4922.4922.764.764.1.0.0.430.116.0.500.500.764.764.0.0.0" />
   <!--
 	Head of clan - Queen, niece of the emperor, raised abroad, blood of the Padishah as well
 	Queen's consort - of imperial birth, charismatic but vindictive,
@@ -219,21 +219,21 @@
 	Cunning, pragmatist heir
 		"The empire is beset on all sides, it defeat its foes, it must absorb them."
 	-->
-  <Faction id="clan_empire_south_2" initial_home_settlement="Settlement.town_ES3" name="Paigah" tier="4" owner="Hero.lord_1_15" culture="Culture.empire" super_faction="Kingdom.empire_s" is_noble="true" color="FFE3B505" color2="FF145A32" banner_key="11.229.126.4922.4922.764.764.1.0.0.214.5.0.463.463.764.764.0.0.0" />
+  <Faction id="clan_empire_south_2" initial_home_settlement="Settlement.town_ES3" name="Paigah" tier="4" owner="Hero.lord_1_15" culture="Culture.empire" super_faction="Kingdom.empire_s" is_noble="true" color="FFE3B505" color2="FF145A32" banner_key="11.229.172.4922.4922.764.764.1.0.0.430.116.0.500.500.764.764.0.0.0" />
   <!--
 	Mestricaros - Long list of grievances against other large families, sided with Pathros by default
 	Uncle - Cunning, frustrated
 -->
-  <Faction id="clan_empire_south_3" initial_home_settlement="Settlement.town_ES1" name="Salar Jung" tier="5" owner="Hero.lord_1_17" culture="Culture.empire" super_faction="Kingdom.empire_s" is_noble="true" color="FFE3B505" color2="FF145A32" banner_key="11.229.126.4922.4922.764.764.1.0.0.108.5.0.485.485.764.644.0.0.0.325.5.0.454.454.764.844.0.0.0" />
+  <Faction id="clan_empire_south_3" initial_home_settlement="Settlement.town_ES1" name="Salar Jung" tier="5" owner="Hero.lord_1_17" culture="Culture.empire" super_faction="Kingdom.empire_s" is_noble="true" color="FFE3B505" color2="FF145A32" banner_key="11.229.172.4922.4922.764.764.1.0.0.430.116.0.500.500.764.764.0.0.0" />
   <!--	
 	Hongeros - Turiados is a genuine autocrat. 'I would rather be ruled by the well-fed than the hungry, by one satisfied thief than a hundred frustrated thieves.'
 	-->
-  <Faction id="clan_empire_south_4" initial_home_settlement="Settlement.town_ES2" name="Kalyani" tier="4" owner="Hero.lord_1_30" culture="Culture.empire" super_faction="Kingdom.empire_s" is_noble="true" color="FFE3B505" color2="FF145A32" banner_key="11.229.126.4922.4922.764.764.1.0.0.418.5.0.147.147.604.882.0.0.0.107.5.0.454.454.764.764.0.0.0.418.5.0.147.147.924.882.0.0.0" />
-  <Faction id="clan_empire_south_5" initial_home_settlement="Settlement.town_ES7" name="Arcot" tier="3" owner="Hero.lord_1_63" culture="Culture.empire" super_faction="Kingdom.empire_s" is_noble="true" color="FFE3B505" color2="FF145A32" banner_key="11.229.126.4922.4922.764.764.1.0.0.119.5.0.344.344.764.658.0.0.0.217.5.0.303.303.764.924.0.0.0.510.5.0.243.505.774.787.0.0.0" />
-  <Faction id="clan_empire_south_6" initial_home_settlement="Settlement.town_ES6" name="Habshi" tier="3" owner="Hero.lord_1_54" culture="Culture.empire" super_faction="Kingdom.empire_s" is_noble="true" color="FFE3B505" color2="FF145A32" banner_key="11.229.126.4922.4922.764.764.1.0.0.304.5.0.366.366.763.844.0.0.0.423.5.0.420.420.763.764.0.1.0" />
-  <Faction id="clan_empire_south_7" initial_home_settlement="Settlement.castle_ES3" name="Salabat Khani" tier="3" owner="Hero.lord_1_55" culture="Culture.empire" super_faction="Kingdom.empire_s" is_noble="true" color="FFE3B505" color2="FF145A32" banner_key="11.229.126.4922.4922.764.764.1.0.0.510.5.0.507.55.764.1025.0.0.0.459.5.0.507.507.764.764.0.0.0.510.5.0.507.171.764.997.0.0.0.510.5.0.507.171.764.532.0.0.0.510.5.0.507.55.764.501.0.0.0" />
-  <Faction id="clan_empire_south_8" initial_home_settlement="Settlement.castle_ES5" name="Berar Rajas" tier="1" owner="Hero.lord_1_72" culture="Culture.empire" super_faction="Kingdom.empire_s" is_noble="true" color="FFE3B505" color2="FF145A32" banner_key="11.229.126.4922.4922.764.764.1.0.0.147.5.0.454.454.764.765.0.0.0" />
-  <Faction id="clan_empire_south_9" initial_home_settlement="Settlement.castle_ES7" name="Aal Habib" tier="2" owner="Hero.lord_SE9_l" culture="Culture.empire" super_faction="Kingdom.empire_s" is_noble="true" color="FFE3B505" color2="FF145A32" banner_key="11.229.126.4922.4922.764.764.1.0.0.505.5.0.460.50.764.764.0.0.0.459.5.0.150.150.660.658.0.0.0.459.5.0.150.150.871.658.0.0.0.459.5.0.150.150.871.870.0.0.0.459.5.0.150.150.660.870.0.0.0.505.5.0.460.50.765.764.0.0.10" />
+  <Faction id="clan_empire_south_4" initial_home_settlement="Settlement.town_ES2" name="Kalyani" tier="4" owner="Hero.lord_1_30" culture="Culture.empire" super_faction="Kingdom.empire_s" is_noble="true" color="FFE3B505" color2="FF145A32" banner_key="11.229.172.4922.4922.764.764.1.0.0.430.116.0.500.500.764.764.0.0.0" />
+  <Faction id="clan_empire_south_5" initial_home_settlement="Settlement.town_ES7" name="Arcot" tier="3" owner="Hero.lord_1_63" culture="Culture.empire" super_faction="Kingdom.empire_s" is_noble="true" color="FFE3B505" color2="FF145A32" banner_key="11.229.172.4922.4922.764.764.1.0.0.430.116.0.500.500.764.764.0.0.0" />
+  <Faction id="clan_empire_south_6" initial_home_settlement="Settlement.town_ES6" name="Habshi" tier="3" owner="Hero.lord_1_54" culture="Culture.empire" super_faction="Kingdom.empire_s" is_noble="true" color="FFE3B505" color2="FF145A32" banner_key="11.229.172.4922.4922.764.764.1.0.0.430.116.0.500.500.764.764.0.0.0" />
+  <Faction id="clan_empire_south_7" initial_home_settlement="Settlement.castle_ES3" name="Salabat Khani" tier="3" owner="Hero.lord_1_55" culture="Culture.empire" super_faction="Kingdom.empire_s" is_noble="true" color="FFE3B505" color2="FF145A32" banner_key="11.229.172.4922.4922.764.764.1.0.0.430.116.0.500.500.764.764.0.0.0" />
+  <Faction id="clan_empire_south_8" initial_home_settlement="Settlement.castle_ES5" name="Berar Rajas" tier="1" owner="Hero.lord_1_72" culture="Culture.empire" super_faction="Kingdom.empire_s" is_noble="true" color="FFE3B505" color2="FF145A32" banner_key="11.229.172.4922.4922.764.764.1.0.0.430.116.0.500.500.764.764.0.0.0" />
+  <Faction id="clan_empire_south_9" initial_home_settlement="Settlement.castle_ES7" name="Bilgrami" tier="2" owner="Hero.lord_SE9_l" culture="Culture.empire" super_faction="Kingdom.empire_s" is_noble="true" color="FFE3B505" color2="FF145A32" banner_key="11.229.172.4922.4922.764.764.1.0.0.430.116.0.500.500.764.764.0.0.0" />
   <!--
 	ASURAI
 	Jawwal, Ghilman0
@@ -244,33 +244,33 @@
 	The Ghulam are an order of warrior-slaves. They originated as the bodyguard of an imperial noble who tried - and failed - to subdue the desert frontier, but during the chaos that preceded the establishment of the Asuri state they set themselves up as independent mercenaries. They purchase new recruits from slave markets across the empire, putting them through a rigorous course of training before initiating them into the order.	
 	-->
   <!--Quraysh-like clan, established and mercantile -->
-  <Faction id="clan_aserai_1" initial_home_settlement="Settlement.town_A1" name="Wodeyar" tier="6" owner="Hero.lord_3_1" culture="Culture.aserai" super_faction="Kingdom.aserai" is_noble="true" banner_key="11.83.7.4345.4345.764.764.1.0.0.212.1.0.454.454.764.764.0.0.359" />
+  <Faction id="clan_aserai_1" initial_home_settlement="Settlement.town_A1" name="Wodeyar" tier="6" owner="Hero.lord_3_1" culture="Culture.aserai" super_faction="Kingdom.aserai" is_noble="true" banner_key="11.178.131.4345.4345.764.764.1.0.0.108.131.0.500.500.764.764.0.0.0" />
   <!--
 	Quraysh, also based on Osama Bin Munqidh, fastidious
 	Patriarch, Unqidh, cautious, generous
 	POSITIVE ties to Ghulam
 	-->
   <!--Upstart clan, recently settled bedouin -->
-  <Faction id="clan_aserai_2" initial_home_settlement="Settlement.town_A6" name="Sher-e-Mysore" tier="5" owner="Hero.lord_3_3" culture="Culture.aserai" super_faction="Kingdom.aserai" is_noble="true" banner_key="11.83.7.4345.4345.764.764.1.0.0.223.1.0.454.454.764.764.0.0.359.515.1.0.177.177.764.764.0.0.0.500.1.0.358.358.764.764.0.0.0" />
+  <Faction id="clan_aserai_2" initial_home_settlement="Settlement.town_A6" name="Kalale" tier="5" owner="Hero.lord_3_3" culture="Culture.aserai" super_faction="Kingdom.aserai" is_noble="true" banner_key="11.178.131.4345.4345.764.764.1.0.0.108.131.0.500.500.764.764.0.0.0" />
   <!--
 	Jahaliya poet boaster
 	POSITIVE ties to Jawal	
 	-->
   <!-- Ascetics -->
-  <Faction id="clan_aserai_3" initial_home_settlement="Settlement.town_A2" name="Dal Hyder" tier="5" owner="Hero.lord_3_5" culture="Culture.aserai" super_faction="Kingdom.aserai" is_noble="true" banner_key="11.83.7.4345.4345.764.764.1.0.0.446.1.0.381.381.764.764.0.0.359.309.1.0.325.325.627.764.0.0.320.309.1.0.323.323.901.764.0.0.146" />
-  <Faction id="clan_aserai_4" initial_home_settlement="Settlement.town_A3" name="Bettada Kote" tier="4" owner="Hero.lord_3_16" culture="Culture.aserai" super_faction="Kingdom.aserai" is_noble="true" banner_key="11.83.7.4345.4345.764.764.1.0.0.427.1.0.415.388.695.764.0.0.270.521.1.0.293.298.822.764.0.0.324" />
-  <Faction id="clan_aserai_5" initial_home_settlement="Settlement.town_A7" name="Maddur" tier="3" owner="Hero.lord_3_17" culture="Culture.aserai" super_faction="Kingdom.aserai" is_noble="true" banner_key="11.83.7.4345.4345.764.764.1.0.0.425.1.0.416.416.764.782.0.0.359.400.1.0.120.120.764.937.0.0.0.411.1.0.120.120.764.614.0.0.0" />
-  <Faction id="clan_aserai_6" initial_home_settlement="Settlement.town_A8" name="Malabar" tier="4" owner="Hero.lord_3_18" culture="Culture.aserai" super_faction="Kingdom.aserai" is_noble="true" banner_key="11.83.7.4345.4345.764.764.1.0.0.222.1.0.454.454.764.764.0.0.359.411.1.0.220.220.764.764.0.0.0" />
-  <Faction id="clan_aserai_7" initial_home_settlement="Settlement.castle_A3" name="Coorg" tier="3" owner="Hero.lord_3_19" culture="Culture.aserai" super_faction="Kingdom.aserai" is_noble="true" banner_key="11.83.7.4345.4345.764.764.1.0.0.426.1.0.397.397.764.688.0.0.270.208.1.0.332.332.764.873.0.0.0" />
-  <Faction id="clan_aserai_8" initial_home_settlement="Settlement.castle_A8" name="Sira" tier="1" owner="Hero.lord_3_22" culture="Culture.aserai" super_faction="Kingdom.aserai" is_noble="true" banner_key="11.83.7.4345.4345.764.764.1.0.0.428.1.0.454.454.764.764.0.0.359.321.1.0.354.354.764.721.0.0.359" />
-  <Faction id="clan_aserai_9" initial_home_settlement="Settlement.castle_A9" name="Palakkad" tier="2" owner="Hero.lord_A9_l" culture="Culture.aserai" super_faction="Kingdom.aserai" is_noble="true" banner_key="11.83.7.4345.4345.776.777.1.0.0.427.1.0.415.388.764.811.0.0.0.436.1.0.359.366.764.706.0.0.0" />
+  <Faction id="clan_aserai_3" initial_home_settlement="Settlement.town_A2" name="Arasu" tier="5" owner="Hero.lord_3_5" culture="Culture.aserai" super_faction="Kingdom.aserai" is_noble="true" banner_key="11.178.131.4345.4345.764.764.1.0.0.108.131.0.500.500.764.764.0.0.0" />
+  <Faction id="clan_aserai_4" initial_home_settlement="Settlement.town_A3" name="Bettada Kote" tier="4" owner="Hero.lord_3_16" culture="Culture.aserai" super_faction="Kingdom.aserai" is_noble="true" banner_key="11.178.131.4345.4345.764.764.1.0.0.108.131.0.500.500.764.764.0.0.0" />
+  <Faction id="clan_aserai_5" initial_home_settlement="Settlement.town_A7" name="Maddur" tier="3" owner="Hero.lord_3_17" culture="Culture.aserai" super_faction="Kingdom.aserai" is_noble="true" banner_key="11.178.131.4345.4345.764.764.1.0.0.108.131.0.500.500.764.764.0.0.0" />
+  <Faction id="clan_aserai_6" initial_home_settlement="Settlement.town_A8" name="Malabar" tier="4" owner="Hero.lord_3_18" culture="Culture.aserai" super_faction="Kingdom.aserai" is_noble="true" banner_key="11.178.131.4345.4345.764.764.1.0.0.108.131.0.500.500.764.764.0.0.0" />
+  <Faction id="clan_aserai_7" initial_home_settlement="Settlement.castle_A3" name="Coorg" tier="3" owner="Hero.lord_3_19" culture="Culture.aserai" super_faction="Kingdom.aserai" is_noble="true" banner_key="11.178.131.4345.4345.764.764.1.0.0.108.131.0.500.500.764.764.0.0.0" />
+  <Faction id="clan_aserai_8" initial_home_settlement="Settlement.castle_A8" name="Sira" tier="1" owner="Hero.lord_3_22" culture="Culture.aserai" super_faction="Kingdom.aserai" is_noble="true" banner_key="11.178.131.4345.4345.764.764.1.0.0.108.131.0.500.500.764.764.0.0.0" />
+  <Faction id="clan_aserai_9" initial_home_settlement="Settlement.castle_A9" name="Palakkad" tier="2" owner="Hero.lord_A9_l" culture="Culture.aserai" super_faction="Kingdom.aserai" is_noble="true" banner_key="11.178.131.4345.4345.776.777.1.0.0.108.131.0.500.500.764.764.0.0.0" />
   <!--
 	VLANDIA
 	Brotherhood of the Woods
 	Free Company
 	Vlandian warships first came to the western shores of Calradia as traders. Then, seeing how rich the land was, they decided to take it. First the Empire fought them, then when that failed granted them noble titles and estates to make them into imperial clients, and then - when they rebelled - fought them again. Now they are an independent kingdom, known for steel-forging and their horses, and their armored riders are a constant menace to the Empire's western marches. 	
 	-->
-  <Faction id="clan_vlandia_1" initial_home_settlement="Settlement.town_V1" name="Kachwaha" tier="6" owner="Hero.lord_4_1" culture="Culture.vlandia" super_faction="Kingdom.vlandia" is_noble="true" banner_key="11.82.7.4922.4922.764.764.1.0.0.346.15.0.208.208.764.764.0.0.0.424.15.0.213.213.585.764.0.0.0.424.15.0.213.213.943.764.0.0.0" />
+  <Faction id="clan_vlandia_1" initial_home_settlement="Settlement.town_V1" name="Kachwaha" tier="6" owner="Hero.lord_4_1" culture="Culture.vlandia" super_faction="Kingdom.vlandia" is_noble="true" banner_key="11.232.7.4922.4922.764.764.1.0.0.401.7.0.500.500.764.764.0.0.0" />
   <!--
 	Derthert - Cunning but weary king, Hugh Capet, trying to retain compassion
 	Derthert, of the House of Meroc, is King of the Vlandians. His subjects regard him as a decent man but a tired one. He is worn down by years of struggle against vassals who swear oaths of fealty only to break them, who see no patch of pasture so worthless, no dynastic claim so unconvincingly traced, that they will not go to war over it. His heir, Alary, retains some of the optimism and vigor of youth, and it's widely believed that he will make a popular king. The  House of Meroc thinks of commoners as a counterbalance to the nobles, and have tried to elevate them to offices of authority when possible.
@@ -281,7 +281,7 @@
 	
 	MINOR FACTION ties to Brotherhood of the Woods
 	-->
-  <Faction id="clan_vlandia_2" initial_home_settlement="Settlement.town_V3" name="Rathore" tier="4" owner="Hero.lord_4_3" culture="Culture.vlandia" super_faction="Kingdom.vlandia" is_noble="true" banner_key="11.82.7.4922.4922.764.764.1.0.0.419.15.0.454.454.764.764.0.0.0.512.15.0.125.125.653.887.0.0.0.512.15.0.125.125.875.641.0.0.0.512.15.0.125.125.869.887.0.0.0.512.15.0.125.125.653.641.0.0.0" />
+  <Faction id="clan_vlandia_2" initial_home_settlement="Settlement.town_V3" name="Rathore" tier="4" owner="Hero.lord_4_3" culture="Culture.vlandia" super_faction="Kingdom.vlandia" is_noble="true" banner_key="11.232.7.4922.4922.764.764.1.0.0.401.7.0.500.500.764.764.0.0.0" />
   <!--
 	Patriarch - Rendric.	Wealthy, entitled clan. Duc de Berry	
 	Rendric of the House of Tir is wealthy and notoriously avaricious, known for squeezing every last denar out of his subjects while neglecting his duty to defend them. His son meanwhile is considered depraved, and is almost as greatly feared as the Sturgian and Battanian raiders who he allows the rampage through the northlands as he pursues his desires. Rendric's daughter Liena is considered the saving grace of the family, who has donned armor and taken on the responsibilities that her male relatives neglect.
@@ -289,7 +289,7 @@
 	Heiress is Liena, leads armies, somewhat feckless
 	Lieutenant - 	
 	-->
-  <Faction id="clan_vlandia_3" initial_home_settlement="Settlement.town_V6" name="Sisodia" tier="4" owner="Hero.lord_4_6" culture="Culture.vlandia" super_faction="Kingdom.vlandia" is_noble="true" banner_key="11.82.7.4922.4922.764.764.1.0.0.424.15.0.377.377.764.764.0.0.0.220.15.0.138.132.884.939.0.0.0.220.15.0.138.138.644.939.0.0.0" />
+  <Faction id="clan_vlandia_3" initial_home_settlement="Settlement.town_V6" name="Sisodia" tier="4" owner="Hero.lord_4_6" culture="Culture.vlandia" super_faction="Kingdom.vlandia" is_noble="true" banner_key="11.232.7.4922.4922.764.764.1.0.0.401.7.0.500.500.764.764.0.0.0" />
   <!--
 	Calatild was her father's only child, and was named heir of the House of Arromanc in contrary to normal Vlandian custom. The claim to her lands staked by Ingalther of Cortain has allowed her to rally her relatives to her banner, overcoming any objections they might have to a female liege. 
 	Patriarch - Untheric, consort of queen
@@ -298,25 +298,25 @@
 	Uncle, Hecard
 	Heiress 
 	-->
-  <Faction id="clan_vlandia_4" initial_home_settlement="Settlement.town_V7" name="Hada" tier="5" owner="Hero.lord_4_16" culture="Culture.vlandia" super_faction="Kingdom.vlandia" is_noble="true" banner_key="11.82.7.4922.4922.764.764.1.0.0.207.15.0.267.238.863.918.0.1.332.207.15.0.238.238.651.918.0.0.28.220.15.0.408.408.757.646.0.0.0.512.15.0.111.111.757.879.0.0.1" />
+  <Faction id="clan_vlandia_4" initial_home_settlement="Settlement.town_V7" name="Hada" tier="5" owner="Hero.lord_4_16" culture="Culture.vlandia" super_faction="Kingdom.vlandia" is_noble="true" banner_key="11.232.7.4922.4922.764.764.1.0.0.401.7.0.500.500.764.764.0.0.0" />
   <!--
 	Fourth clan
 	Ingalther, lord of the House of Cortain, seized his estate from a much older illegitimate half-brother. His ambition and sense of entitlement is extreme even by Vlandian standards. He has a dynastic claim to Arromanc lands, and has been pressing Derther to disinherit Calatild and award her lands to him. Derthert has of course refused, as this would both start a war with the Arromancs and make Ingalther twice as powerful as the king, but Ingalther nonetheless greatly resents him for it. Ingalther keeps close ties with the Free Company, a notoriously rapacious band of mercenaries whose seaside castle lies near his domains.	
 	MINOR FACTIION ties to free company
 	-->
-  <Faction id="clan_vlandia_5" initial_home_settlement="Settlement.castle_V5" name="Bhati" tier="2" owner="Hero.lord_4_21" culture="Culture.vlandia" super_faction="Kingdom.vlandia" is_noble="true" banner_key="11.82.7.4922.4922.764.764.1.0.0.159.15.0.452.452.764.644.0.0.0.418.15.0.270.270.764.864.0.0.0" />
-  <Faction id="clan_vlandia_6" initial_home_settlement="Settlement.town_V9" name="Shekhawat" tier="3" owner="Hero.lord_4_22" culture="Culture.vlandia" super_faction="Kingdom.vlandia" is_noble="true" banner_key="11.82.7.4922.4922.764.764.1.0.0.336.15.0.382.382.763.764.0.0.0.424.15.0.183.183.903.774.0.0.0.424.15.0.183.183.624.774.0.0.0.424.15.0.183.183.763.904.0.0.0" />
-  <Faction id="clan_vlandia_7" initial_home_settlement="Settlement.town_V2" name="Chauhan" tier="3" owner="Hero.lord_4_23" culture="Culture.vlandia" super_faction="Kingdom.vlandia" is_noble="true" banner_key="11.82.7.4922.4922.764.764.1.0.0.141.15.0.454.454.764.764.0.0.0" />
-  <Faction id="clan_vlandia_8" initial_home_settlement="Settlement.town_V8" name="Jhala" tier="3" owner="Hero.lord_4_24" culture="Culture.vlandia" super_faction="Kingdom.vlandia" is_noble="true" banner_key="11.82.7.4922.4922.764.764.1.0.0.315.15.0.462.462.790.771.0.0.311.315.15.0.462.462.740.758.0.0.49.424.15.0.144.144.753.650.0.0.0" />
-  <Faction id="clan_vlandia_9" initial_home_settlement="Settlement.castle_V2" name="Tanwar" tier="2" owner="Hero.lord_4_27" culture="Culture.vlandia" super_faction="Kingdom.vlandia" is_noble="true" banner_key="11.82.7.4922.4922.764.764.1.0.0.335.15.0.499.499.764.764.0.0.0.336.15.0.186.186.764.744.0.0.0" />
-  <Faction id="clan_vlandia_10" initial_home_settlement="Settlement.castle_V4" name="Gaur" tier="1" owner="Hero.lord_4_28" culture="Culture.vlandia" super_faction="Kingdom.vlandia" is_noble="true" banner_key="11.82.7.4922.4922.764.764.1.0.0.305.15.0.444.444.764.764.0.0.0.206.15.0.480.480.658.764.0.0.17.206.15.0.480.480.870.764.0.0.194" />
-  <Faction id="clan_vlandia_11" initial_home_settlement="Settlement.castle_V1" name="Baghel" tier="4" owner="Hero.lord_V11_l" culture="Culture.vlandia" super_faction="Kingdom.vlandia" is_noble="true" banner_key="11.82.7.4922.4922.764.764.1.0.0.505.15.0.60.60.583.911.0.0.134.505.15.0.60.60.668.909.0.0.134.505.15.0.60.60.666.827.0.0.134.505.15.0.60.60.751.827.0.0.134.505.15.0.60.60.751.744.0.0.134.505.15.0.60.60.833.745.0.0.134.505.15.0.60.60.833.663.0.0.134.505.15.0.60.60.916.663.0.0.134.505.15.0.60.60.916.580.0.0.134.102.15.0.188.188.638.664.0.0.0.102.15.0.188.188.894.898.0.1.0" />
+  <Faction id="clan_vlandia_5" initial_home_settlement="Settlement.castle_V5" name="Bhati" tier="2" owner="Hero.lord_4_21" culture="Culture.vlandia" super_faction="Kingdom.vlandia" is_noble="true" banner_key="11.232.7.4922.4922.764.764.1.0.0.401.7.0.500.500.764.764.0.0.0" />
+  <Faction id="clan_vlandia_6" initial_home_settlement="Settlement.town_V9" name="Shekhawat" tier="3" owner="Hero.lord_4_22" culture="Culture.vlandia" super_faction="Kingdom.vlandia" is_noble="true" banner_key="11.232.7.4922.4922.764.764.1.0.0.401.7.0.500.500.764.764.0.0.0" />
+  <Faction id="clan_vlandia_7" initial_home_settlement="Settlement.town_V2" name="Chauhan" tier="3" owner="Hero.lord_4_23" culture="Culture.vlandia" super_faction="Kingdom.vlandia" is_noble="true" banner_key="11.232.7.4922.4922.764.764.1.0.0.401.7.0.500.500.764.764.0.0.0" />
+  <Faction id="clan_vlandia_8" initial_home_settlement="Settlement.town_V8" name="Jhala" tier="3" owner="Hero.lord_4_24" culture="Culture.vlandia" super_faction="Kingdom.vlandia" is_noble="true" banner_key="11.232.7.4922.4922.764.764.1.0.0.401.7.0.500.500.764.764.0.0.0" />
+  <Faction id="clan_vlandia_9" initial_home_settlement="Settlement.castle_V2" name="Tanwar" tier="2" owner="Hero.lord_4_27" culture="Culture.vlandia" super_faction="Kingdom.vlandia" is_noble="true" banner_key="11.232.7.4922.4922.764.764.1.0.0.401.7.0.500.500.764.764.0.0.0" />
+  <Faction id="clan_vlandia_10" initial_home_settlement="Settlement.castle_V4" name="Gaur" tier="1" owner="Hero.lord_4_28" culture="Culture.vlandia" super_faction="Kingdom.vlandia" is_noble="true" banner_key="11.232.7.4922.4922.764.764.1.0.0.401.7.0.500.500.764.764.0.0.0" />
+  <Faction id="clan_vlandia_11" initial_home_settlement="Settlement.castle_V1" name="Baghel" tier="4" owner="Hero.lord_V11_l" culture="Culture.vlandia" super_faction="Kingdom.vlandia" is_noble="true" banner_key="11.232.7.4922.4922.764.764.1.0.0.401.7.0.500.500.764.764.0.0.0" />
   <!--
 	BATTANIA
 	Minors: Wolfskins
 	-->
-  <Faction id="clan_battania_1" initial_home_settlement="Settlement.town_B1" name="House of Peshwa" tier="6" owner="Hero.lord_5_1" culture="Culture.battania" super_faction="Kingdom.battania" is_noble="true" banner_key="11.223.231.4345.4345.764.764.1.0.0.456.39.0.382.382.764.834.0.0.180.413.39.0.224.224.764.614.0.0.0" />
-  <Faction id="clan_battania_2" initial_home_settlement="Settlement.town_B2" name="Bhonsle" tier="5" owner="Hero.lord_5_3" culture="Culture.battania" super_faction="Kingdom.battania" is_noble="true" banner_key="11.223.231.4345.4345.764.764.1.0.0.412.39.0.454.454.764.764.0.0.180" />
+  <Faction id="clan_battania_1" initial_home_settlement="Settlement.town_B1" name="Bhat" tier="6" owner="Hero.lord_5_1" culture="Culture.battania" super_faction="Kingdom.battania" is_noble="true" banner_key="11.223.231.4345.4345.764.764.1.0.0.415.231.0.500.500.764.764.0.0.0" />
+  <Faction id="clan_battania_2" initial_home_settlement="Settlement.town_B2" name="Bhonsle" tier="5" owner="Hero.lord_5_3" culture="Culture.battania" super_faction="Kingdom.battania" is_noble="true" banner_key="11.223.231.4345.4345.764.764.1.0.0.415.231.0.500.500.764.764.0.0.0" />
   <!--		
 		Patriarch: Ergeon, 5_3 whitebeard, arthur-type. Submits to Gruffendoc because they realize latter's capacity to lead
 		Active queen: Mywin 5_4, holds her own lands and fights in her own right
@@ -324,7 +324,7 @@
 		Inactive heiress (5_11)
 		Lieutenant: 5_14
 	-->
-  <Faction id="clan_battania_3" initial_home_settlement="Settlement.town_B3" name="Scindia" tier="4" owner="Hero.lord_5_5" culture="Culture.battania" super_faction="Kingdom.battania" is_noble="true" banner_key="11.223.231.4345.4345.764.764.1.0.0.427.39.0.261.261.764.869.0.0.359.133.39.0.380.380.764.696.0.0.0" />
+  <Faction id="clan_battania_3" initial_home_settlement="Settlement.town_B3" name="Scindia" tier="4" owner="Hero.lord_5_5" culture="Culture.battania" super_faction="Kingdom.battania" is_noble="true" banner_key="11.223.231.4345.4345.764.764.1.0.0.415.231.0.500.500.764.764.0.0.0" />
   <!--		
 	Fen Uvain
 		Old house, know they lack the charisma to conquer, prefer to plot to maintain their independence
@@ -336,18 +336,18 @@
 		Heiress (5_12)
 		Lieutenant (5_15)
 	-->
-  <Faction id="clan_battania_4" initial_home_settlement="Settlement.town_B4" name="Holkar" tier="3" owner="Hero.lord_5_14" culture="Culture.battania" super_faction="Kingdom.battania" is_noble="true" banner_key="11.223.231.4345.4345.764.764.1.0.0.132.39.0.438.438.764.814.0.0.0.302.39.0.438.438.764.714.0.0.0" />
-  <Faction id="clan_battania_5" initial_home_settlement="Settlement.town_B5" name="Gaekwad" tier="2" owner="Hero.lord_5_16" culture="Culture.battania" super_faction="Kingdom.battania" is_noble="true" banner_key="11.223.231.4345.4345.764.764.1.0.0.535.39.0.189.178.814.920.0.1.0.535.39.0.178.178.692.919.0.0.0.151.39.0.425.425.764.732.0.0.0" />
-  <Faction id="clan_battania_6" initial_home_settlement="Settlement.castle_B3" name="Bhonsle of Nagpur" tier="3" owner="Hero.lord_5_17" culture="Culture.battania" super_faction="Kingdom.battania" is_noble="true" banner_key="11.223.231.4345.4345.764.764.1.0.0.504.39.0.90.90.764.942.0.0.180.503.39.0.84.84.764.760.0.0.0.406.39.0.455.455.764.764.0.0.0.504.39.0.90.90.764.587.0.0.0" />
-  <Faction id="clan_battania_7" initial_home_settlement="Settlement.castle_B2" name="Patwardhan" tier="4" owner="Hero.lord_5_15" culture="Culture.battania" super_faction="Kingdom.battania" is_noble="true" banner_key="11.223.231.4345.4345.764.764.1.0.0.504.39.96.80.80.764.978.1.0.180.407.39.0.368.368.764.757.0.0.0.504.39.96.110.110.764.535.1.0.180" />
+  <Faction id="clan_battania_4" initial_home_settlement="Settlement.town_B4" name="Holkar" tier="3" owner="Hero.lord_5_14" culture="Culture.battania" super_faction="Kingdom.battania" is_noble="true" banner_key="11.223.231.4345.4345.764.764.1.0.0.415.231.0.500.500.764.764.0.0.0" />
+  <Faction id="clan_battania_5" initial_home_settlement="Settlement.town_B5" name="Gaekwad" tier="2" owner="Hero.lord_5_16" culture="Culture.battania" super_faction="Kingdom.battania" is_noble="true" banner_key="11.223.231.4345.4345.764.764.1.0.0.415.231.0.500.500.764.764.0.0.0" />
+  <Faction id="clan_battania_6" initial_home_settlement="Settlement.castle_B3" name="Bhonsle of Nagpur" tier="3" owner="Hero.lord_5_17" culture="Culture.battania" super_faction="Kingdom.battania" is_noble="true" banner_key="11.223.231.4345.4345.764.764.1.0.0.415.231.0.500.500.764.764.0.0.0" />
+  <Faction id="clan_battania_7" initial_home_settlement="Settlement.castle_B2" name="Patwardhan" tier="4" owner="Hero.lord_5_15" culture="Culture.battania" super_faction="Kingdom.battania" is_noble="true" banner_key="11.223.231.4345.4345.764.764.1.0.0.415.231.0.500.500.764.764.0.0.0" />
   <!-- fen Caernacht, resentful clan -->
-  <Faction id="clan_battania_8" initial_home_settlement="Settlement.castle_B1" name="Angre" tier="1" owner="Hero.lord_B8_l" culture="Culture.battania" super_faction="Kingdom.battania" is_noble="true" banner_key="11.223.231.4345.4345.764.764.1.0.0.415.39.0.391.391.764.764.0.0.0" />
+  <Faction id="clan_battania_8" initial_home_settlement="Settlement.castle_B1" name="Angre" tier="1" owner="Hero.lord_B8_l" culture="Culture.battania" super_faction="Kingdom.battania" is_noble="true" banner_key="11.223.231.4345.4345.764.764.1.0.0.415.231.0.500.500.764.764.0.0.0" />
   <!--
 	KHUZAITS
 	The Khuzaits thundered into the steppes west of Lake Baetiros two generations ago, driving other nomads before them. They and their vassal tribes, the Khergit and the Arkit, seized some of the cities on the fringe of the empire. They grew rich on the caravans from the lands of the Padishah to the east, trading in their yurts for carpeted palaces. But they still lead raids into the heart of the empire, their swift horse archers spreading terror for leagues around their armies.
 	(Minor faction:) The Hawlan are unsubjugated nomads, living on the fringes of the Khuzait's kingdom. Other Khuzait mock them for living only in yurts and smelling like the sheep dung they use for their fuel. They are what the Khuzait used to be, but despite this - or perhaps because of this - the newly rich, newly settled tribes treat them with scorn. Sons of Noyans have even been known to lead expeditions into the deep steppe to hunt them like animals. The Khergit however turned to them in their recent moment of crisis, using them as mercenaries.	
 	-->
-  <Faction id="clan_khuzait_1" name="Sukerchakia" initial_home_settlement="Settlement.town_K3" tier="6" owner="Hero.lord_6_1" culture="Culture.khuzait" super_faction="Kingdom.khuzait" is_noble="true" banner_key="11.205.223.4345.4345.764.764.1.0.0.449.11.0.327.349.764.649.0.0.0.449.11.0.319.339.764.879.0.0.180.510.11.0.351.240.634.764.0.0.180.510.11.0.351.240.894.764.0.0.180" />
+  <Faction id="clan_khuzait_1" name="Sukerchakia" initial_home_settlement="Settlement.town_K3" tier="6" owner="Hero.lord_6_1" culture="Culture.khuzait" super_faction="Kingdom.khuzait" is_noble="true" banner_key="11.205.245.4345.4345.764.764.1.0.0.455.245.0.500.500.764.764.0.0.0" />
   <!--
 		The Urkhunait are ruling clan of the Khuzaits, named after the Khagan Urkhun who transformed them from squabbling bands of fierce but undisciplined nomads into a formidable machine of war. The current Khan, Tulag, is cut from this cloth. Grim, humorless, as demanding of his followers as he is of himself, he has an unblemished record on the battlefield. But the Khuzaits are no longer a hungry people, desperate for a iron-handed warlord to lead them to richer pastures, and from the comfort of their palaces many clan leaders are beginning to wonder if they too could serve as Khagan.
 		Patriarch: Tulag. Aescetic.
@@ -356,7 +356,7 @@
 		Heir: overawed, 
 		Heiress is warrior	
 	-->
-  <Faction id="clan_khuzait_2" initial_home_settlement="Settlement.town_K1" name="Ahluwalia" tier="4" owner="Hero.lord_6_4" culture="Culture.khuzait" super_faction="Kingdom.khuzait" is_noble="true" banner_key="11.205.223.4345.4345.764.764.1.0.0.128.11.0.454.454.764.764.0.0.0" />
+  <Faction id="clan_khuzait_2" initial_home_settlement="Settlement.town_K1" name="Ahluwalia" tier="4" owner="Hero.lord_6_4" culture="Culture.khuzait" super_faction="Kingdom.khuzait" is_noble="true" banner_key="11.205.245.4345.4345.764.764.1.0.0.455.245.0.500.500.764.764.0.0.0" />
   <!--
 		The Khergit, or Roan Horses, were one of the first peoples to be subjugated by Urkhun. Although assimilated into his confederacy by force, they proved themselves some of his most valuable warriors, and were rewarded with extensive lands in his new conquests. War however took a heavy toll of the clan's males, and ten years ago the Arkit made a bid for their territories. Mesui, sister of a slain noyan and part of a long tradition of steppe warrior-women, led the Khergit's counter-attack. She continues to rule a clan nervous about its brush with extinction, and resentful of the Urkhunait for doing little to help them.
 		Matriarch - female, widow, very conscious of her clan's brush with extinction
@@ -364,7 +364,7 @@
 		Heir: Baybuz Energetic but sometimes weak-willed confessional 
 		Valorous, deceitful, generous
 	-->
-  <Faction id="clan_khuzait_3" initial_home_settlement="Settlement.town_K4" name="Ramgarhia" tier="5" owner="Hero.lord_6_5" culture="Culture.khuzait" super_faction="Kingdom.khuzait" is_noble="true" banner_key="11.205.223.4345.4345.764.764.1.0.0.446.11.0.438.438.764.764.0.0.269.503.11.0.164.164.754.767.0.0.315.509.11.0.133.133.767.915.0.0.315.503.11.0.95.95.948.760.0.0.315.503.11.0.95.95.581.763.0.0.315.509.11.0.133.133.762.613.0.0.315" />
+  <Faction id="clan_khuzait_3" initial_home_settlement="Settlement.town_K4" name="Ramgarhia" tier="5" owner="Hero.lord_6_5" culture="Culture.khuzait" super_faction="Kingdom.khuzait" is_noble="true" banner_key="11.205.245.4345.4345.764.764.1.0.0.455.245.0.500.500.764.764.0.0.0" />
   <!--
 		The Arkit, the Children of the Sky, were formerly the richest and most prestigious of the tribes in the Khuzait homelands, of which Urkhun and his followers were at first merely a humble offshoot. They followed the Khuzait hordes to the west but are not happy about living in the shadow of a less ancient lineage. Their patriarch, the noyan Monchug, models himself on Tulag but is somewhat less competent.
 		Embittered elder tribe
@@ -372,30 +372,30 @@
 		Patriarch: Honest, ungenerous, cruel like ascetic
 		Heir: gallant	
 	-->
-  <Faction id="clan_khuzait_4" initial_home_settlement="Settlement.town_K2" name="Singhpuria" tier="3" owner="Hero.lord_6_16" culture="Culture.khuzait" super_faction="Kingdom.khuzait" is_noble="true" banner_key="11.205.223.4345.4345.780.802.1.0.0.503.11.0.164.164.904.913.0.0.0.314.11.0.508.508.764.764.0.0.0.503.11.0.164.164.624.913.0.0.0" />
-  <Faction id="clan_khuzait_5" initial_home_settlement="Settlement.town_K6" name="Dallewalia" tier="3" owner="Hero.lord_6_17" culture="Culture.khuzait" super_faction="Kingdom.khuzait" is_noble="true" banner_key="11.205.223.4345.4345.780.802.1.0.0.427.11.0.401.401.764.822.0.0.359.503.11.0.193.193.764.781.0.0.358.218.11.0.222.222.764.612.0.0.0" />
-  <Faction id="clan_khuzait_6" initial_home_settlement="Settlement.castle_K6" name="Nakai" tier="4" owner="Hero.lord_6_18" culture="Culture.khuzait" super_faction="Kingdom.khuzait" is_noble="true" banner_key="11.205.223.4345.4345.764.764.1.0.0.218.11.0.194.194.807.631.0.0.359.150.11.0.444.444.764.775.0.0.0" />
-  <Faction id="clan_khuzait_7" initial_home_settlement="Settlement.castle_K5" name="Kanhaiya" tier="3" owner="Hero.lord_6_19" culture="Culture.khuzait" super_faction="Kingdom.khuzait" is_noble="true" banner_key="11.205.223.4345.4345.764.764.1.0.0.117.11.0.346.346.841.838.0.0.179.508.11.0.110.110.638.876.0.0.0.117.11.0.342.342.692.687.0.0.0.508.11.0.108.108.890.648.0.0.0" />
-  <Faction id="clan_khuzait_8" initial_home_settlement="Settlement.castle_K3" name="Phulkian" tier="1" owner="Hero.lord_6_20" culture="Culture.khuzait" super_faction="Kingdom.khuzait" is_noble="true" banner_key="11.205.223.4345.4345.764.764.1.0.0.427.11.0.236.236.726.768.0.0.273.427.11.0.236.236.802.760.0.0.93.503.11.0.80.80.764.764.0.0.0.510.11.0.236.165.869.644.0.0.0.510.11.0.236.165.869.884.0.0.0.510.11.0.236.165.656.884.0.0.0.510.11.0.236.165.656.644.0.0.0" />
-  <Faction id="clan_khuzait_9" initial_home_settlement="Settlement.castle_K8" name="Karora Singhia" tier="2" owner="Hero.lord_K9_l" culture="Culture.khuzait" super_faction="Kingdom.khuzait" is_noble="true" banner_key="11.205.223.4345.4345.764.764.1.0.0.427.11.0.206.176.764.667.0.0.0.503.11.0.92.87.764.642.0.0.0.218.11.0.109.90.764.572.0.0.0.510.11.0.250.300.641.862.0.0.90.504.11.0.155.92.764.769.0.0.180.510.11.0.249.300.887.862.0.0.90.504.11.0.155.92.764.957.0.0.180.503.11.0.92.87.764.859.0.0.0.510.11.0.136.131.764.814.0.0.0.510.11.0.136.131.764.907.0.0.0" />
+  <Faction id="clan_khuzait_4" initial_home_settlement="Settlement.town_K2" name="Singhpuria" tier="3" owner="Hero.lord_6_16" culture="Culture.khuzait" super_faction="Kingdom.khuzait" is_noble="true" banner_key="11.205.245.4345.4345.780.802.1.0.0.455.245.0.500.500.764.764.0.0.0" />
+  <Faction id="clan_khuzait_5" initial_home_settlement="Settlement.town_K6" name="Dallewalia" tier="3" owner="Hero.lord_6_17" culture="Culture.khuzait" super_faction="Kingdom.khuzait" is_noble="true" banner_key="11.205.245.4345.4345.780.802.1.0.0.455.245.0.500.500.764.764.0.0.0" />
+  <Faction id="clan_khuzait_6" initial_home_settlement="Settlement.castle_K6" name="Nakai" tier="4" owner="Hero.lord_6_18" culture="Culture.khuzait" super_faction="Kingdom.khuzait" is_noble="true" banner_key="11.205.245.4345.4345.764.764.1.0.0.455.245.0.500.500.764.764.0.0.0" />
+  <Faction id="clan_khuzait_7" initial_home_settlement="Settlement.castle_K5" name="Kanhaiya" tier="3" owner="Hero.lord_6_19" culture="Culture.khuzait" super_faction="Kingdom.khuzait" is_noble="true" banner_key="11.205.245.4345.4345.764.764.1.0.0.455.245.0.500.500.764.764.0.0.0" />
+  <Faction id="clan_khuzait_8" initial_home_settlement="Settlement.castle_K3" name="Phulkian" tier="1" owner="Hero.lord_6_20" culture="Culture.khuzait" super_faction="Kingdom.khuzait" is_noble="true" banner_key="11.205.245.4345.4345.764.764.1.0.0.455.245.0.500.500.764.764.0.0.0" />
+  <Faction id="clan_khuzait_9" initial_home_settlement="Settlement.castle_K8" name="Karora Singhia" tier="2" owner="Hero.lord_K9_l" culture="Culture.khuzait" super_faction="Kingdom.khuzait" is_noble="true" banner_key="11.205.245.4345.4345.764.764.1.0.0.455.245.0.500.500.764.764.0.0.0" />
   <!--
 	STURGIA
 	Jomsvikings
 	-->
-  <Faction id="clan_sturgia_1" initial_home_settlement="Settlement.town_S1" name="House of Sadozai" tier="6" owner="Hero.lord_2_1" culture="Culture.sturgia" super_faction="Kingdom.sturgia" is_noble="true" banner_key="11.116.126.4922.4922.764.764.1.0.0.333.111.0.454.454.764.764.0.0.0" />
+  <Faction id="clan_sturgia_1" initial_home_settlement="Settlement.town_S1" name="House of Sadozai" tier="6" owner="Hero.lord_2_1" culture="Culture.sturgia" super_faction="Kingdom.sturgia" is_noble="true" banner_key="11.116.126.4922.4922.764.764.1.0.0.120.126.0.500.500.764.764.0.0.0" />
   <!--		
 		Ruling clan, centralizing,
 		Patriarch: Raganvad, Ivan/Hardrada type, minimal sense of humor
 		Heir: Simir, ambitious but treated coldly by father, wants to prove self
 	-->
-  <Faction id="clan_sturgia_2" initial_home_settlement="Settlement.town_S3" name="Barakzai" tier="5" owner="Hero.lord_2_3" culture="Culture.sturgia" super_faction="Kingdom.sturgia" is_noble="true" banner_key="11.116.126.4922.4922.764.764.1.0.0.420.111.0.586.586.764.764.0.0.180.459.111.171.215.215.767.762.0.0.1" />
+  <Faction id="clan_sturgia_2" initial_home_settlement="Settlement.town_S3" name="Barakzai" tier="5" owner="Hero.lord_2_3" culture="Culture.sturgia" super_faction="Kingdom.sturgia" is_noble="true" banner_key="11.116.126.4922.4922.764.764.1.0.0.120.126.0.500.500.764.764.0.0.0" />
   <!--		
 		Old Believers, ties to Jomsvikings
 		Patriarch - Olek old, ferocious	
 	
 		Heir - Urik, fierce but high-spirited
 	-->
-  <Faction id="clan_sturgia_3" initial_home_settlement="Settlement.town_S5" name="Popalzai" tier="4" owner="Hero.lord_2_5" culture="Culture.sturgia" super_faction="Kingdom.sturgia" is_noble="true" banner_key="11.116.126.4922.4922.764.764.1.0.0.347.111.0.325.325.764.685.0.0.0.302.111.0.408.408.669.890.0.0.60.302.111.0.408.408.859.890.0.0.300" />
+  <Faction id="clan_sturgia_3" initial_home_settlement="Settlement.town_S5" name="Popalzai" tier="4" owner="Hero.lord_2_5" culture="Culture.sturgia" super_faction="Kingdom.sturgia" is_noble="true" banner_key="11.116.126.4922.4922.764.764.1.0.0.120.126.0.500.500.764.764.0.0.0" />
   <!--		
 		Based on Icelandish explorers - independent forging outward
 	
@@ -404,11 +404,11 @@
 		Uncle: Rategost - Mystic
 		Heiress: Svana - heiress, leads armies
 	-->
-  <Faction id="clan_sturgia_4" initial_home_settlement="Settlement.town_S4" name="Alakozai" tier="4" owner="Hero.lord_2_16" culture="Culture.sturgia" super_faction="Kingdom.sturgia" is_noble="true" banner_key="11.116.126.4922.4922.733.752.1.0.0.307.111.0.488.488.713.806.0.0.29.307.111.0.499.499.827.796.0.1.340" />
-  <Faction id="clan_sturgia_5" initial_home_settlement="Settlement.town_S7" name="Achakzai" tier="3" owner="Hero.lord_2_17" culture="Culture.sturgia" super_faction="Kingdom.sturgia" is_noble="true" banner_key="11.116.126.4922.4922.764.764.1.0.0.456.111.0.443.443.764.728.0.0.359.444.111.0.102.102.764.972.0.0.179.454.111.0.102.102.868.972.0.0.179.454.111.0.102.102.659.972.0.0.359" />
-  <Faction id="clan_sturgia_6" initial_home_settlement="Settlement.town_S6" name="Ghilzai" tier="3" owner="Hero.lord_2_18" culture="Culture.sturgia" super_faction="Kingdom.sturgia" is_noble="true" banner_key="11.116.126.4922.4922.764.764.1.0.0.441.111.0.454.454.764.764.0.0.359" />
-  <Faction id="clan_sturgia_7" initial_home_settlement="Settlement.castle_S5" name="Afridi" tier="4" owner="Hero.lord_2_19" culture="Culture.sturgia" super_faction="Kingdom.sturgia" is_noble="true" banner_key="11.116.126.4922.4922.764.764.1.0.11.421.111.0.518.518.761.795.0.1.90.419.111.171.141.141.764.764.0.0.0" />
-  <Faction id="clan_sturgia_8" initial_home_settlement="Settlement.castle_S6" name="Yusufzai" tier="1" owner="Hero.lord_2_20" culture="Culture.sturgia" super_faction="Kingdom.sturgia" is_noble="true" banner_key="11.116.126.4922.4922.764.764.1.0.0.138.111.0.509.509.764.764.0.0.359" />
+  <Faction id="clan_sturgia_4" initial_home_settlement="Settlement.town_S4" name="Alakozai" tier="4" owner="Hero.lord_2_16" culture="Culture.sturgia" super_faction="Kingdom.sturgia" is_noble="true" banner_key="11.116.126.4922.4922.733.752.1.0.0.120.126.0.500.500.764.764.0.0.0" />
+  <Faction id="clan_sturgia_5" initial_home_settlement="Settlement.town_S7" name="Achakzai" tier="3" owner="Hero.lord_2_17" culture="Culture.sturgia" super_faction="Kingdom.sturgia" is_noble="true" banner_key="11.116.126.4922.4922.764.764.1.0.0.120.126.0.500.500.764.764.0.0.0" />
+  <Faction id="clan_sturgia_6" initial_home_settlement="Settlement.town_S6" name="Ghilzai" tier="3" owner="Hero.lord_2_18" culture="Culture.sturgia" super_faction="Kingdom.sturgia" is_noble="true" banner_key="11.116.126.4922.4922.764.764.1.0.0.120.126.0.500.500.764.764.0.0.0" />
+  <Faction id="clan_sturgia_7" initial_home_settlement="Settlement.castle_S5" name="Afridi" tier="4" owner="Hero.lord_2_19" culture="Culture.sturgia" super_faction="Kingdom.sturgia" is_noble="true" banner_key="11.116.126.4922.4922.764.764.1.0.11.120.126.0.500.500.764.764.0.0.0" />
+  <Faction id="clan_sturgia_8" initial_home_settlement="Settlement.castle_S6" name="Yusufzai" tier="1" owner="Hero.lord_2_20" culture="Culture.sturgia" super_faction="Kingdom.sturgia" is_noble="true" banner_key="11.116.126.4922.4922.764.764.1.0.0.120.126.0.500.500.764.764.0.0.0" />
   <!-- Kostaroving, dominated by a matriarch allied to Olek -->
-  <Faction id="clan_sturgia_9" initial_home_settlement="Settlement.castle_S4" name="Ishakzai" tier="2" owner="Hero.lord_S9_l" culture="Culture.sturgia" super_faction="Kingdom.sturgia" is_noble="true" banner_key="11.116.126.4922.4922.764.764.1.0.0.142.29.149.331.331.764.665.0.0.0.146.29.149.311.311.764.863.0.1.0" />
+  <Faction id="clan_sturgia_9" initial_home_settlement="Settlement.castle_S4" name="Ishakzai" tier="2" owner="Hero.lord_S9_l" culture="Culture.sturgia" super_faction="Kingdom.sturgia" is_noble="true" banner_key="11.116.126.4922.4922.764.764.1.0.0.120.126.0.500.500.764.764.0.0.0" />
 </Factions>

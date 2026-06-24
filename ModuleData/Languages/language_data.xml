@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LanguageData id="English">
+  <!-- Bulk vanilla-string overrides (troop names, faction terms, backstories, settlement
+       and culture lore) load first; the curated std strings load after so they win for any
+       shared ids. Without this the ~600 entries below fell back to vanilla text. -->
+  <LanguageFile xml_path="hindostan_demonym_overrides.xml" />
   <LanguageFile xml_path="std_module_strings_xml.xml" />
 </LanguageData>

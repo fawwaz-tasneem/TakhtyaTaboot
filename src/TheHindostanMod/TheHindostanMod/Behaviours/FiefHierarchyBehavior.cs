@@ -41,8 +41,8 @@ namespace TakhtyaTaboot
         public override void RegisterEvents()
         {
             Instance = this;
-            CampaignEvents.WeeklyTickEvent.AddNonSerializedListener(this, OnWeeklyTick);
-            CampaignEvents.DailyTickEvent.AddNonSerializedListener(this, OnDailyTick);
+            CampaignEvents.WeeklyTickEvent.AddNonSerializedListener(this, () => Util.TYTLog.Guard("FiefHierarchy.WeeklyTick", OnWeeklyTick));
+            CampaignEvents.DailyTickEvent.AddNonSerializedListener(this, () => Util.TYTLog.Guard("FiefHierarchy.DailyTick", OnDailyTick));
             CampaignEvents.OnSettlementOwnerChangedEvent.AddNonSerializedListener(this, OnSettlementOwnerChanged);
         }
 
@@ -313,6 +313,7 @@ namespace TakhtyaTaboot
 
         private void OnSettlementOwnerChanged(Settlement settlement, bool openToClaim, Hero newOwner, Hero oldOwner, Hero capturerHero, ChangeOwnerOfSettlementAction.ChangeOwnerOfSettlementDetail detail)
         {
+            if (!Util.WorldGen.Ready) return; // skip the parallel world-gen distribution (see Util/WorldGen.cs)
             if (newOwner == Hero.MainHero && MansabdariBehavior.Instance != null
                 && !MansabdariBehavior.Instance.CanHold(Clan.PlayerClan, settlement))
             {

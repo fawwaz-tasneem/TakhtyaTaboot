@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Unit tests for Takht ya Taboot's ENGINE-FREE logic (cost formulas, Rusukh growth/decay,
+    historical-calendar date math, succession candidate selection given mocked inputs, …).
+    These never touch TaleWorlds types, so they run on a plain .NET test host. Engine-bound
+    code (KillCharacterAction, ChangeOwnerOfSettlement, …) is kept thin and excluded here;
+    the data side is covered by tools/validate_data.py.
+
+    Convention: pure logic for a feature lives in its own class with NO TaleWorlds dependency,
+    and is <Compile>-linked into this project (see ItemGroup below) so tests need no game DLLs.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net481</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <Nullable>disable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>TheHindostanMod.Tests</AssemblyName>
+    <RootNamespace>TakhtyaTaboot.Tests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <!-- Pure-logic source files linked from the main module (engine-free only). Add new ones here. -->
+  <ItemGroup>
+    <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\HistoricalCalendar.cs" Link="Linked\HistoricalCalendar.cs" />
+    <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\ImperialSuccessionPlan.cs" Link="Linked\ImperialSuccessionPlan.cs" />
+    <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\RusukhMath.cs" Link="Linked\RusukhMath.cs" />
+    <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\MansabTenureMath.cs" Link="Linked\MansabTenureMath.cs" />
+    <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\SuccessionLawMath.cs" Link="Linked\SuccessionLawMath.cs" />
+    <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\WarAimMath.cs" Link="Linked\WarAimMath.cs" />
+  </ItemGroup>
+
+</Project>

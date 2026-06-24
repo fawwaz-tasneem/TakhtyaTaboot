@@ -35,6 +35,53 @@ Debug.Print($"[Hindostan] Bengal gold set to {bengal.RulingClan.Gold}");
 
 **Always prefix with `[Hindostan]`** so you can Ctrl+F among thousands of engine messages.
 
+### The mod's own crash-isolation engine (`TYTLog`)
+
+The mod keeps its **own** diagnostic log, separate from the engine's, written to:
+
+```
+<module folder>\Logs\        (falls back to the Desktop if the module path is unavailable)
+```
+
+It is built to answer one question after any crash — **including a native access violation
+(`0xC0000005`) that never reaches a managed `catch`** — "which piece of mod code, and which
+game object, was executing?" Three files, read in this order:
+
+| File | What it is | Read it when |
+|------|-----------|--------------|
+| `tyt_heartbeat.txt` | A **one-line, always-overwritten** record of the last mod operation, e.g. `Mansabdari.WeeklyTick › clan 'Asaf Jah I'`. Survives a native crash because it is on disk *before* the crash. | The game died with **no** managed stack (native crash, blank Better-Exception-Window, instant CTD). |
+| `tyt_crash_<time>.txt` | A self-contained report written when a **managed** exception escapes: the exception + full stack, the live scope stack (what was running, nested), and the last ~96 breadcrumbs. | A guarded handler threw or `AppDomain.UnhandledException` fired. |
+| `tyt_log.txt` | The running narrative: load info, tick boundaries, warnings, errors. With `TYTLog.Verbose = true`, every breadcrumb too. | General "what happened, in order". |
+
+#### Instrumenting code
+
+Wrap a once-per-tick handler so a throw is caught, identified, and crash-reported instead of
+crashing — and so its scope shows up in the heartbeat:
+
+```csharp
+CampaignEvents.DailyTickEvent.AddNonSerializedListener(this,
+    () => Util.TYTLog.Guard("MyBehaviour.DailyTick", OnDailyTick));
+```
+
+Inside a loop, iterate defensively — each item is **validated** (stale/removed objects skipped,
+the native-crash defence), gets a **breadcrumb naming it**, and its body is **guarded** so one bad
+object is logged-and-skipped rather than taking down the whole tick:
+
+```csharp
+Util.TYTLog.ForEach("clan", Clan.All, c => c?.Name?.ToString(), ReviewClan);
+```
+
+Other tools:
+
+- `Util.TYTLog.Valid(hero / clan / kingdom / settlement / party)` — true only for a live engine
+  object. Call it before touching a reference you have held across ticks; a stale one is the classic
+  cause of the native access violation.
+- `Util.TYTLog.Crumb("…")` — drop a manual breadcrumb (updates the heartbeat) at a fine point inside a loop.
+- `Util.TYTLog.GuardQuiet("ctx", …)` — like `Guard` but **no** per-call breadcrumb/heartbeat I/O. Use
+  on **hot paths** that fire for every party/agent many times an hour (e.g. `HourlyTickPartyEvent`).
+
+See **[Chapter 22 — Crash Logging](22-Systems-Overhaul-and-Tuning.md#crash-logging)**.
+
 ---
 
 ## In-Game Message Logging

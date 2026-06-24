@@ -44,7 +44,8 @@ namespace TakhtyaTaboot
 
         private readonly Dictionary<Religion, List<string>> _male = new Dictionary<Religion, List<string>>();
         private readonly Dictionary<Religion, List<string>> _female = new Dictionary<Religion, List<string>>();
-        private bool _loaded;
+        private readonly object _poolLock = new object();
+        private volatile bool _loaded;
 
         public override void RegisterEvents() { Instance = this; }
         public override void SyncData(IDataStore dataStore) { }
@@ -80,27 +81,40 @@ namespace TakhtyaTaboot
             return list[MBRandom.RandomInt(list.Count)];
         }
 
+        // Lazily build the name pools ONCE, thread-safely. GenerateHeroFirstName (our Harmony
+        // hook) is called from the engine's PARALLEL hero-creation at world-gen, so an unguarded
+        // check-then-populate here let multiple threads write the shared dictionaries/lists at
+        // once — corrupting the managed heap and native-crashing (0xC0000005) intermittently mid
+        // world-gen. Double-checked locking; _loaded is published (volatile) only after the pools
+        // are fully built, so lock-free readers either wait or see a complete, read-only structure.
         private void EnsurePools()
         {
             if (_loaded) return;
-            _loaded = true;
-            foreach (Religion r in new[] { Religion.Islam, Religion.Hindu, Religion.Sikh })
-            { _male[r] = new List<string>(); _female[r] = new List<string>(); }
-
-            try
+            lock (_poolLock)
             {
-                string path = Path.Combine(ModuleHelper.GetModuleFullPath(ModuleId) ?? "", "ModuleData", "tyt_spcultures.xml");
-                if (!File.Exists(path)) return;
-                var doc = new XmlDocument(); doc.Load(path);
-                foreach (XmlNode c in doc.SelectNodes("//Culture"))
+                if (_loaded) return;
+                foreach (Religion r in new[] { Religion.Islam, Religion.Hindu, Religion.Sikh })
+                { _male[r] = new List<string>(); _female[r] = new List<string>(); }
+
+                try
                 {
-                    string id = c.Attributes?["id"]?.Value;
-                    if (id == null || !PoolSourceCulture.TryGetValue(id, out var rel)) continue;
-                    AddNames(c.SelectSingleNode("male_names"), _male[rel]);
-                    AddNames(c.SelectSingleNode("female_names"), _female[rel]);
+                    string path = Path.Combine(ModuleHelper.GetModuleFullPath(ModuleId) ?? "", "ModuleData", "tyt_spcultures.xml");
+                    if (File.Exists(path))
+                    {
+                        var doc = new XmlDocument(); doc.Load(path);
+                        foreach (XmlNode c in doc.SelectNodes("//Culture"))
+                        {
+                            string id = c.Attributes?["id"]?.Value;
+                            if (id == null || !PoolSourceCulture.TryGetValue(id, out var rel)) continue;
+                            AddNames(c.SelectSingleNode("male_names"), _male[rel]);
+                            AddNames(c.SelectSingleNode("female_names"), _female[rel]);
+                        }
+                    }
                 }
+                catch { /* leave pools empty -> falls back to vanilla naming */ }
+
+                _loaded = true;   // publish only after the pools are fully built
             }
-            catch { /* leave pools empty -> falls back to vanilla naming */ }
         }
 
         private static void AddNames(XmlNode container, List<string> into)
@@ -118,8 +132,21 @@ namespace TakhtyaTaboot
     [HarmonyPatch(typeof(NameGenerator), "GenerateHeroFirstName")]
     public static class ReligionNamePatch
     {
+        // Named historical figures (the emperors) whose display name MUST be fixed, never drawn from
+        // the random culture pool. Sourced from the succession plan so there is one list of truth.
+        private static readonly Dictionary<string, string> Fixed = BuildFixed();
+        private static Dictionary<string, string> BuildFixed()
+        {
+            var d = new Dictionary<string, string>();
+            foreach (var r in Util.ImperialSuccessionPlan.Reigns) d[r.HeroId] = r.Name;
+            return d;
+        }
+
         static bool Prefix(Hero hero, ref TextObject __result)
         {
+            if (hero != null && Fixed.TryGetValue(hero.StringId, out string fixedName))
+            { __result = new TextObject(fixedName); return false; }
+
             string name = ReligionBehavior.Instance?.GetReligionName(hero);
             if (string.IsNullOrEmpty(name)) return true; // vanilla / culture fallback
             __result = new TextObject(name);

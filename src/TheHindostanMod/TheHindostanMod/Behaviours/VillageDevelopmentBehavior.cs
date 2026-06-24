@@ -9,6 +9,8 @@ using TaleWorlds.CampaignSystem.Settlements;
 using TaleWorlds.Core;
 using TaleWorlds.Library;
 using TaleWorlds.Localization;
+using TakhtyaTaboot.UI;
+using TakhtyaTaboot.Util;
 
 namespace TakhtyaTaboot
 {
@@ -44,6 +46,11 @@ namespace TakhtyaTaboot
         private Dictionary<string, string> _buildProject = new Dictionary<string, string>();     // villageId -> project name
         private Dictionary<string, int> _buildDays = new Dictionary<string, int>();              // villageId -> days remaining
         private Dictionary<string, int> _lastPatrolDay = new Dictionary<string, int>();          // villageId -> day index
+        private Dictionary<string, int> _reliefUntil = new Dictionary<string, int>();            // villageId -> day relief ends
+        private Dictionary<string, int> _reliefTroops = new Dictionary<string, int>();           // villageId -> men to return
+        private Dictionary<string, int> _lastOverwhelmDay = new Dictionary<string, int>();       // villageId -> day a plea was last sent
+        private const int ReliefDays = 6;
+        private const int OverwhelmCooldown = 12;
 
         public override void RegisterEvents()
         {
@@ -55,8 +62,13 @@ namespace TakhtyaTaboot
         // ── Queries ────────────────────────────────────────────────────────────────
         public float GetThreat(Settlement s) => s != null && _threat.TryGetValue(s.StringId, out float v) ? v : 0f;
 
+        // The player may oversee a village he holds outright (engine owner) OR one he holds in
+        // zamindari through our feudal layer — the latter covers a vassal granted a village
+        // beneath an AI lord, where the engine owner is still that lord's clan.
         private bool IsPlayerVillage(Settlement s)
-            => s != null && s.IsVillage && s.OwnerClan == Clan.PlayerClan;
+            => s != null && s.IsVillage
+               && (s.OwnerClan == Clan.PlayerClan
+                   || FeudalTitlesBehavior.Instance?.GetVillageLord(s) == Hero.MainHero);
 
         private bool HasProject(Settlement s, VillageProject p)
             => _completed.TryGetValue(s.StringId, out string list)
@@ -65,16 +77,38 @@ namespace TakhtyaTaboot
         // ── Daily simulation ─────────────────────────────────────────────────────────
         private void OnDailyTickSettlement(Settlement s)
         {
+            // We're inside the engine's settlement iteration: any farmaan this tick raises (a
+            // bandit overwhelm plea) must be enqueued, not shown now. RoyalFarmaan.Pump() shows it
+            // later from the campaign TickEvent, outside the iteration. See FarmaanScreen.
+            UI.RoyalFarmaan.SuppressImmediate = true;
+            try { TYTLog.Guard("VillageDev.DailyTick:" + (s?.Name?.ToString() ?? "?"), () => DailyTickSettlement(s)); }
+            finally { UI.RoyalFarmaan.SuppressImmediate = false; }
+        }
+
+        private void DailyTickSettlement(Settlement s)
+        {
             if (!IsPlayerVillage(s) || s.Village == null) return;
 
-            UpdateThreat(s);
-            AdvanceConstruction(s);
-            ApplyHearthAndProsperity(s);
-            NotifyThreat(s);
+            // Per-step breadcrumbs: a NATIVE crash bypasses the outer Guard's try/catch and leaves
+            // no managed report, so the heartbeat's last crumb is the only witness. Naming each step
+            // turns "died somewhere in Khanna's tick" into "died in Khanna › MaybeOverwhelm".
+            TYTLog.Crumb("UpdateThreat");        UpdateThreat(s);
+            TYTLog.Crumb("AdvanceConstruction");  AdvanceConstruction(s);
+            TYTLog.Crumb("ApplyHearthProsperity"); ApplyHearthAndProsperity(s);
+            TYTLog.Crumb("HandleReliefReturn");   HandleReliefReturn(s);
+            TYTLog.Crumb("MaybeOverwhelm");       MaybeOverwhelm(s);
+            TYTLog.Crumb("NotifyThreat");         NotifyThreat(s);
         }
 
         private void UpdateThreat(Settlement s)
         {
+            // While a relief force holds the district, the threat recedes steadily.
+            if (_reliefUntil.TryGetValue(s.StringId, out int until) && (int)CampaignTime.Now.ToDays < until)
+            {
+                _threat[s.StringId] = MathF.Max(0f, GetThreat(s) - 8f);
+                return;
+            }
+
             float threat = GetThreat(s);
             threat += 1.0f; // bandits always return
 
@@ -87,9 +121,108 @@ namespace TakhtyaTaboot
             if (MobileParty.MainParty != null && MobileParty.MainParty.CurrentSettlement == s)
                 threat -= 5.0f; // the lord's presence deters raiders
 
+            // A capable zamindar and a standing militia keep the peace day to day.
+            threat -= DefenceStrength(s);
+
             if (HasProject(s, VillageProject.Watchtower)) threat *= 0.6f;
 
             _threat[s.StringId] = MathF.Max(0f, MathF.Min(100f, threat));
+        }
+
+        // Daily suppression from the village's own defenders: its militia and the
+        // stewardship of its zamindar. Scaled by the Militia & zamindar defence weight (MCM).
+        private float DefenceStrength(Settlement s)
+        {
+            float w = Config.Tune.MilitiaDefenceWeight;
+            if (w <= 0f) return 0f;
+            float militia = s.Militia;
+            Hero z = FeudalTitlesBehavior.Instance?.GetVillageLord(s);
+            int steward = z != null ? z.GetSkillValue(DefaultSkills.Steward) : 0;
+            return w * (MathF.Min(2f, militia / 25f) + MathF.Min(2f, steward / 100f));
+        }
+
+        // ── Bandit raids overwhelm the militia; the zamindar pleads for relief ──────────
+        private void MaybeOverwhelm(Settlement s)
+        {
+            if (_reliefUntil.ContainsKey(s.StringId)) return;     // already being relieved
+            int today = (int)CampaignTime.Now.ToDays;
+            if (_lastOverwhelmDay.TryGetValue(s.StringId, out int last) && today - last < OverwhelmCooldown) return;
+
+            float t = GetThreat(s);
+            if (t < 50f) return;
+            // The weaker the village's own defence relative to the threat, the likelier it breaks.
+            float exposure = MathF.Max(0.2f, 1f - DefenceStrength(s) / 6f);
+            float chance = Config.Tune.PatrolOverwhelmChance * (t / 100f) * exposure;
+            if (MBRandom.RandomFloat >= chance) return;
+            TriggerOverwhelm(s);
+        }
+
+        private void TriggerOverwhelm(Settlement s)
+        {
+            _lastOverwhelmDay[s.StringId] = (int)CampaignTime.Now.ToDays;
+            _threat[s.StringId] = MathF.Min(100f, GetThreat(s) + 25f); // the militia is broken
+            if (s.Village != null) s.Village.Hearth = MathF.Max(0f, s.Village.Hearth - 10f);
+
+            Hero z = FeudalTitlesBehavior.Instance?.GetVillageLord(s);
+            string sender = (z != null && z != Hero.MainHero) ? $"{z.Name}, your zamindar of {s.Name}," : $"The headman of {s.Name}";
+            int men = Config.Tune.ReliefDetachmentSize;
+
+            RoyalFarmaan.Issue("A Plea from the Village", $"{s.Name} is beset",
+                $"{sender} sends a desperate letter: bandits have broken the militia and ravage the district. He begs for relief — " +
+                $"will you send a commander with {men} men to drive them off, or ride to patrol the lands yourself?",
+                seal: "Sealed in haste",
+                primary: $"Send a commander with {men} men", onPrimary: () => DispatchRelief(s),
+                secondary: "I will see to it myself", onSecondary: () => SelfRelief(s));
+        }
+
+        private void DispatchRelief(Settlement s)
+        {
+            MobileParty party = MobileParty.MainParty;
+            if (party == null) return;
+            int took = RemoveTroops(party, Config.Tune.ReliefDetachmentSize);
+            if (took <= 0) { Notify($"You have no men to spare for the relief of {s.Name}.", true); return; }
+
+            int today = (int)CampaignTime.Now.ToDays;
+            _reliefUntil[s.StringId] = today + ReliefDays;
+            _reliefTroops[s.StringId] = took;
+            _threat[s.StringId] = MathF.Max(0f, GetThreat(s) - 40f);
+
+            Hero comp = Clan.PlayerClan?.Companions?.FirstOrDefault(h => h != null && h.IsAlive);
+            string who = comp != null ? comp.Name.ToString() : "your commander";
+            Notify($"{who} rides to relieve {s.Name} with {took} men. They will return in {ReliefDays} days.", false);
+        }
+
+        private void SelfRelief(Settlement s)
+            => Notify($"You resolve to see to {s.Name} yourself. Ride there and patrol the district to drive off the bandits.", false);
+
+        private void HandleReliefReturn(Settlement s)
+        {
+            if (!_reliefUntil.TryGetValue(s.StringId, out int until)) return;
+            if ((int)CampaignTime.Now.ToDays < until) return;
+            int count = _reliefTroops.TryGetValue(s.StringId, out int c) ? c : 0;
+            _reliefUntil.Remove(s.StringId);
+            _reliefTroops.Remove(s.StringId);
+            if (count > 0 && MobileParty.MainParty != null)
+            {
+                CharacterObject troop = (s.Culture ?? s.OwnerClan?.Culture)?.BasicTroop;
+                if (troop != null) MobileParty.MainParty.MemberRoster.AddToCounts(troop, count);
+                Notify($"Your {count} men return from the relief of {s.Name}.", false);
+            }
+        }
+
+        // Remove up to 'want' regular (non-hero) troops from the party, returning how many left.
+        private static int RemoveTroops(MobileParty p, int want)
+        {
+            int removed = 0;
+            var roster = p.MemberRoster;
+            for (int i = roster.Count - 1; i >= 0 && removed < want; i--)
+            {
+                var e = roster.GetElementCopyAtIndex(i);
+                if (e.Character == null || e.Character.IsHero) continue;
+                int take = Math.Min(e.Number, want - removed);
+                if (take > 0) { roster.AddToCounts(e.Character, -take); removed += take; }
+            }
+            return removed;
         }
 
         private void AdvanceConstruction(Settlement s)
@@ -272,6 +405,10 @@ namespace TakhtyaTaboot
                 sb.AppendLine($"Bandit threat: {GetThreat(s):0}/100  ({ThreatBand(GetThreat(s))})");
                 Hero z = FeudalTitlesBehavior.Instance?.GetVillageLord(s);
                 sb.AppendLine($"Zamindar (village lord): {(z != null ? z.Name.ToString() : "vacant")}");
+                int steward = z != null ? z.GetSkillValue(DefaultSkills.Steward) : 0;
+                sb.AppendLine($"Militia: {(int)s.Militia}    Zamindar stewardship: {steward}");
+                if (_reliefUntil.TryGetValue(s.StringId, out int until))
+                    sb.AppendLine($"Under relief for {Math.Max(0, until - (int)CampaignTime.Now.ToDays)} more days.");
             }
             if (_buildProject.TryGetValue(s.StringId, out string pn))
                 sb.AppendLine($"Under construction: {pn} ({(_buildDays.TryGetValue(s.StringId, out int bd) ? bd : 0)} days left)");
@@ -318,6 +455,15 @@ namespace TakhtyaTaboot
             dataStore.SyncData("hind_vil_buildDayIds", ref buildDayIds);
             dataStore.SyncData("hind_vil_buildDayVals", ref buildDayVals);
 
+            var reliefIds = _reliefUntil.Keys.ToList();
+            var reliefVals = _reliefUntil.Values.ToList();
+            var reliefTIds = _reliefTroops.Keys.ToList();
+            var reliefTVals = _reliefTroops.Values.ToList();
+            dataStore.SyncData("hind_vil_reliefIds", ref reliefIds);
+            dataStore.SyncData("hind_vil_reliefVals", ref reliefVals);
+            dataStore.SyncData("hind_vil_reliefTIds", ref reliefTIds);
+            dataStore.SyncData("hind_vil_reliefTVals", ref reliefTVals);
+
             if (!dataStore.IsSaving)
             {
                 _threat = Zip(threatIds, threatVals);
@@ -325,6 +471,9 @@ namespace TakhtyaTaboot
                 _buildProject = Zip(buildIds, buildProj);
                 _buildDays = Zip(buildDayIds, buildDayVals);
                 _lastPatrolDay = new Dictionary<string, int>();
+                _reliefUntil = Zip(reliefIds, reliefVals);
+                _reliefTroops = Zip(reliefTIds, reliefTVals);
+                _lastOverwhelmDay = new Dictionary<string, int>();
             }
         }
 

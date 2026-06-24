@@ -31,6 +31,8 @@ A complete guide to writing C# code for Bannerlord, with all examples drawn from
 | [19 — Imperial Depth: Political Systems](19-Imperial-Depth-Political-Systems.md) | Mughal succession (War of Princes), Imperial Authority decay, Three Estates, internal court factions, legitimacy, revolt cascade |
 | [20 — Character Depth: Traits, Intrigue, Pilgrimage, Great Works](20-Character-Depth-and-Intrigue.md) | Character traits (earned from actions), Ulema fatwa network, assassination/blackmail/spy schemes, pilgrimage (Hajj/Kumbh Mela/Amritsar), Great Works (Taj Mahal etc.), cultural innovations |
 | [21 — Main Quest, Reunification, War Score, Peace Negotiation, Suzerainty](21-Main-Quest-Reunification-and-Peace.md) | Two-path win condition (Restoration vs Domination), war score accumulation, peace negotiation menu with demand tiers, suzerainty vassal system, Shahanshah coronation |
+| [22 — Systems Overhaul, MCM Tuning & Crash Logging](22-Systems-Overhaul-and-Tuning.md) | **v1.x overhaul** — MCM tuning layer, mansab troop stability, valour/elevation/demotion/stipend, capital + 4-office culture-named council + convening/votes/cadence, liege & village placement, real player zamindari, mercenary land rule, conquest notable fates, village defence & call-for-help, `TYTLog` crash log, console commands |
+| [23 — Creating the Campaign Map](23-Creating-the-Campaign-Map.md) | **Map-making guide** — heightmap fix for jaggy mountains & pixelated plains (8-bit→16-bit + erosion + scale), terrain materials, sea/rivers/lakes, flora, **navmesh** (why parties can't move without it), settlement placement (scene entity ↔ `settlements.xml` posX/posY), atmosphere, registering `Main_map`, pitfalls table |
 
 ---
 
@@ -38,7 +40,7 @@ A complete guide to writing C# code for Bannerlord, with all examples drawn from
 
 | Item | Value |
 |------|-------|
-| Mod ID | `TheHindostanMod` |
+| Mod ID | `TakhtyaTaboot` (SubModule `Id`; assembly/DLL `TakhtyaTaboot.dll`) |
 | Desktop source | `C:\Users\tasne\Desktop\TakhtyaTaboot\` |
 | Installed copy | `D:\SteamLibrary\steamapps\common\Mount & Blade II Bannerlord\Modules\The Hindostan Mod\` |
 | Game version | v1.4.6 |

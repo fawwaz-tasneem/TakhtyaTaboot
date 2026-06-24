@@ -20,7 +20,7 @@ namespace TakhtyaTaboot
         {
             Instance = this;
             CampaignEvents.OnNewGameCreatedEvent.AddNonSerializedListener(this, OnNewGame);
-            CampaignEvents.WeeklyTickEvent.AddNonSerializedListener(this, OnWeeklyTick);
+            CampaignEvents.WeeklyTickEvent.AddNonSerializedListener(this, () => Util.TYTLog.Guard("Legitimacy.WeeklyTick", OnWeeklyTick));
         }
 
         public float GetLegitimacy(Hero ruler)

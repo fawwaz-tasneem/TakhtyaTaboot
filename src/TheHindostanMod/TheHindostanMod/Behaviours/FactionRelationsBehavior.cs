@@ -26,7 +26,7 @@ namespace TakhtyaTaboot
         {
             CampaignEvents.OnNewGameCreatedEvent.AddNonSerializedListener(this, OnNewGame);
             CampaignEvents.OnSessionLaunchedEvent.AddNonSerializedListener(this, OnSessionLaunched);
-            CampaignEvents.WeeklyTickEvent.AddNonSerializedListener(this, OnWeeklyTick);
+            CampaignEvents.WeeklyTickEvent.AddNonSerializedListener(this, () => Util.TYTLog.Guard("FactionRelations.WeeklyTick", OnWeeklyTick));
         }
 
         private void OnNewGame(CampaignGameStarter starter) => ApplyInitialRelations();

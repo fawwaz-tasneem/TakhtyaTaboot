@@ -23,7 +23,7 @@ namespace TakhtyaTaboot
     public class WarfareBehavior : CampaignBehaviorBase
     {
         public enum WarGoal { Conquest = 0, Tribute = 1, Humble = 2, Defense = 3 }
-        private enum Term { WhitePeace, DemandNazrana, DemandProvince, MakeTributary, OfferNazrana }
+        private enum Term { WhitePeace, DemandNazrana, DemandProvince, MakeTributary, OfferNazrana, Subjugate, SurrenderCulprit }
 
         public static WarfareBehavior Instance { get; private set; }
 
@@ -45,13 +45,14 @@ namespace TakhtyaTaboot
         public override void RegisterEvents()
         {
             Instance = this;
-            CampaignEvents.DailyTickEvent.AddNonSerializedListener(this, OnDailyTick);
+            CampaignEvents.DailyTickEvent.AddNonSerializedListener(this, () => Util.TYTLog.Guard("Warfare.DailyTick", OnDailyTick));
             CampaignEvents.OnSessionLaunchedEvent.AddNonSerializedListener(this, OnSessionLaunched);
             CampaignEvents.WarDeclared.AddNonSerializedListener(this, OnWarDeclared);
             CampaignEvents.MakePeace.AddNonSerializedListener(this, OnMakePeace);
             CampaignEvents.OnPlayerBattleEndEvent.AddNonSerializedListener(this, OnPlayerBattleEnd);
             CampaignEvents.OnSettlementOwnerChangedEvent.AddNonSerializedListener(this, OnOwnerChanged);
             CampaignEvents.HeroPrisonerTaken.AddNonSerializedListener(this, OnPrisonerTaken);
+            CampaignEvents.HeroKilledEvent.AddNonSerializedListener(this, OnHeroKilled);
         }
 
         private static Kingdom PK => Hero.MainHero?.Clan?.Kingdom;
@@ -109,8 +110,22 @@ namespace TakhtyaTaboot
         private int ScoreOf(string id) => _score.TryGetValue(id, out int s) ? s : 0;
         private void AddScore(string id, int delta) { if (id != null) _score[id] = ScoreOf(id) + delta; }
 
+        // Make sure a war the realm is ACTUALLY in is tracked, even if it began before this behavior saw
+        // the declaration (save load, war declared while the player was elsewhere, or the player joined
+        // the realm mid-war). Without this the score stayed 0 and "Direct the war effort" saw no wars.
+        private void EnsureWarTracked(Kingdom ok)
+        {
+            if (ok == null) return;
+            if (!_score.ContainsKey(ok.StringId)) _score[ok.StringId] = 0;
+            if (!_weary.ContainsKey(ok.StringId)) _weary[ok.StringId] = 0f;
+            if (!_goal.ContainsKey(ok.StringId)) _goal[ok.StringId] = (int)WarGoal.Defense;
+        }
+
         // ── War score ────────────────────────────────────────────────────────────────
         private void OnPlayerBattleEnd(MapEvent mapEvent)
+            => Util.TYTLog.Guard("Warfare.OnPlayerBattleEnd", () => PlayerBattleEnd(mapEvent));
+
+        private void PlayerBattleEnd(MapEvent mapEvent)
         {
             if (mapEvent == null) return;
             Kingdom pk = PK;
@@ -122,9 +137,15 @@ namespace TakhtyaTaboot
             bool win = mapEvent.HasWinner && mapEvent.WinningSide == mapEvent.PlayerSide;
             bool siege = mapEvent.MapEventSettlement != null;
 
-            // War score for the realm's war.
-            if (pk != null && opp is Kingdom ok && _score.ContainsKey(ok.StringId))
-                AddScore(ok.StringId, (win ? 1 : -1) * (siege ? 12 : 6));
+            // War score for the realm's war. Track the war first so a battle always counts (the old
+            // ContainsKey guard silently dropped score for any war that wasn't declared on our watch).
+            if (pk != null && opp is Kingdom ok)
+            {
+                EnsureWarTracked(ok);
+                int mag = siege ? 18 : 10;
+                if (win && RoutedOrCapturedKing(mapEvent, ok)) mag += 25;  // breaking their king is decisive
+                AddScore(ok.StringId, (win ? 1 : -1) * mag);
+            }
 
             // Battlefield valour toward the next mansab — earned against real foes, not brigands.
             // Capturing or routing the enemy sovereign on the field is worth a great deal.
@@ -137,6 +158,19 @@ namespace TakhtyaTaboot
                     Notify($"You have broken {enemy.Leader?.Name} on the field — a deed that will be sung of. Your valour soars.", false);
                 }
                 MansabdariBehavior.Instance?.AddValour(Clan.PlayerClan, gain);
+            }
+
+            // Personal valour: enemies the player cut down by his own hand. Deserters (bhagode)
+            // count; common bandits give nothing (filtered in PlayerKillValourLogic).
+            int kills = Util.PlayerKillValourLogic.Take();
+            if (kills > 0)
+            {
+                float killGain = kills * Config.Tune.ValourPerKill;
+                if (killGain > 0f)
+                {
+                    MansabdariBehavior.Instance?.AddValour(Clan.PlayerClan, killGain);
+                    Notify($"Your own blade accounted for {kills} of the foe — {killGain:0.#} valour earned.", false);
+                }
             }
         }
 
@@ -156,6 +190,7 @@ namespace TakhtyaTaboot
         private void OnOwnerChanged(Settlement s, bool openToClaim, Hero newOwner, Hero oldOwner, Hero capturer,
             ChangeOwnerOfSettlementAction.ChangeOwnerOfSettlementDetail detail)
         {
+            if (!Util.WorldGen.Ready) return; // skip the parallel world-gen distribution (see Util/WorldGen.cs)
             if (s == null || !(s.IsTown || s.IsCastle)) return;
             Kingdom pk = PK;
             Kingdom newK = newOwner?.Clan?.Kingdom;
@@ -164,8 +199,8 @@ namespace TakhtyaTaboot
             // War score from provinces changing hands between the warring realms.
             if (pk != null)
             {
-                if (newK == pk && oldK != null && _score.ContainsKey(oldK.StringId)) AddScore(oldK.StringId, 20);
-                else if (oldK == pk && newK != null && _score.ContainsKey(newK.StringId)) AddScore(newK.StringId, -20);
+                if (newK == pk && oldK != null && pk.IsAtWarWith(oldK)) { EnsureWarTracked(oldK); AddScore(oldK.StringId, 20); }
+                else if (oldK == pk && newK != null && pk.IsAtWarWith(newK)) { EnsureWarTracked(newK); AddScore(newK.StringId, -20); }
             }
 
             // Spoils of war — the player takes a city by storm.
@@ -341,6 +376,10 @@ namespace TakhtyaTaboot
             if (pk == null) return;
             int today = (int)CampaignTime.Now.ToDays;
 
+            // Track every war the realm is actually in (covers wars that predate this behavior's sight).
+            foreach (Kingdom o in Kingdom.All.Where(o => o != pk && !o.IsEliminated && pk.IsAtWarWith(o)).ToList())
+                EnsureWarTracked(o);
+
             foreach (string id in _score.Keys.ToList())
             {
                 Kingdom ok = Find(id);
@@ -392,11 +431,39 @@ namespace TakhtyaTaboot
             _score.Remove(ok.StringId); _goal.Remove(ok.StringId); _weary.Remove(ok.StringId); _peaceUrged.Remove(ok.StringId);
         }
 
+        // ── Regicide: executing an enemy king ends the war for now, but breeds a thirst for revenge ──
+        private void OnHeroKilled(Hero victim, Hero killer, KillCharacterAction.KillCharacterActionDetail detail, bool showNotification)
+        {
+            if (victim == null || detail != KillCharacterAction.KillCharacterActionDetail.Executed) return;
+            Kingdom theirs = Kingdom.All.FirstOrDefault(k => !k.IsEliminated && k.Leader == victim);
+            if (theirs == null) return;
+            Kingdom pk = PK;
+            if (pk == null || theirs == pk) return;
+            bool byUs = killer != null && (killer == Hero.MainHero || killer.Clan?.Kingdom == pk);
+            if (!byUs) return;
+
+            // The leaderless realm reels and sues for peace...
+            if (pk.IsAtWarWith(theirs)) try { MakePeaceAction.Apply(pk, theirs); } catch { }
+
+            // ...but every house of the slain king's realm now nurses a blood grudge against you,
+            // and holds just cause for a war of vengeance.
+            Hero butcher = killer == Hero.MainHero ? Hero.MainHero : (pk.Leader ?? killer);
+            foreach (Clan c in theirs.Clans.Where(c => !c.IsEliminated && c.Leader != null))
+                ChangeRelationAction.ApplyRelationChangeBetweenHeroes(butcher, c.Leader, -30);
+            Util.WarAimsBehavior.Instance?.RegisterRevengeCasusBelli(theirs, pk, butcher);
+            if (pk.Leader != null) LegitimacyBehavior.Instance?.ModifyLegitimacy(pk.Leader, -3f, "the killing of a king");
+
+            bool seen = killer == Hero.MainHero || pk == Hero.MainHero?.Clan?.Kingdom;
+            if (seen) Notify($"You have put {victim.Name}, king of {theirs.Name}, to death. His realm sues for peace — but every lord of {theirs.Name} now thirsts for vengeance against you.", true);
+        }
+
         private void OpenDirectWar()
         {
             Kingdom pk = PK;
             if (pk == null || !IsRuler) { Notify("Only the sovereign may direct the realm's wars.", true); return; }
-            var wars = _score.Keys.Select(Find).Where(k => k != null && pk.IsAtWarWith(k)).ToList();
+            // Read the realm's wars from the engine, not just from what we happened to track.
+            var wars = Kingdom.All.Where(k => k != null && k != pk && !k.IsEliminated && pk.IsAtWarWith(k)).ToList();
+            foreach (var k in wars) EnsureWarTracked(k);
             if (wars.Count == 0) { Notify("The realm is at peace.", false); return; }
 
             var elements = wars.Select(k => new InquiryElement(k,
@@ -412,6 +479,7 @@ namespace TakhtyaTaboot
 
         private void OfferTerms(Kingdom ok)
         {
+            Kingdom pk = PK;
             int sc = ScoreOf(ok.StringId);
             var elements = new List<InquiryElement> { new InquiryElement(Term.WhitePeace, "White peace (no terms)", null, true, "End the war as it stands.") };
             if (sc >= 8) elements.Add(new InquiryElement(Term.DemandNazrana, "Demand a nazrana indemnity", null, true, "Take gold for peace."));
@@ -419,8 +487,26 @@ namespace TakhtyaTaboot
             {
                 elements.Add(new InquiryElement(Term.DemandProvince, "Demand a province", null, true, "Annex one of their towns or castles."));
                 elements.Add(new InquiryElement(Term.MakeTributary, "Make them a tributary", null, true, "They pay weekly nazrana and keep the peace."));
+
+                // Total subjugation — annex their ENTIRE realm. Only when their throne has collapsed:
+                // king fallen, legitimacy broken, and their lords already look to you (tested gate).
+                bool kingFallen = ok.Leader == null || !ok.Leader.IsAlive || ok.Leader.IsPrisoner;
+                float okLeg = LegitimacyBehavior.Instance?.GetLegitimacy(ok.Leader) ?? 60f;
+                float loyalFrac = Util.WarAimMath.FractionWithRelationAtLeast(
+                    ok.Clans.Where(c => !c.IsEliminated && c.Leader != null)
+                            .Select(c => CharacterRelationManager.GetHeroRelation(Hero.MainHero, c.Leader)),
+                    Util.WarAimMath.SubjugationLoyalRelation);
+                if (Util.WarAimMath.SubjugationAllowed(kingFallen, okLeg, loyalFrac))
+                    elements.Add(new InquiryElement(Term.Subjugate, "Demand total submission (annex the realm)", null, true,
+                        "Absorb their ENTIRE realm into yours. Possible only because their king is fallen, their legitimacy is broken, and their lords look to you."));
             }
             if (sc <= -8) elements.Add(new InquiryElement(Term.OfferNazrana, "Offer a nazrana for peace", null, true, "Buy your way out of a losing war."));
+
+            // Revenge: if this war is justified by an affront, you may demand the culprit for judgement.
+            if (sc >= 8 && Util.WarAimsBehavior.Instance != null
+                && Util.WarAimsBehavior.Instance.HasCasusBelli(pk, ok, out Hero culprit) && culprit != null)
+                elements.Add(new InquiryElement(Term.SurrenderCulprit, $"Demand they surrender {culprit.Name} for judgement", null, true,
+                    "Make them hand over the lord who wronged you — to pardon, fine, imprison, or execute as you see fit."));
 
             MBInformationManager.ShowMultiSelectionInquiry(new MultiSelectionInquiryData(
                 $"Terms with {ok.Name}",
@@ -452,6 +538,16 @@ namespace TakhtyaTaboot
                     case Term.MakeTributary:
                         _tributaryUntil[ok.StringId] = (int)CampaignTime.Now.ToDays + 365 * 3;
                         break;
+                    case Term.Subjugate:
+                        // Annex the entire realm: every house swears to you, then the kingdom is dissolved.
+                        foreach (Clan c in ok.Clans.ToList())
+                            try { ChangeKingdomAction.ApplyByJoinToKingdom(c, pk, default(CampaignTime), false); } catch { }
+                        if (!ok.Settlements.Any() && !ok.Clans.Any())
+                            try { DestroyKingdomAction.Apply(ok); } catch { }
+                        break;
+                    case Term.SurrenderCulprit:
+                        Util.WarAimsBehavior.Instance?.JudgeCulprit(ok);
+                        break;
                 }
                 MakePeaceAction.Apply(pk, ok);
                 RoyalFarmaan.FromRuler(pk, "Peace Is Dictated",
@@ -469,7 +565,8 @@ namespace TakhtyaTaboot
 
         private static string Describe(Term t) => t == Term.DemandNazrana ? "a nazrana indemnity"
             : t == Term.DemandProvince ? "a province ceded" : t == Term.MakeTributary ? "their tributary submission"
-            : t == Term.OfferNazrana ? "a nazrana paid for peace" : "white peace";
+            : t == Term.OfferNazrana ? "a nazrana paid for peace" : t == Term.Subjugate ? "their realm annexed entire"
+            : t == Term.SurrenderCulprit ? "the surrender of the guilty lord" : "white peace";
 
         private static string Standing(int sc) => sc >= DecisiveScore ? "you are winning decisively"
             : sc >= 8 ? "you hold the advantage" : sc <= -DecisiveScore ? "you are losing badly"

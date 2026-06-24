@@ -5,11 +5,15 @@ using System.Text;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.CampaignSystem.Actions;
 using TaleWorlds.CampaignSystem.GameMenus;
+using TaleWorlds.CampaignSystem.Party;
+using TaleWorlds.CampaignSystem.Roster;
 using TaleWorlds.CampaignSystem.Settlements;
 using TaleWorlds.Core;
 using TaleWorlds.Library;
 using TaleWorlds.Localization;
 using TakhtyaTaboot.UI;
+using TakhtyaTaboot.Util;
+using TakhtyaTaboot.Config;
 
 namespace TakhtyaTaboot
 {
@@ -32,6 +36,8 @@ namespace TakhtyaTaboot
         private const float BrewingDays = 21f;   // Brewing -> Active
         private const float DeadlineDays = 60f;  // Active -> CivilWar if unresolved
         private const float AiBrokerDay = 45f;   // AI kingmaker steps in
+        private const int   CivilWarDays = 90;   // backstop: strongest side prevails after this
+        private const float DynastyFavour = 20f; // the reigning house's standing premium in elections
 
         // ── State (parallel lists — engine can't serialize Dictionary<string,T>) ──
         private List<string> _crisisKingdomIds = new List<string>();
@@ -39,6 +45,12 @@ namespace TakhtyaTaboot
         private List<float>  _crisisDays       = new List<float>();
         private List<string> _claimantIds      = new List<string>(); // comma-joined per crisis
         private List<string> _incumbentIds     = new List<string>(); // sitting ruler at crisis start ("" if died)
+
+        // Civil-war breakaway kingdoms, parallel to _crisisKingdomIds. Each entry is a comma-joined
+        // list of "rebelKingdomId=claimantHeroId" — the champion houses warring for each claimant.
+        // "" until the crisis reaches the CivilWar phase (or if no separate house can field a host).
+        private List<string> _warBreakaways    = new List<string>();
+        private List<int>    _warStartDay      = new List<int>();     // day civil war began (-1 if not)
 
         private List<string> _alignHeroIds     = new List<string>(); // lordId -> claimantId
         private List<string> _alignTargetIds   = new List<string>();
@@ -93,9 +105,10 @@ namespace TakhtyaTaboot
             Instance = this;
             CampaignEvents.OnNewGameCreatedEvent.AddNonSerializedListener(this, OnNewGame);
             CampaignEvents.OnSessionLaunchedEvent.AddNonSerializedListener(this, OnSessionLaunched);
-            CampaignEvents.DailyTickEvent.AddNonSerializedListener(this, OnDailyTick);
-            CampaignEvents.WeeklyTickEvent.AddNonSerializedListener(this, OnWeeklyTick);
+            CampaignEvents.DailyTickEvent.AddNonSerializedListener(this, () => Util.TYTLog.Guard("Succession.DailyTick", OnDailyTick));
+            CampaignEvents.WeeklyTickEvent.AddNonSerializedListener(this, () => Util.TYTLog.Guard("Succession.WeeklyTick", OnWeeklyTick));
             CampaignEvents.HeroKilledEvent.AddNonSerializedListener(this, OnHeroKilled);
+            CampaignEvents.MakePeace.AddNonSerializedListener(this, OnMakePeace);
         }
 
         public override void SyncData(IDataStore dataStore)
@@ -105,6 +118,8 @@ namespace TakhtyaTaboot
             dataStore.SyncData("suc_days",         ref _crisisDays);
             dataStore.SyncData("suc_claimants",    ref _claimantIds);
             dataStore.SyncData("suc_incumbents",   ref _incumbentIds);
+            dataStore.SyncData("suc_warBreakaways", ref _warBreakaways);
+            dataStore.SyncData("suc_warStartDay",   ref _warStartDay);
             dataStore.SyncData("suc_alignHeroes",  ref _alignHeroIds);
             dataStore.SyncData("suc_alignTargets", ref _alignTargetIds);
             dataStore.SyncData("suc_suppHeroes",   ref _supportHeroIds);
@@ -140,6 +155,10 @@ namespace TakhtyaTaboot
         private void OnHeroKilled(Hero victim, Hero killer, KillCharacterAction.KillCharacterActionDetail detail, bool showNotification)
         {
             if (victim == null) return;
+            // World-gen fires HeroKilled in PARALLEL for object setup; never touch crisis state or (worse)
+            // mutate a ruling clan from here until the session is live. Nothing meaningful exists to act on
+            // during world-gen anyway (no crises, empty ruler snapshot).
+            if (!Util.WorldGen.Ready) return;
 
             // Was the victim a known ruler?
             int ri = _rulerHeroIds.IndexOf(victim.StringId);
@@ -150,8 +169,25 @@ namespace TakhtyaTaboot
                 {
                     float legitimacy = LegitimacyBehavior.Instance?.GetLegitimacy(victim) ?? 60f;
                     bool hasHeir = victim.Children.Any(c => c.IsAlive && !c.IsFemale && !c.IsChild);
-                    if (legitimacy < 60f || !hasHeir)
-                        TriggerCrisis(k, victim, includeIncumbent: false);
+                    SuccessionLaw law = Law(k);
+
+                    if (law == SuccessionLaw.Undeclared)
+                    {
+                        // No formal law: the realm's open contest, exactly as before.
+                        if (legitimacy < 60f || !hasHeir)
+                            TriggerCrisis(k, victim, includeIncumbent: false);
+                    }
+                    else
+                    {
+                        // A formal law softly suppresses the war-of-princes: a valid lawful heir usually
+                        // accedes cleanly, but a shaky or collapsed throne can still be contested.
+                        Hero lawfulHeir = SuccessionLawBehavior.Instance?.LawfulHeir(k);
+                        float auth = ImperialAuthorityBehavior.Instance?.GetAuthority(k) ?? 75f;
+                        if (SuccessionLawMath.ShouldContest(law, lawfulHeir != null, legitimacy, auth, MBRandom.RandomFloat, Tune.SuccessionContestFloor))
+                            TriggerCrisis(k, victim, includeIncumbent: false);
+                        else if (lawfulHeir != null)
+                            Util.TYTLog.Guard("Succession.CleanAccession", () => CleanAccession(k, lawfulHeir, law));
+                    }
                 }
                 SnapshotRulers();
                 return;
@@ -187,6 +223,8 @@ namespace TakhtyaTaboot
             // Prisoner-ruler trigger: a captive emperor with weak authority invites a crisis.
             foreach (Kingdom k in Kingdom.All.Where(x => !x.IsEliminated && x.Leader != null))
             {
+                if (!Util.TYTLog.Valid(k) || !Util.TYTLog.Valid(k.Leader)) continue;
+                Util.TYTLog.Crumb("succession scan " + k.StringId);
                 int pi = _prisonKingdomIds.IndexOf(k.StringId);
                 if (k.Leader.IsPrisoner)
                 {
@@ -216,13 +254,35 @@ namespace TakhtyaTaboot
                 }
                 else if (state == CrisisState.Active && _crisisDays[i] >= DeadlineDays)
                 {
-                    Hero leader = LeadingClaimant(k);
-                    if (leader != null && GetSupportPercent(k, leader) >= 55f)
-                        ResolveCrisis(k, leader, "the acclaim of the great lords");
+                    SuccessionLaw law = Law(k);
+                    bool elective = law == SuccessionLaw.PrincelyElection || law == SuccessionLaw.MagnateElection;
+
+                    if (elective)
+                    {
+                        // The assembled magnates cast their voices; a decisive result settles the throne,
+                        // a near-tie throws the realm into civil war.
+                        var vote = RunMagnateVote(k);
+                        Hero winner = FindHero(vote.WinnerId);
+                        if (winner != null && SuccessionLawMath.IsDecisive(vote, Tune.MagnateElectionDecisiveMargin))
+                            ResolveCrisis(k, winner, "the voices of the assembled lords");
+                        else
+                        {
+                            _crisisStates[i] = (int)CrisisState.CivilWar;
+                            Notify($"The election in {k.Name} ends in deadlock — civil war! The lords take up arms for rival claimants.", true);
+                            StartCivilWar(k, i);
+                        }
+                    }
                     else
                     {
-                        _crisisStates[i] = (int)CrisisState.CivilWar;
-                        Notify($"Civil war! The lords of {k.Name} take up arms for rival claimants.", true);
+                        Hero leader = LeadingClaimant(k);
+                        if (leader != null && GetSupportPercent(k, leader) >= 55f)
+                            ResolveCrisis(k, leader, "the acclaim of the great lords");
+                        else
+                        {
+                            _crisisStates[i] = (int)CrisisState.CivilWar;
+                            Notify($"Civil war! The lords of {k.Name} take up arms for rival claimants.", true);
+                            StartCivilWar(k, i);
+                        }
                     }
                 }
             }
@@ -262,7 +322,7 @@ namespace TakhtyaTaboot
                     TryAiBroker(k);
 
                 if (state == CrisisState.CivilWar)
-                    RunSkirmish(k);
+                    RunCivilWar(k, i);
             }
 
             // Stability premium: untroubled realms look better while a rival burns.
@@ -315,7 +375,7 @@ namespace TakhtyaTaboot
 
         private void TriggerCrisis(Kingdom k, Hero ruler, bool includeIncumbent)
         {
-            var claimants = FindClaimants(ruler, includeIncumbent, out var categories);
+            var claimants = FindClaimants(k, ruler, includeIncumbent, out var categories);
             if (claimants.Count <= 1) return; // a lone heir succeeds quietly
 
             _crisisKingdomIds.Add(k.StringId);
@@ -324,6 +384,8 @@ namespace TakhtyaTaboot
             _claimantIds.Add(string.Join(",", claimants.Select(c => c.StringId)));
             // Record the sitting ruler so we know who was "deposed" if they lose.
             _incumbentIds.Add(ruler != null && ruler.IsAlive ? ruler.StringId : "");
+            _warBreakaways.Add("");
+            _warStartDay.Add(-1);
 
             InitialiseSupport(k, claimants, categories);
             AlignLords(k, claimants);
@@ -339,17 +401,29 @@ namespace TakhtyaTaboot
                    $"{claimants.Count} princes eye the throne.", true);
         }
 
-        // Agnatic priority: sons (eldest first) -> brothers -> nephews -> clan leader.
-        private static List<Hero> FindClaimants(Hero ruler, bool includeIncumbent, out List<int> categories)
+        // Gather the candidate UNIVERSE in agnatic priority — sons (eldest first) -> brothers -> nephews
+        // -> clan leader — followed by the realm's mightiest houses as pretenders, then let the kingdom's
+        // SUCCESSION LAW choose the actual contested pool from it (SuccessionLawMath.OrderedPool). With no
+        // formal law the universe's first three stand, exactly as before; primogeniture narrows to the
+        // line, the election laws widen to the magnates, and an appointed Wali Ahd leads his own pool.
+        private static List<Hero> FindClaimants(Kingdom k, Hero ruler, bool includeIncumbent, out List<int> categories)
         {
             var seen = new HashSet<Hero>();
-            var outp = new List<Hero>();
-            var cats = new List<int>(); // 0 incumbent, 1 son, 2 brother, 3 nephew, 4 fallback
+            var heroes = new List<Hero>();
+            var cats = new List<int>();      // 0 incumbent, 1 son, 2 brother, 3 nephew, 4 clan-leader, 5 powerful lord
+            var sonRanks = new List<int>();  // 0 = eldest son; -1 otherwise
+            int sonCounter = 0;
 
             void Add(Hero h, int cat)
             {
                 if (h != null && h.IsAlive && !h.IsChild && !h.IsFemale && seen.Add(h))
-                { outp.Add(h); cats.Add(cat); }
+                { heroes.Add(h); cats.Add(cat); sonRanks.Add(cat == 1 ? sonCounter++ : -1); }
+            }
+            // Powerful-lord fallback allows any adult clan leader (a formidable Rani may press a claim too).
+            void AddLord(Hero h, int cat)
+            {
+                if (h != null && h.IsAlive && !h.IsChild && seen.Add(h))
+                { heroes.Add(h); cats.Add(cat); sonRanks.Add(-1); }
             }
 
             if (includeIncumbent) Add(ruler, 0);
@@ -361,22 +435,70 @@ namespace TakhtyaTaboot
             foreach (Hero b in brothers)
                 foreach (Hero n in b.Children.Where(c => !c.IsFemale).OrderByDescending(c => c.Age))
                     Add(n, 3);
-            if (outp.Count < 2) Add(ruler.Clan?.Leader, 4);
+            Add(ruler.Clan?.Leader, 4);
 
-            categories = cats.Take(3).ToList();
-            return outp.Take(3).ToList();
+            // Always append the realm's mightiest houses to the universe (so the election laws have a real
+            // field); appended AFTER the dynasty, the open-contest default's first three are unchanged.
+            if (k != null)
+                foreach (Hero lord in k.Clans
+                    .Where(c => !c.IsEliminated && !c.IsMinorFaction && c.Leader != null && !c.Leader.IsChild)
+                    .OrderByDescending(ClanPower).Select(c => c.Leader).Take(6))
+                    AddLord(lord, 5);
+
+            // Hand the universe to the law to pick the contested pool.
+            Hero wali = SuccessionLawBehavior.Instance?.GetWaliAhd(k);
+            Hero naib = SuccessionLawBehavior.Instance?.GetNaib(k);
+            var universe = new List<SuccessionLawMath.LawCandidate>();
+            for (int i = 0; i < heroes.Count; i++)
+                universe.Add(new SuccessionLawMath.LawCandidate
+                {
+                    Id = heroes[i].StringId,
+                    Category = cats[i],
+                    IsDynasty = cats[i] <= 4,
+                    SonRank = sonRanks[i],
+                    Power = ClanPower(heroes[i].Clan),
+                    RankIndex = MansabdariBehavior.Instance?.GetRankIndex(heroes[i].Clan) ?? 0,
+                    IsWali = wali != null && heroes[i] == wali,
+                    IsNaib = naib != null && heroes[i] == naib,
+                });
+
+            SuccessionLaw law = SuccessionLawBehavior.Instance?.GetLaw(k) ?? SuccessionLaw.Undeclared;
+            var orderedIds = SuccessionLawMath.OrderedPool(law, universe, 3);
+
+            var byId = new Dictionary<string, int>();
+            for (int i = 0; i < heroes.Count; i++) byId[heroes[i].StringId] = i;
+
+            var resultHeroes = new List<Hero>();
+            var resultCats = new List<int>();
+            foreach (string id in orderedIds)
+                if (byId.TryGetValue(id, out int idx)) { resultHeroes.Add(heroes[idx]); resultCats.Add(cats[idx]); }
+
+            categories = resultCats;
+            return resultHeroes;
+        }
+
+        // A rough measure of a house's weight at court: host strength, influence, fiefs, and coin.
+        private static float ClanPower(Clan c)
+        {
+            if (c == null) return 0f;
+            float fiefs = c.Settlements?.Count(s => s.IsTown || s.IsCastle) ?? 0;
+            return c.CurrentTotalStrength + c.Influence * 3f + fiefs * 200f + (c.Leader?.Gold ?? 0) * 0.01f;
         }
 
         private void InitialiseSupport(Kingdom k, List<Hero> claimants, List<int> categories)
         {
+            SuccessionLaw law = Law(k);
+            Hero wali = SuccessionLawBehavior.Instance?.GetWaliAhd(k);
+            Hero naib = SuccessionLawBehavior.Instance?.GetNaib(k);
             int sonRank = 0;
             for (int i = 0; i < claimants.Count; i++)
             {
                 Hero c = claimants[i];
+                int thisSonRank = categories[i] == 1 ? sonRank++ : -1;
                 float score = categories[i] switch
                 {
                     0 => 50f,                       // sitting (if disputed-while-alive) ruler
-                    1 => sonRank++ == 0 ? 60f : 45f - 5f * sonRank,
+                    1 => thisSonRank == 0 ? 60f : 45f - 5f * thisSonRank,
                     2 => 30f,                       // brother
                     3 => 20f,                       // nephew
                     _ => 40f,                       // clan-leader fallback
@@ -389,6 +511,14 @@ namespace TakhtyaTaboot
                 // Favour of the realm's chief Amir carries weight at court.
                 Hero amir = TopAmir(k, exclude: c);
                 if (amir != null && CharacterRelationManager.GetHeroRelation(c, amir) > 20) score += 10f;
+
+                // The succession law's own thumb on the scale: a named/primogeniture heir leads, and a
+                // magnate election still tilts toward the reigning house.
+                score += SuccessionLawMath.LawSupportBonus(law, new SuccessionLawMath.LawCandidate
+                {
+                    Category = categories[i], SonRank = thisSonRank, IsDynasty = categories[i] <= 4,
+                    IsWali = wali != null && c == wali, IsNaib = naib != null && c == naib,
+                }, Tune.HeirSupportBoost, DynastyFavour);
 
                 SetSupport(c, Math.Max(5f, score));
             }
@@ -463,6 +593,363 @@ namespace TakhtyaTaboot
                 ResolveCrisis(k, winner, "the collapse of all opposition");
         }
 
+        // ── Real civil war: rival claimants raise their OWN banners as breakaway kingdoms ──────
+        // Bannerlord kingdoms are led by clans, so a prince who is only a MEMBER of the dynasty clan
+        // cannot head a kingdom. Each fighting claimant therefore gets a host clan to secede with:
+        //  • a prince who already leads his own landed house -> that house secedes directly;
+        //  • a prince with no house of his own (e.g. the king's son) -> a TEMPORARY cadet clan is
+        //    split off for him (Util.ClaimantClan), which founds the breakaway kingdom.
+        // A claimant may DECLINE to fight (WillFight) and remain a peaceful court claimant. On
+        // resolution the cadet clans either merge back into the dynasty (FoldBack) or, for an
+        // embittered surviving pretender, stand on as a PERMANENT split realm.
+        private void StartCivilWar(Kingdom k, int i)
+        {
+            try
+            {
+                if (k == null || k.Leader == null || RevoltCascadeBehavior.Instance == null) return;
+                var claimants = GetClaimants(k);
+                Hero throne = k.Leader;
+                var pairs = new List<string>();                 // "rebelKingdomId=claimantId"
+                var formed = new Dictionary<string, Kingdom>();  // claimantId -> rebel kingdom
+
+                foreach (Hero c in claimants)
+                {
+                    if (c == null || !c.IsAlive || c == throne || c == Hero.MainHero) continue; // player prompted below
+
+                    var backers = AlignedBackerClans(c, k);
+                    bool ownHouse = c.Clan != null && c.Clan != k.RulingClan && c.Clan.Leader == c
+                                    && !c.Clan.IsMinorFaction && c.Clan.Kingdom == k && HasFief(c.Clan);
+                    if (!ownHouse && !backers.Any(HasFief)) continue;   // no viable host -> court claimant
+                    if (!WillFight(c, k)) continue;                     // chooses the court over the field
+
+                    Clan host; bool temp = false;
+                    if (ownHouse) host = c.Clan;
+                    else { host = Util.ClaimantClan.Create(c, k.Culture); temp = true; if (host == null) continue; }
+
+                    Settlement seat = host.Settlements.FirstOrDefault(s => s.IsTown)
+                        ?? host.Settlements.FirstOrDefault(s => s.IsCastle)
+                        ?? host.Settlements.FirstOrDefault()
+                        ?? backers.SelectMany(b => b.Settlements).FirstOrDefault(s => s.IsTown)
+                        ?? backers.SelectMany(b => b.Settlements).FirstOrDefault()
+                        ?? c.HomeSettlement;
+                    if (seat == null) { if (temp) Util.ClaimantClan.Dissolve(host); continue; }
+
+                    Kingdom rebel = RevoltCascadeBehavior.Instance.CreateRebelKingdom(host, seat, $"{c.Name}'s Claim");
+                    if (rebel == null) { if (temp) Util.ClaimantClan.Dissolve(host); continue; }
+
+                    foreach (Clan b in backers)
+                        if (b != host && b.Kingdom == k)
+                            try { ChangeKingdomAction.ApplyByJoinToKingdom(b, rebel, default(CampaignTime), false); } catch { }
+
+                    RevoltCascadeBehavior.Instance.EnsureAtWar(rebel, k);
+                    pairs.Add(rebel.StringId + "=" + c.StringId);
+                    formed[c.StringId] = rebel;
+                }
+
+                // Pretenders war each other only if their claimants are hostile; otherwise they tolerate
+                // one another and concentrate on the throne.
+                var ids = formed.Keys.ToList();
+                for (int x = 0; x < ids.Count; x++)
+                    for (int y = x + 1; y < ids.Count; y++)
+                    {
+                        Hero ca = FindHero(ids[x]), cb = FindHero(ids[y]);
+                        if (ca != null && cb != null && CharacterRelationManager.GetHeroRelation(ca, cb) < 0
+                            && !formed[ids[x]].IsAtWarWith(formed[ids[y]]))
+                            try { DeclareWarAction.ApplyByDefault(formed[ids[x]], formed[ids[y]]); } catch { }
+                    }
+
+                if (i >= 0 && i < _warBreakaways.Count)
+                {
+                    _warBreakaways[i] = string.Join(",", pairs);
+                    _warStartDay[i] = (int)CampaignTime.Now.ToDays;
+                }
+
+                // Player agency: a claimant-player is offered the choice to raise his own banner;
+                // otherwise, if he pledged to a breakaway claimant, he rides to that banner.
+                if (claimants.Contains(Hero.MainHero) && Hero.MainHero != throne && Clan.PlayerClan != k.RulingClan)
+                    PromptPlayerClaim(k, i);
+                else
+                {
+                    Hero pick = GetAlignment(Hero.MainHero);
+                    if (pick != null && formed.TryGetValue(pick.StringId, out Kingdom pk)
+                        && Clan.PlayerClan != null && Clan.PlayerClan.Kingdom == k && Clan.PlayerClan != k.RulingClan)
+                        try { ChangeKingdomAction.ApplyByJoinToKingdom(Clan.PlayerClan, pk, default(CampaignTime), false); } catch { }
+                }
+
+                if (pairs.Count > 0)
+                    Notify($"The war of princes in {k.Name} spills onto the map — {pairs.Count} pretender realm(s) march against the throne.", true);
+            }
+            catch (Exception e) { Util.TYTLog.Error("StartCivilWar failed", e); }
+        }
+
+        // A claimant raises arms only if his cause has momentum; a near-hopeless prince keeps to the
+        // court (where he can still be brokered in). Randomised so the same crisis can play out anew.
+        private bool WillFight(Hero c, Kingdom k)
+        {
+            if (c == null) return false;
+            float drive = GetSupportPercent(k, c) + CountBackers(c) * 8f + MBRandom.RandomFloatRanged(-15f, 15f);
+            return drive >= 25f;
+        }
+
+        private static bool IsTempClaimClan(Clan c)
+            => c?.StringId != null && c.StringId.StartsWith("tyt_claim_");
+
+        // ── Player as claimant: choose to raise your own banner or hold at court ───────────
+        private void PromptPlayerClaim(Kingdom k, int i)
+        {
+            if (k == null || Hero.MainHero == null) return;
+            InformationManager.ShowInquiry(new InquiryData(
+                "Raise Your Banner?",
+                $"{k.Name} has fallen into a war of princes, and you are among the claimants to the throne. " +
+                "Will you raise your own banner and fight for the crown — or hold at court and let the great lords decide?",
+                true, true, "Raise my banner", "Hold at court",
+                () => PlayerRaiseBanner(k, i), () => { }), true);
+        }
+
+        private void PlayerRaiseBanner(Kingdom k, int i)
+        {
+            try
+            {
+                if (RevoltCascadeBehavior.Instance == null || Clan.PlayerClan == null || k == null) return;
+                if (Clan.PlayerClan.Kingdom != k) { Notify("You are no longer of this realm.", true); return; }
+
+                var backers = AlignedBackerClans(Hero.MainHero, k);
+                Settlement seat = Clan.PlayerClan.Settlements.FirstOrDefault(s => s.IsTown)
+                    ?? Clan.PlayerClan.Settlements.FirstOrDefault()
+                    ?? backers.SelectMany(b => b.Settlements).FirstOrDefault(s => s.IsTown)
+                    ?? backers.SelectMany(b => b.Settlements).FirstOrDefault()
+                    ?? Hero.MainHero.HomeSettlement;
+                if (seat == null) { Notify("You hold no seat from which to raise your banner.", true); return; }
+
+                Kingdom rebel = RevoltCascadeBehavior.Instance.CreateRebelKingdom(
+                    Clan.PlayerClan, seat, $"{Hero.MainHero.Name}'s Claim");
+                if (rebel == null) { Notify("Your banner could not be raised.", true); return; }
+
+                foreach (Clan b in backers)
+                    if (b != Clan.PlayerClan && b.Kingdom == k)
+                        try { ChangeKingdomAction.ApplyByJoinToKingdom(b, rebel, default(CampaignTime), false); } catch { }
+
+                RevoltCascadeBehavior.Instance.EnsureAtWar(rebel, k);
+                AppendBreakaway(i, rebel, Hero.MainHero);
+                Notify($"You raise your banner against the throne of {k.Name}. The war of princes is joined — win it, and the crown is yours.", true);
+            }
+            catch (Exception e) { Util.TYTLog.Error("PlayerRaiseBanner failed", e); }
+        }
+
+        private void AppendBreakaway(int i, Kingdom rebel, Hero claimant)
+        {
+            if (i < 0 || i >= _warBreakaways.Count || rebel == null || claimant == null) return;
+            string entry = rebel.StringId + "=" + claimant.StringId;
+            _warBreakaways[i] = string.IsNullOrEmpty(_warBreakaways[i]) ? entry : _warBreakaways[i] + "," + entry;
+            if (i < _warStartDay.Count && _warStartDay[i] < 0) _warStartDay[i] = (int)CampaignTime.Now.ToDays;
+        }
+
+        // A throne and one of its active succession breakaways cannot sign a white peace — the war for the
+        // crown is binary. Any truce the engine concludes between them is reversed at once.
+        private void OnMakePeace(IFaction f1, IFaction f2, MakePeaceAction.MakePeaceDetail detail)
+            => Util.TYTLog.Guard("Succession.OnMakePeace", () =>
+            {
+                if (!(f1 is Kingdom a) || !(f2 is Kingdom b)) return;
+                if (!IsSuccessionWarPair(a, b)) return;
+                try { DeclareWarAction.ApplyByDefault(a, b); } catch { }
+                Kingdom pk = Hero.MainHero?.Clan?.Kingdom;
+                if (pk == a || pk == b)
+                    Notify("A war for the throne cannot be ended by treaty — only by victory in the field. The war goes on.", true);
+            });
+
+        // Are these two kingdoms a throne and one of its own active succession breakaways?
+        private bool IsSuccessionWarPair(Kingdom x, Kingdom y)
+        {
+            if (x == null || y == null || x == y) return false;
+            for (int i = 0; i < _crisisKingdomIds.Count; i++)
+            {
+                Kingdom throne = Kingdom.All.FirstOrDefault(z => z.StringId == _crisisKingdomIds[i]);
+                if (throne == null || (throne != x && throne != y)) continue;
+                Kingdom other = throne == x ? y : x;
+                if (GetBreakaways(i).Any(p => p.Item1 == other)) return true;
+            }
+            return false;
+        }
+
+        private void RunCivilWar(Kingdom k, int i)
+        {
+            string raw = (i >= 0 && i < _warBreakaways.Count) ? _warBreakaways[i] : "";
+            if (string.IsNullOrEmpty(raw)) { RunSkirmish(k); return; }   // no real host formed -> abstract
+
+            // Prune pretenders whose realm has been broken.
+            foreach (var p in GetBreakaways(i).ToList())
+                if (p.Item1 == null || p.Item1.IsEliminated || !p.Item1.Settlements.Any())
+                {
+                    FoldBack(p.Item1, k);
+                    RemoveBreakaway(i, p.Item2);
+                    if (p.Item2 != null) AddSupport(p.Item2, -25f);
+                }
+
+            var bw = GetBreakaways(i);
+            if (bw.Count == 0) { ResolveCivilWar(k, i, null, "the pretenders' hosts were broken"); return; }
+
+            // A war for the throne is fought to the finish — there is no white peace and no quiet
+            // partition. If the engine or a diplomacy AI has slipped a truce in, re-light the war: the
+            // crown is won or lost, never simply walked away with.
+            foreach (var p in bw)
+                if (p.Item1 != null && !p.Item1.IsEliminated && p.Item1 != k && k != null && !p.Item1.IsAtWarWith(k))
+                {
+                    RevoltCascadeBehavior.Instance?.EnsureAtWar(p.Item1, k);
+                    Notify($"There can be no peace in a war for the throne of {k.Name} — only victory. The fighting resumes.", true);
+                }
+
+            // Throne fallen (capital lost, eliminated, or the king taken)?
+            if (k == null || k.IsEliminated || !k.Settlements.Any() || k.Leader == null || k.Leader.IsPrisoner)
+            {
+                var champ = bw.OrderByDescending(p => KingdomStrength(p.Item1)).First();
+                ResolveCivilWar(k, i, champ.Item2, "the throne has fallen");
+                return;
+            }
+
+            // Backstop: after a long war the strongest side prevails.
+            int start = (i < _warStartDay.Count) ? _warStartDay[i] : -1;
+            if (start >= 0 && (int)CampaignTime.Now.ToDays - start >= CivilWarDays)
+            {
+                var top = bw.OrderByDescending(p => KingdomStrength(p.Item1)).First();
+                if (KingdomStrength(top.Item1) > ThroneStrength(k) * 1.1f)
+                    ResolveCivilWar(k, i, top.Item2, "a long war breaks the throne");
+                else
+                    ResolveCivilWar(k, i, null, "the throne outlasts the pretenders");
+            }
+        }
+
+        // winnerClaimant == null  =>  the throne held and the crisis ends with the sitting ruler.
+        private void ResolveCivilWar(Kingdom k, int i, Hero winnerClaimant, string how)
+        {
+            try
+            {
+                var breakaways = GetBreakaways(i);
+                if (i < _warBreakaways.Count) _warBreakaways[i] = "";
+                if (i < _warStartDay.Count) _warStartDay[i] = -1;
+
+                if (winnerClaimant == null || !winnerClaimant.IsAlive)
+                {
+                    foreach (var p in breakaways) FoldBack(p.Item1, k);
+                    int idx = CrisisIndex(k);
+                    if (idx >= 0) ClearCrisisData(idx, GetClaimants(k));
+                    ImperialAuthorityBehavior.Instance?.ModifyAuthority(k, 5f, "the throne survived the war of princes");
+                    Notify($"The throne of {k?.Name} weathers the war of princes; {k?.Leader?.Name} reigns still.", false);
+                    return;
+                }
+
+                // A pretender prevails: his own host folds home for the crowning; rivals submit if not
+                // too embittered, otherwise their realm stands on, now at war with the new sovereign.
+                foreach (var p in breakaways)
+                {
+                    if (p.Item2 == winnerClaimant) { FoldBack(p.Item1, k); continue; }
+                    int rel = p.Item2 != null ? CharacterRelationManager.GetHeroRelation(p.Item2, winnerClaimant) : 0;
+                    if (rel >= -20) FoldBack(p.Item1, k);   // placated — bends the knee
+                }
+
+                ResolveCrisis(k, winnerClaimant, how);      // crowns winner on k, deposed fate, clears crisis
+
+                foreach (var p in breakaways)
+                    if (p.Item1 != null && !p.Item1.IsEliminated && p.Item1 != k && p.Item2 != winnerClaimant)
+                    {
+                        RevoltCascadeBehavior.Instance?.EnsureAtWar(p.Item1, k);
+                        Notify($"{p.Item2?.Name} refuses to bend the knee to {winnerClaimant.Name} — the war goes on.", true);
+                    }
+            }
+            catch (Exception e) { Util.TYTLog.Error("ResolveCivilWar failed", e); }
+        }
+
+        // Merge a breakaway realm back into the throne's realm. Backer houses rejoin with their fiefs;
+        // a claimant's TEMPORARY cadet clan is dissolved back into the dynasty (its conquests pass to
+        // the throne so nothing is orphaned), leaving the dynasty whole again.
+        private void FoldBack(Kingdom rebel, Kingdom k)
+        {
+            if (rebel == null || k == null || rebel == k) return;
+            try
+            {
+                if (rebel.IsAtWarWith(k)) Util.ThroneWar.WithInternalPeace(() => MakePeaceAction.Apply(rebel, k));
+
+                Clan cadet = rebel.RulingClan;
+                bool temp = IsTempClaimClan(cadet);
+
+                // Backer houses (and a non-temp seceded house) rejoin the throne with their lands.
+                foreach (Clan c in rebel.Clans.ToList())
+                    if (!(temp && c == cadet))
+                        try { ChangeKingdomAction.ApplyByJoinToKingdom(c, k, default(CampaignTime), false); } catch { }
+
+                // The cadet clan's conquests pass to the throne, then the cadet dissolves into the dynasty.
+                if (temp && cadet != null)
+                {
+                    Hero throneLord = k.RulingClan?.Leader ?? k.Leader;
+                    if (throneLord != null)
+                        foreach (Settlement s in cadet.Settlements.ToList())
+                            try { ChangeOwnerOfSettlementAction.ApplyByDefault(throneLord, s); } catch { }
+                    Util.ClaimantClan.Dissolve(cadet);   // returns the prince to the dynasty, destroys the cadet
+                }
+
+                if (rebel != k && !rebel.Settlements.Any() && !rebel.Clans.Any())
+                    try { DestroyKingdomAction.Apply(rebel); } catch { }
+            }
+            catch { }
+        }
+
+        private List<Tuple<Kingdom, Hero>> GetBreakaways(int i)
+        {
+            var result = new List<Tuple<Kingdom, Hero>>();
+            if (i < 0 || i >= _warBreakaways.Count || string.IsNullOrEmpty(_warBreakaways[i])) return result;
+            foreach (string pair in _warBreakaways[i].Split(','))
+            {
+                var kv = pair.Split('=');
+                if (kv.Length != 2) continue;
+                result.Add(Tuple.Create(Kingdom.All.FirstOrDefault(x => x.StringId == kv[0]), FindHero(kv[1])));
+            }
+            return result;
+        }
+
+        private void RemoveBreakaway(int i, Hero claimant)
+        {
+            if (i < 0 || i >= _warBreakaways.Count || claimant == null) return;
+            var kept = GetBreakaways(i)
+                .Where(p => p.Item2 != claimant && p.Item1 != null && p.Item2 != null)
+                .Select(p => p.Item1.StringId + "=" + p.Item2.StringId);
+            _warBreakaways[i] = string.Join(",", kept);
+        }
+
+        private List<Clan> AlignedBackerClans(Hero c, Kingdom k)
+        {
+            var result = new List<Clan>();
+            if (c == null) return result;
+            for (int a = 0; a < _alignHeroIds.Count; a++)
+                if (_alignTargetIds[a] == c.StringId)
+                {
+                    Hero lord = FindHero(_alignHeroIds[a]);
+                    Clan cl = lord?.Clan;
+                    if (cl != null && !cl.IsEliminated && cl != k.RulingClan && !cl.IsMinorFaction
+                        && cl.Leader == lord && cl.Kingdom == k)
+                        result.Add(cl);
+                }
+            return result;
+        }
+
+        private Hero GetAlignment(Hero lord)
+        {
+            if (lord == null) return null;
+            int idx = _alignHeroIds.IndexOf(lord.StringId);
+            return idx < 0 ? null : FindHero(_alignTargetIds[idx]);
+        }
+
+        private static bool HasFief(Clan c)
+            => c?.Settlements != null && c.Settlements.Any(s => s.IsTown || s.IsCastle);
+
+        private float KingdomStrength(Kingdom kg)
+        {
+            if (kg == null) return 0f;
+            float s = 0f;
+            foreach (Clan c in kg.Clans) if (!c.IsEliminated) s += c.CurrentTotalStrength;
+            return s;
+        }
+
+        private float ThroneStrength(Kingdom k) => KingdomStrength(k);
+
         private void ResolveCrisis(Kingdom k, Hero winner, string how)
         {
             int i = CrisisIndex(k);
@@ -475,6 +962,10 @@ namespace TakhtyaTaboot
             string incumbentId = (i < _incumbentIds.Count) ? _incumbentIds[i] : "";
             Hero deposed = string.IsNullOrEmpty(incumbentId) ? null : FindHero(incumbentId);
 
+            // Defensive: if the winner is still in a temporary cadet clan (a path that did not fold
+            // back first), dissolve it so he is crowned within the dynasty, not as a throwaway house.
+            if (IsTempClaimClan(winner.Clan)) Util.ClaimantClan.Dissolve(winner.Clan);
+
             // Crown the winner.
             if (winner != k.Leader)
             {
@@ -483,6 +974,11 @@ namespace TakhtyaTaboot
                 if (winner.Clan != null && winner.Clan.Leader != winner)
                     ChangeClanLeaderAction.ApplyWithSelectedNewLeader(winner.Clan, winner);
             }
+
+            // An active king governs at once: fill his imperial council immediately rather than
+            // leaving it vacant until the next weekly fill.
+            if (k.Leader != null && k.Leader != Hero.MainHero)
+                CouncilBehavior.Instance?.EnsureCouncil(k.Leader);
 
             LegitimacyBehavior.Instance?.SetLegitimacy(winner, 45f + pct * 0.4f);
             ImperialAuthorityBehavior.Instance?.ModifyAuthority(k, -20f, "scars of the succession crisis");
@@ -574,20 +1070,34 @@ namespace TakhtyaTaboot
                     break;
 
                 case "banish":
-                    // A clan leader of a separate house can be cast out of the realm intact;
-                    // otherwise the deposed simply vanishes from history.
-                    if (deposed.Clan != winner.Clan && deposed.Clan.Leader == deposed && deposed.Clan.Kingdom == k)
+                {
+                    // Stripped of crown, wealth and standing — but he LIVES, departing into exile with his
+                    // family to found a destitute house that may yet scheme another day. Never "lost".
+                    int purse = Math.Max(0, deposed.Gold - 1000);
+                    if (purse > 0 && winner != null) GiveGoldAction.ApplyBetweenCharacters(deposed, winner, purse, true);
+
+                    if (deposed.Clan == null || deposed.Clan == winner.Clan)
                     {
-                        ChangeClanInfluenceAction.Apply(deposed.Clan, -deposed.Clan.Influence);
-                        ChangeKingdomAction.ApplyByLeaveKingdom(deposed.Clan, playerSees);
+                        // A prince of the victor's own dynasty: split off a new exile house with his kin.
+                        Clan exile = Util.ClaimantClan.CreateExileHouse(deposed);
+                        if (exile != null)
+                        {
+                            if (exile.Influence > 0) ChangeClanInfluenceAction.Apply(exile, -exile.Influence);
+                            if (exile.Kingdom != null) ChangeKingdomAction.ApplyByLeaveKingdom(exile, playerSees);
+                        }
                     }
                     else
                     {
-                        KillCharacterAction.ApplyByRemove(deposed, playerSees, true);
+                        // He already heads his own house: strip its fiefs to the victor, then cast it out.
+                        foreach (Settlement s in deposed.Clan.Settlements.Where(s => s.IsTown || s.IsCastle).ToList())
+                            if (winner != null) try { ChangeOwnerOfSettlementAction.ApplyByGift(s, winner); } catch { }
+                        if (deposed.Clan.Influence > 0) ChangeClanInfluenceAction.Apply(deposed.Clan, -deposed.Clan.Influence);
+                        if (deposed.Clan.Kingdom != null) ChangeKingdomAction.ApplyByLeaveKingdom(deposed.Clan, playerSees);
                     }
                     ImperialAuthorityBehavior.Instance?.ModifyAuthority(k, 3f, "the deposed emperor banished");
-                    if (playerSees) Notify($"{deposed.Name} is banished from Hindostan, stripped of title and standing.", false);
+                    if (playerSees) Notify($"{deposed.Name} is banished from Hindostan — stripped of crown, wealth and standing, he departs with his family to found a house in exile.", false);
                     break;
+                }
 
                 default: // pardon
                     ChangeRelationAction.ApplyRelationChangeBetweenHeroes(winner, deposed, 15);
@@ -639,6 +1149,24 @@ namespace TakhtyaTaboot
                     args => { PlayerBack(s); SuccessionMenuInit(args); });
             }
 
+            starter.AddGameMenuOption("hindostan_succession", "hindostan_succ_nominate",
+                "{=!}Put forward a claimant (Amir-ul-Umara, 100 influence)",
+                args =>
+                {
+                    args.optionLeaveType = GameMenuOption.LeaveType.Manage;
+                    return PlayerCanNominate(out _);
+                },
+                args => { PlayerNominate(); SuccessionMenuInit(args); });
+
+            starter.AddGameMenuOption("hindostan_succession", "hindostan_succ_persuade",
+                "{=!}Persuade a rival claimant to stand down",
+                args =>
+                {
+                    args.optionLeaveType = GameMenuOption.LeaveType.Bribe;
+                    return PlayerCanPersuade(out _);
+                },
+                args => { PlayerPersuade(); SuccessionMenuInit(args); });
+
             starter.AddGameMenuOption("hindostan_succession", "hindostan_succ_broker",
                 "{=!}Broker the succession as Amir-ul-Umara (200 influence)",
                 args =>
@@ -661,6 +1189,14 @@ namespace TakhtyaTaboot
             var sb = new StringBuilder();
             sb.AppendLine("The War of Princes");
             sb.AppendLine(" ");
+
+            if (k != null)
+            {
+                string law = SuccessionLawBehavior.LawName(Law(k));
+                Hero wali = SuccessionLawBehavior.Instance?.GetWaliAhd(k);
+                sb.AppendLine($"Law of succession: {law}" + (wali != null ? $"    Wali Ahd: {wali.Name}" : ""));
+                sb.AppendLine(" ");
+            }
 
             if (k == null || GetCrisisState(k) == CrisisState.None)
                 sb.AppendLine("The succession here is settled.");
@@ -712,6 +1248,339 @@ namespace TakhtyaTaboot
             Notify($"You pledge your standing to {claimant.Name}. Their cause strengthens.", false);
         }
 
+        // ── Put forward your own claimant (Amir-ul-Umara) ──────────────────────────────
+        public bool PlayerCanNominate(out string reason)
+        {
+            reason = "";
+            Kingdom k = MenuKingdom();
+            var state = k == null ? CrisisState.None : GetCrisisState(k);
+            if (state != CrisisState.Brewing && state != CrisisState.Active)
+            { reason = "A claimant can be put forward only while the succession is still being contested."; return false; }
+            if ((MansabdariBehavior.Instance?.GetRankIndex(Clan.PlayerClan) ?? 0) < 6)
+            { reason = "Only the Amir-ul-Umara may raise a lord to the lists of claimants."; return false; }
+            if (Clan.PlayerClan.Influence < 100f)
+            { reason = "Putting a claimant forward costs 100 influence."; return false; }
+            return true;
+        }
+
+        private void PlayerNominate()
+        {
+            if (!PlayerCanNominate(out string reason)) { Notify(reason, true); return; }
+            Kingdom k = MenuKingdom();
+            var current = new HashSet<Hero>(GetClaimants(k));
+            var candidates = k.Clans
+                .Where(c => !c.IsEliminated && !c.IsMinorFaction && c.Leader != null && !c.Leader.IsChild && !current.Contains(c.Leader))
+                .OrderByDescending(ClanPower).Take(8)
+                .Select(c => new InquiryElement(c.Leader,
+                    $"{c.Leader.Name} — {MansabdariBehavior.Instance?.GetTitle(c) ?? "a lord"}", null, true,
+                    $"A power of {k.Name}: {c.Settlements.Count(s => s.IsTown || s.IsCastle)} fief(s), {c.Influence:0} influence. Press his claim and lend him your weight."))
+                .ToList();
+            if (candidates.Count == 0) { Notify("There is no other lord of standing to put forward.", true); return; }
+
+            MBInformationManager.ShowMultiSelectionInquiry(new MultiSelectionInquiryData(
+                $"Put Forward a Claimant for {k.Name}",
+                "Name a powerful lord as a claimant to the throne and throw your support behind him.",
+                candidates, true, 1, 1, "Proclaim him", "Cancel",
+                sel => { if (sel != null && sel.Count > 0 && sel[0].Identifier is Hero h) DoNominate(k, h); },
+                _ => { }, "", false), false, false);
+        }
+
+        private void DoNominate(Kingdom k, Hero hero)
+        {
+            if (k == null || hero == null) return;
+            if (Clan.PlayerClan.Influence < 100f) { Notify("You lack the influence (100).", true); return; }
+            ChangeClanInfluenceAction.Apply(Clan.PlayerClan, -100f);
+            AddClaimant(k, hero);
+            AddSupport(hero, 20f);
+            SetAlignment(Hero.MainHero, hero);
+            ChangeRelationAction.ApplyRelationChangeBetweenHeroes(Hero.MainHero, hero, 10);
+            Notify($"You put {hero.Name} forward as a claimant to the throne of {k.Name}, and pledge your support to his cause.", false);
+        }
+
+        // Add a claimant to an ongoing crisis, keeping the contested pool at no more than three by
+        // dropping the weakest if it is already full.
+        private void AddClaimant(Kingdom k, Hero hero)
+        {
+            int i = CrisisIndex(k);
+            if (i < 0 || hero == null) return;
+            var ids = string.IsNullOrEmpty(_claimantIds[i]) ? new List<string>() : _claimantIds[i].Split(',').ToList();
+            if (ids.Contains(hero.StringId)) return;
+            if (ids.Count >= 3)
+            {
+                Hero weakest = ids.Select(FindHero).Where(h => h != null).OrderBy(GetSupport).FirstOrDefault();
+                if (weakest != null) ids.Remove(weakest.StringId);
+            }
+            ids.Add(hero.StringId);
+            _claimantIds[i] = string.Join(",", ids);
+            SetSupport(hero, Math.Max(GetSupport(hero), 25f));
+            LegitimacyBehavior.Instance?.SetLegitimacy(hero, 40f);
+        }
+
+        // ── Persuade a rival claimant to stand down (a real deal: gold / influence / troops / a fief) ──────
+        // You back a claimant; a rival is bought off — coin, standing, men, or land — and removed from the
+        // contest, his following thrown behind YOUR candidate. The going price in gold is the realm's worth:
+        // (towns + castles) × 50,000.
+        public bool PlayerCanPersuade(out string reason)
+        {
+            reason = "";
+            Kingdom k = MenuKingdom();
+            var state = k == null ? CrisisState.None : GetCrisisState(k);
+            if (state != CrisisState.Brewing && state != CrisisState.Active)
+            { reason = "A claimant can be bought off only while the succession is still being contested at court."; return false; }
+            Hero myCand = GetAlignment(Hero.MainHero);
+            if (myCand == null || !GetClaimants(k).Contains(myCand))
+            { reason = "First throw your weight behind a claimant — then you may clear his rivals from the field."; return false; }
+            if (!GetClaimants(k).Any(c => c != myCand && c != Hero.MainHero))
+            { reason = "There is no rival claimant left to persuade."; return false; }
+            return true;
+        }
+
+        private int KingdomFiefCount(Kingdom k)
+            => k?.Settlements?.Count(s => s != null && (s.IsTown || s.IsCastle)) ?? 0;
+
+        private void PlayerPersuade()
+        {
+            if (!PlayerCanPersuade(out string reason)) { Notify(reason, true); return; }
+            Kingdom k = MenuKingdom();
+            Hero myCand = GetAlignment(Hero.MainHero);
+            var rivals = GetClaimants(k).Where(c => c != myCand && c != Hero.MainHero)
+                                        .OrderBy(GetSupport).ToList(); // weakest first
+            if (rivals.Count == 0) { Notify("There is no rival to persuade.", true); return; }
+
+            var elements = rivals.Select(c => new InquiryElement(c,
+                $"{c.Name} — {GetSupportPercent(k, c):0.#}% support",
+                null, true, $"Buy off {c.Name} so he stands down and backs {myCand.Name}.")).ToList();
+
+            MBInformationManager.ShowMultiSelectionInquiry(new MultiSelectionInquiryData(
+                $"Persuade a Claimant to Stand Down — {k.Name}",
+                $"Whom shall you buy off, that he withdraw his claim and back {myCand.Name}?",
+                elements, true, 1, 1, "Choose the terms", "Cancel",
+                sel => { if (sel != null && sel.Count > 0 && sel[0].Identifier is Hero rival) OfferTerms(k, rival, myCand); },
+                _ => { }, "", false), false, false);
+        }
+
+        // A bribe in progress: which resources the player chose to put on the table and how much of each.
+        // Transient (UI only) — never serialized.
+        private class Offer
+        {
+            public Kingdom K; public Hero Rival; public Hero MyCand;
+            public int Fiefs; public int BaseGold;
+            public bool WantGold, WantInfluence, WantTroops, WantFief;
+            public int Gold, Influence, Troops; public Settlement Fief;
+        }
+
+        // Step 1 — pick WHICH things to offer (any combination). Amounts are set next, then the rival
+        // weighs the whole purse against the worth of the claim he is asked to give up: it is never certain.
+        private void OfferTerms(Kingdom k, Hero rival, Hero myCand)
+        {
+            if (k == null || rival == null || myCand == null) return;
+            int fiefs = Math.Max(1, KingdomFiefCount(k));
+            var o = new Offer { K = k, Rival = rival, MyCand = myCand, Fiefs = fiefs, BaseGold = fiefs * 50000 };
+
+            int myGold = Hero.MainHero?.Gold ?? 0;
+            float myInf = Clan.PlayerClan?.Influence ?? 0f;
+            int myRegulars = MobileParty.MainParty?.MemberRoster?.TotalRegulars ?? 0;
+            bool rivalHasParty = rival.PartyBelongedTo != null;
+            int myFiefCount = Clan.PlayerClan?.Settlements?.Count(s => s.IsTown || s.IsCastle) ?? 0;
+
+            var opts = new List<InquiryElement>
+            {
+                new InquiryElement("gold", "Gold", null, myGold > 0,
+                    myGold > 0 ? $"A purse of dinars (you hold {myGold:n0}; the going rate is {o.BaseGold:n0})." : "You have no coin."),
+                new InquiryElement("influence", "Influence at court", null, myInf >= 1f,
+                    myInf >= 1f ? $"Court influence (you hold {myInf:0})." : "You have no influence to spend."),
+                new InquiryElement("troops", "A gift of men", null, rivalHasParty && myRegulars > 1,
+                    rivalHasParty ? (myRegulars > 1 ? $"Soldiers for his banner (you lead {myRegulars})." : "Your host is too small.") : "He keeps no host to receive men."),
+                new InquiryElement("fief", "A fief of your own", null, myFiefCount > 0,
+                    myFiefCount > 0 ? "Grant him one of your towns or castles." : "You hold no fief to grant."),
+            };
+
+            MBInformationManager.ShowMultiSelectionInquiry(new MultiSelectionInquiryData(
+                $"Terms for {rival.Name}",
+                $"What will you put on the table to make {rival.Name} withdraw in favour of {myCand.Name}? " +
+                "Choose all you mean to offer — you will set each amount next.",
+                opts, true, 1, opts.Count, "Set the amounts", "Cancel",
+                sel =>
+                {
+                    if (sel == null || sel.Count == 0) return;
+                    foreach (var e in sel)
+                        switch (e.Identifier as string)
+                        {
+                            case "gold": o.WantGold = true; break;
+                            case "influence": o.WantInfluence = true; break;
+                            case "troops": o.WantTroops = true; break;
+                            case "fief": o.WantFief = true; break;
+                        }
+                    CollectGold(o);
+                },
+                _ => { }, "", false), false, false);
+        }
+
+        // Step 2 — set each amount in turn (numeric entry, prefilled with the going rate, capped at what you
+        // hold). Each collector hands off to the next, so only the chosen resources are asked for.
+        private void CollectGold(Offer o)
+        {
+            if (!o.WantGold) { CollectInfluence(o); return; }
+            int myGold = Hero.MainHero?.Gold ?? 0;
+            PromptAmount("Purse of Gold", $"How many dinars for {o.Rival.Name}? (going rate {o.BaseGold:n0}; you hold {myGold:n0})",
+                Math.Min(o.BaseGold, myGold), 0, myGold, v => { o.Gold = v; CollectInfluence(o); }, () => { });
+        }
+
+        private void CollectInfluence(Offer o)
+        {
+            if (!o.WantInfluence) { CollectTroops(o); return; }
+            int myInf = (int)(Clan.PlayerClan?.Influence ?? 0f);
+            PromptAmount("Court Influence", $"How much influence for {o.Rival.Name}? (you hold {myInf})",
+                Math.Min(o.Fiefs * 25, myInf), 0, myInf, v => { o.Influence = v; CollectTroops(o); }, () => { });
+        }
+
+        private void CollectTroops(Offer o)
+        {
+            if (!o.WantTroops) { CollectFief(o); return; }
+            int spare = (MobileParty.MainParty?.MemberRoster?.TotalRegulars ?? 1) - 1;
+            if (spare < 1) { CollectFief(o); return; }
+            PromptAmount("Gift of Men", $"How many soldiers to send to {o.Rival.Name}'s banner? (you can spare {spare})",
+                Math.Min(o.Fiefs * 25, spare), 0, spare, v => { o.Troops = v; CollectFief(o); }, () => { });
+        }
+
+        private void CollectFief(Offer o)
+        {
+            if (!o.WantFief) { ConfirmOffer(o); return; }
+            var myFiefs = Clan.PlayerClan?.Settlements?.Where(s => s.IsTown || s.IsCastle).ToList() ?? new List<Settlement>();
+            if (myFiefs.Count == 0) { ConfirmOffer(o); return; }
+            var elements = myFiefs.Select(s => new InquiryElement(s, $"{s.Name} ({(s.IsTown ? "town" : "castle")})", null, true,
+                $"Grant {s.Name} to {o.Rival.Name}.")).ToList();
+            MBInformationManager.ShowMultiSelectionInquiry(new MultiSelectionInquiryData(
+                "A Fief to Grant", $"Which holding will you grant {o.Rival.Name}?",
+                elements, true, 1, 1, "Choose", "None",
+                sel => { if (sel != null && sel.Count > 0 && sel[0].Identifier is Settlement s) o.Fief = s; ConfirmOffer(o); },
+                _ => { ConfirmOffer(o); }, "", false), false, false);
+        }
+
+        // A numeric prompt that prefills a suggestion and refuses anything outside [min, max].
+        private void PromptAmount(string title, string prompt, int suggested, int min, int max, Action<int> onOk, Action onCancel)
+        {
+            suggested = Math.Max(min, Math.Min(max, suggested));
+            InformationManager.ShowTextInquiry(new TextInquiryData(
+                title, prompt, true, true, "Set", "Cancel",
+                s => onOk(int.TryParse(s, out int v) ? Math.Max(min, Math.Min(max, v)) : suggested),
+                () => onCancel?.Invoke(),
+                false,
+                s => new Tuple<bool, string>(int.TryParse(s, out int v) && v >= min && v <= max, $"Enter a whole number between {min} and {max}."),
+                "", suggested.ToString()), false, false);
+        }
+
+        // Step 3 — weigh the whole offer against the rival's price and show the odds before he is asked.
+        private void ConfirmOffer(Offer o)
+        {
+            if (o.Gold <= 0 && o.Influence <= 0 && o.Troops <= 0 && o.Fief == null)
+            { Notify("You laid nothing on the table.", true); return; }
+
+            float fiefGold = o.Fief == null ? 0f : (o.Fief.IsTown ? o.BaseGold : o.BaseGold * 0.5f);
+            float offerValue = SuccessionLawMath.OfferValue(o.Gold, o.Influence, o.Troops, fiefGold);
+            float price = SuccessionLawMath.RivalPrice(o.BaseGold, SupportFraction(o.K, o.Rival));
+            int rel = CharacterRelationManager.GetHeroRelation(Hero.MainHero, o.Rival);
+            float chance = SuccessionLawMath.PersuasionAcceptChance(offerValue, price, rel);
+
+            var sb = new StringBuilder();
+            if (o.Gold > 0) sb.Append($"{o.Gold:n0} dinars, ");
+            if (o.Influence > 0) sb.Append($"{o.Influence} influence, ");
+            if (o.Troops > 0) sb.Append($"{o.Troops} men, ");
+            if (o.Fief != null) sb.Append($"the fief of {o.Fief.Name}, ");
+            string parts = sb.ToString().TrimEnd(' ', ',');
+            string mood = chance >= 0.66f ? "a tempting" : (chance >= 0.4f ? "a fair" : "a poor");
+
+            InformationManager.ShowInquiry(new InquiryData(
+                $"Offer to {o.Rival.Name}",
+                $"You offer {parts}.\n\n{o.Rival.Name} judges this {mood} bargain — roughly a {chance * 100f:0}% chance he stands down. " +
+                "Refuse, and your treasury is untouched, but he takes the affront and presses his claim the harder.\n\nPress the offer?",
+                true, true, "Make the offer", "Withdraw",
+                () => Util.TYTLog.Guard("Succession.Persuade", () => ResolveOffer(o, chance)),
+                () => { }), false);
+        }
+
+        // Step 4 — the rival decides. On acceptance the goods change hands and he joins your candidate; on
+        // refusal nothing is paid, his standing hardens, and relations sour.
+        private void ResolveOffer(Offer o, float chance)
+        {
+            if (MBRandom.RandomFloat >= chance)
+            {
+                ChangeRelationAction.ApplyRelationChangeBetweenHeroes(Hero.MainHero, o.Rival, -5);
+                AddSupport(o.Rival, 3f);
+                Notify($"{o.Rival.Name} spurns your terms and presses his claim the harder.", true);
+                return;
+            }
+
+            if (o.Gold > 0 && (Hero.MainHero?.Gold ?? 0) >= o.Gold)
+                GiveGoldAction.ApplyBetweenCharacters(Hero.MainHero, o.Rival, o.Gold, true);
+            if (o.Influence > 0 && (Clan.PlayerClan?.Influence ?? 0f) >= o.Influence)
+                ChangeClanInfluenceAction.Apply(Clan.PlayerClan, -o.Influence);
+            if (o.Troops > 0) GiftTroops(o.Rival, o.Troops);
+            if (o.Fief != null)
+                try { ChangeOwnerOfSettlementAction.ApplyByGift(o.Fief, o.Rival); }
+                catch (Exception e) { Util.TYTLog.Error("Persuade fief gift failed", e); }
+
+            ConvertClaimantToBacker(o.K, o.Rival, o.MyCand);
+            ChangeRelationAction.ApplyRelationChangeBetweenHeroes(Hero.MainHero, o.Rival, 10);
+            ChangeRelationAction.ApplyRelationChangeBetweenHeroes(o.Rival, o.MyCand, 10);
+            Notify($"{o.Rival.Name} accepts your terms, withdraws his claim, and throws his support behind {o.MyCand.Name}.", false);
+
+            var remaining = GetClaimants(o.K);
+            if (remaining.Count == 1)
+                ResolveCrisis(o.K, remaining[0], "his rivals bought off and reconciled");
+        }
+
+        // The rival's share of the contest's total claim-support (0..1) — drives how dear he holds out.
+        private float SupportFraction(Kingdom k, Hero rival)
+        {
+            var claimants = GetClaimants(k);
+            if (claimants == null || claimants.Count == 0) return 1f;
+            float total = claimants.Sum(c => Math.Max(0f, GetSupport(c)));
+            if (total <= 0f) return 1f / claimants.Count;
+            return Math.Max(0f, GetSupport(rival)) / total;
+        }
+
+        // Move regular soldiers from the player's host to a rival's, keeping at least one man in your own.
+        private bool GiftTroops(Hero rival, int count)
+        {
+            MobileParty mine = MobileParty.MainParty, his = rival?.PartyBelongedTo;
+            if (mine == null || his == null) return false;
+            int budget = Math.Min(count, mine.MemberRoster.TotalRegulars - 1);
+            if (budget <= 0) return false;
+
+            var moves = new List<(CharacterObject ch, int n)>();
+            foreach (TroopRosterElement e in mine.MemberRoster.GetTroopRoster())
+            {
+                if (budget <= 0) break;
+                if (e.Character == null || e.Character.IsHero) continue;
+                int take = Math.Min(budget, e.Number);
+                if (take > 0) { moves.Add((e.Character, take)); budget -= take; }
+            }
+            foreach (var (ch, n) in moves)
+            {
+                mine.MemberRoster.AddToCounts(ch, -n);
+                his.MemberRoster.AddToCounts(ch, n);
+            }
+            return moves.Count > 0;
+        }
+
+        // Remove a claimant from the contest and swing him (and his backers) behind the player's candidate.
+        private void ConvertClaimantToBacker(Kingdom k, Hero rival, Hero myCand)
+        {
+            int i = CrisisIndex(k);
+            if (i < 0 || rival == null || myCand == null) return;
+            var ids = _claimantIds[i].Split(',').ToList();
+            if (!ids.Remove(rival.StringId)) return;
+            _claimantIds[i] = string.Join(",", ids);
+
+            float gift = GetSupport(rival);
+            SetSupport(rival, 0f);
+            AddSupport(myCand, gift * 0.5f);   // half his following rallies to your candidate
+            SetAlignment(rival, myCand);
+            for (int a = 0; a < _alignTargetIds.Count; a++)
+                if (_alignTargetIds[a] == rival.StringId) _alignTargetIds[a] = myCand.StringId;
+        }
+
         public bool PlayerCanBroker(out string reason)
         {
             reason = "";
@@ -728,24 +1597,203 @@ namespace TakhtyaTaboot
             return true;
         }
 
+        // As Amir-ul-Umara the player does not merely anoint his favourite — he dictates the whole
+        // settlement: crown the front-runner, install another claimant outright, broker a compromise
+        // that binds the rivals, or partition the realm so a rival departs in peace with lands of his own.
         private void PlayerBroker()
         {
             if (!PlayerCanBroker(out string reason)) { Notify(reason, true); return; }
             Kingdom k = MenuKingdom();
-            Hero leader = LeadingClaimant(k);
+            var claimants = GetClaimants(k).OrderByDescending(c => GetSupport(c)).ToList();
+            Hero front = claimants.FirstOrDefault();
+            if (k == null || front == null) return;
+            Hero rival = claimants.FirstOrDefault(c => c != front);
 
-            ChangeClanInfluenceAction.Apply(Clan.PlayerClan, -200f);
-            ChangeRelationAction.ApplyRelationChangeBetweenHeroes(Hero.MainHero, leader, 15);
+            var options = new List<InquiryElement>
+            {
+                new InquiryElement("install_leader",
+                    $"Crown {front.Name}, the front-runner  (200)", null, true,
+                    $"Confirm the lords' choice. {front.Name} takes the throne with broad support."),
+            };
+            foreach (Hero c in claimants.Where(c => c != front))
+                options.Add(new InquiryElement("install:" + c.StringId,
+                    $"Crown {c.Name} over the front-runner  (300)", null, true,
+                    $"Impose {c.Name} against the court's lean — the front-runner will resent it."));
+            if (rival != null)
+            {
+                options.Add(new InquiryElement("compromise",
+                    $"Broker a compromise  (350)", null, true,
+                    $"Crown {front.Name}, but honour {rival.Name} with rank and reconciliation — the realm is spared a lasting feud."));
+                options.Add(new InquiryElement("partition",
+                    $"Partition the realm  (400)", null, true,
+                    $"{front.Name} keeps {k.Name}; {rival.Name} departs in peace to rule his own realm. Hindostan splits in two."));
+            }
+
+            MBInformationManager.ShowMultiSelectionInquiry(new MultiSelectionInquiryData(
+                $"Broker the Succession of {k.Name}",
+                "As Amir-ul-Umara, the settlement is yours to dictate. How shall the crisis end?",
+                options, true, 1, 1, "Decree it", "Cancel",
+                sel => { if (sel != null && sel.Count > 0 && sel[0].Identifier is string id) ExecuteBroker(k, id, front); },
+                _ => { }, "", false), false, false);
+        }
+
+        private void ExecuteBroker(Kingdom k, string choice, Hero front)
+        {
+            if (k == null || front == null) return;
+            var claimants = GetClaimants(k).OrderByDescending(c => GetSupport(c)).ToList();
+            Hero rival = claimants.FirstOrDefault(c => c != front);
+
+            int cost = choice == "partition" ? 400 : choice == "compromise" ? 350 : choice.StartsWith("install:") ? 300 : 200;
+            if (Clan.PlayerClan.Influence < cost)
+            { Notify($"That settlement needs {cost} influence (you have {Clan.PlayerClan.Influence:0}).", true); return; }
+            ChangeClanInfluenceAction.Apply(Clan.PlayerClan, -cost);
+
+            if (choice == "compromise" && rival != null)
+            {
+                ChangeRelationAction.ApplyRelationChangeBetweenHeroes(front, rival, 30);
+                ChangeRelationAction.ApplyRelationChangeBetweenHeroes(Hero.MainHero, rival, 10);
+                MansabdariBehavior.Instance?.AdjustRank(rival.Clan, +1);   // honoured with rank
+                LegitimacyBehavior.Instance?.SetLegitimacy(front, 72f);    // a settled, accepted accession
+                RewardBroker(k, front);
+                Notify($"You broker a compromise: {front.Name} takes the throne, and {rival.Name} is honoured and reconciled. The realm is spared a feud.", false);
+                ResolveCrisis(k, front, "a brokered compromise");
+            }
+            else if (choice == "partition" && rival != null)
+            {
+                bool split = SecedePeacefully(k, rival);
+                RewardBroker(k, front);
+                Notify(split
+                    ? $"The realm is partitioned: {front.Name} keeps {k.Name}, and {rival.Name} departs in peace to rule his own realm."
+                    : $"The partition could not be arranged; {front.Name} alone is crowned.", false);
+                ResolveCrisis(k, front, "a brokered partition");
+            }
+            else if (choice.StartsWith("install:"))
+            {
+                Hero pick = FindHero(choice.Substring("install:".Length)) ?? front;
+                if (pick != front) ChangeRelationAction.ApplyRelationChangeBetweenHeroes(front, pick, -15);
+                RewardBroker(k, pick);
+                Notify($"By your hand, {pick.Name} ascends the throne of {k.Name} — over the front-runner. All Hindostan knows who made this king.", false);
+                ResolveCrisis(k, pick, "your brokerage");
+            }
+            else
+            {
+                RewardBroker(k, front);
+                Notify($"By your hand, {front.Name} ascends the throne of {k.Name}. All Hindostan knows who made this king.", false);
+                ResolveCrisis(k, front, "your brokerage");
+            }
+        }
+
+        private void RewardBroker(Kingdom k, Hero winner)
+        {
+            if (winner != null) ChangeRelationAction.ApplyRelationChangeBetweenHeroes(Hero.MainHero, winner, 15);
             ImperialAuthorityBehavior.Instance?.ModifyAuthority(k, 10f, "succession brokered");
             if (Clan.PlayerClan.Kingdom != null)
-                LegitimacyBehavior.Instance?.ModifyLegitimacy(Clan.PlayerClan.Kingdom.Leader, 20f, "kingmaker's prestige");
-            Notify($"By your hand, {leader.Name} ascends the throne of {k.Name}. All Hindostan knows who made this king.", false);
-            ResolveCrisis(k, leader, "your brokerage");
+                LegitimacyBehavior.Instance?.ModifyLegitimacy(Clan.PlayerClan.Kingdom.Leader, 15f, "kingmaker's prestige");
+        }
+
+        // A claimant and his backers depart the realm in PEACE, founding their own kingdom (a partition,
+        // not a war). Reuses the secession primitives; the new realm is immediately at peace with the old.
+        private bool SecedePeacefully(Kingdom k, Hero rival)
+        {
+            try
+            {
+                if (rival == null || RevoltCascadeBehavior.Instance == null) return false;
+                var backers = AlignedBackerClans(rival, k);
+                bool ownHouse = rival.Clan != null && rival.Clan != k.RulingClan && rival.Clan.Leader == rival
+                                && !rival.Clan.IsMinorFaction && rival.Clan.Kingdom == k && HasFief(rival.Clan);
+                if (!ownHouse && !backers.Any(HasFief)) return false;
+
+                Clan host; bool temp = false;
+                if (ownHouse) host = rival.Clan;
+                else { host = Util.ClaimantClan.Create(rival, k.Culture); temp = true; if (host == null) return false; }
+
+                Settlement seat = host.Settlements.FirstOrDefault(s => s.IsTown)
+                    ?? host.Settlements.FirstOrDefault(s => s.IsCastle)
+                    ?? host.Settlements.FirstOrDefault()
+                    ?? backers.SelectMany(b => b.Settlements).FirstOrDefault()
+                    ?? rival.HomeSettlement;
+                if (seat == null) { if (temp) Util.ClaimantClan.Dissolve(host); return false; }
+
+                Kingdom newK = RevoltCascadeBehavior.Instance.CreateRebelKingdom(host, seat, $"{rival.Name}'s Realm");
+                if (newK == null) { if (temp) Util.ClaimantClan.Dissolve(host); return false; }
+
+                foreach (Clan b in backers)
+                    if (b != host && b.Kingdom == k)
+                        try { ChangeKingdomAction.ApplyByJoinToKingdom(b, newK, default(CampaignTime), false); } catch { }
+
+                if (newK.IsAtWarWith(k)) try { Util.ThroneWar.WithInternalPeace(() => MakePeaceAction.Apply(newK, k)); } catch { }
+                return true;
+            }
+            catch (Exception e) { Util.TYTLog.Error("SecedePeacefully failed", e); return false; }
         }
 
         // ── Helpers ───────────────────────────────────────────────────────────────
 
         private int CrisisIndex(Kingdom k) => _crisisKingdomIds.IndexOf(k?.StringId ?? "");
+
+        // ── Succession-law integration ─────────────────────────────────────────────
+        private static SuccessionLaw Law(Kingdom k)
+            => SuccessionLawBehavior.Instance?.GetLaw(k) ?? SuccessionLaw.Undeclared;
+
+        // A formal law's lawful heir accedes without a war: the engine enforces him over the vanilla
+        // king-selection, crowning within (or, for a magnate-election upset, across) clans.
+        private void CleanAccession(Kingdom k, Hero heir, SuccessionLaw law)
+        {
+            if (k == null || heir == null || !heir.IsAlive || k.IsEliminated) return;
+            if (k.Leader != heir)
+            {
+                if (heir.Clan != null && heir.Clan != k.RulingClan) ChangeRulingClanAction.Apply(k, heir.Clan);
+                if (heir.Clan != null && heir.Clan.Leader != heir)
+                    ChangeClanLeaderAction.ApplyWithSelectedNewLeader(heir.Clan, heir);
+            }
+            float legit = LegitimacyBehavior.Instance?.GetLegitimacy(k.Leader) ?? 60f;
+            LegitimacyBehavior.Instance?.SetLegitimacy(heir, Math.Max(55f, legit));
+            if (k.Leader != null && k.Leader != Hero.MainHero) CouncilBehavior.Instance?.EnsureCouncil(k.Leader);
+            SnapshotRulers();
+            string by = law == SuccessionLaw.AppointedHeir ? "by the late sovereign's appointment" : "by the law of primogeniture";
+            Notify($"{heir.Name} accedes to the throne of {k.Name} {by}, the succession settled without a contest.", false);
+        }
+
+        // Naming an heir (Wali Ahd) raises his claim in a live crisis and cools his rivals' support.
+        public void NoteHeirNamed(Kingdom k, Hero heir)
+        {
+            if (k == null || heir == null) return;
+            int i = CrisisIndex(k);
+            if (i < 0) return;
+            AddClaimant(k, heir);
+            AddSupport(heir, Tune.HeirSupportBoost);
+            foreach (Hero c in GetClaimants(k)) if (c != heir) AddSupport(c, -5f);
+        }
+
+        // The election laws' resolution: each great house casts a weighted voice for its favoured claimant.
+        private SuccessionLawMath.VoteResult RunMagnateVote(Kingdom k)
+        {
+            var candidates = GetClaimants(k);
+            var ballots = new List<(string, float)>();
+            if (k == null || candidates.Count == 0) return SuccessionLawMath.Tally(ballots);
+
+            foreach (Clan clan in k.Clans.Where(c => !c.IsEliminated && c.Leader != null && !c.IsMinorFaction))
+            {
+                Hero elector = clan.Leader;
+                Hero best = null; float bestPref = float.MinValue;
+                foreach (Hero c in candidates)
+                {
+                    int rel = CharacterRelationManager.GetHeroRelation(elector, c);
+                    bool sameRel = ReligionBehavior.Instance != null &&
+                                   ReligionBehavior.Instance.GetReligion(elector) == ReligionBehavior.Instance.GetReligion(c);
+                    float pref = SuccessionLawMath.CandidatePreference(rel, sameRel, c.Clan == k.RulingClan, DynastyFavour);
+                    if (c == elector) pref += 1000f; // a candidate always votes for himself
+                    if (pref > bestPref) { bestPref = pref; best = c; }
+                }
+                if (best != null)
+                {
+                    float w = SuccessionLawMath.ElectorWeight(
+                        MansabdariBehavior.Instance?.GetRankIndex(clan) ?? 0, (int)clan.Tier);
+                    ballots.Add((best.StringId, w));
+                }
+            }
+            return SuccessionLawMath.Tally(ballots);
+        }
 
         private static Hero FindHero(string id)
             => Hero.AllAliveHeroes.FirstOrDefault(h => h.StringId == id)
@@ -803,6 +1851,8 @@ namespace TakhtyaTaboot
             _crisisDays.RemoveAt(i);
             _claimantIds.RemoveAt(i);
             if (i < _incumbentIds.Count) _incumbentIds.RemoveAt(i);
+            if (i < _warBreakaways.Count) _warBreakaways.RemoveAt(i);
+            if (i < _warStartDay.Count) _warStartDay.RemoveAt(i);
         }
 
         private void ClearCrisisData(int i, List<Hero> claimants)

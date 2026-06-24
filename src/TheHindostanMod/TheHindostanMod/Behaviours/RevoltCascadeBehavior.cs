@@ -44,8 +44,8 @@ namespace TakhtyaTaboot
         public override void RegisterEvents()
         {
             Instance = this;
-            CampaignEvents.WeeklyTickEvent.AddNonSerializedListener(this, OnWeeklyTick);
-            CampaignEvents.DailyTickEvent.AddNonSerializedListener(this, OnDailyTick);
+            CampaignEvents.WeeklyTickEvent.AddNonSerializedListener(this, () => Util.TYTLog.Guard("RevoltCascade.WeeklyTick", OnWeeklyTick));
+            CampaignEvents.DailyTickEvent.AddNonSerializedListener(this, () => Util.TYTLog.Guard("RevoltCascade.DailyTick", OnDailyTick));
             CampaignEvents.OnSettlementOwnerChangedEvent.AddNonSerializedListener(this, OnSettlementOwnerChanged);
         }
 
@@ -307,7 +307,7 @@ namespace TakhtyaTaboot
         private void GrantAutonomy(Kingdom parent, Kingdom rebel)
         {
             if (rebel == null || parent == null) return;
-            try { if (rebel.IsAtWarWith(parent)) MakePeaceAction.Apply(rebel, parent); } catch { }
+            try { if (rebel.IsAtWarWith(parent)) Util.ThroneWar.WithInternalPeace(() => MakePeaceAction.Apply(rebel, parent)); } catch { }
             Establish(rebel, "granted autonomy by the throne");
             ImperialAuthorityBehavior.Instance?.ModifyAuthority(parent, -10f, "autonomy conceded to a breakaway");
             Notify($"You recognise {rebel.Name} as autonomous. The empire bends rather than breaks.", true);
@@ -319,6 +319,7 @@ namespace TakhtyaTaboot
             int today = (int)CampaignTime.Now.ToDays;
             for (int i = _provKIds.Count - 1; i >= 0; i--)
             {
+                Util.TYTLog.Crumb("provisional rebel " + _provKIds[i]);
                 Kingdom rebel = Kingdom.All.FirstOrDefault(x => x.StringId == _provKIds[i]);
                 if (rebel == null || rebel.IsEliminated || !rebel.Settlements.Any())
                 {
@@ -483,6 +484,7 @@ namespace TakhtyaTaboot
         // ── Reactions ──
         private void OnSettlementOwnerChanged(Settlement settlement, bool openToClaim, Hero newOwner, Hero oldOwner, Hero capturerHero, ChangeOwnerOfSettlementAction.ChangeOwnerOfSettlementDetail detail)
         {
+            if (!Util.WorldGen.Ready) return; // skip the parallel world-gen distribution (see Util/WorldGen.cs)
             Kingdom newK = settlement.OwnerClan?.Kingdom;
             // A rebel kingdom that just lost its last settlement will be crushed next daily tick.
             // A rebel seizing a settlement from the parent erodes imperial authority.

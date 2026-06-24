@@ -31,7 +31,7 @@ namespace TakhtyaTaboot
             Instance = this;
             CampaignEvents.OnSessionLaunchedEvent.AddNonSerializedListener(this, OnSessionLaunched);
             CampaignEvents.OnSettlementOwnerChangedEvent.AddNonSerializedListener(this, OnOwnerChanged);
-            CampaignEvents.DailyTickEvent.AddNonSerializedListener(this, OnDailyTick);
+            CampaignEvents.DailyTickEvent.AddNonSerializedListener(this, () => Util.TYTLog.Guard("CareerProgression.DailyTick", OnDailyTick));
         }
 
         private void OnSessionLaunched(CampaignGameStarter starter) => ScanPlayerFiefs(announce: false);
@@ -45,6 +45,7 @@ namespace TakhtyaTaboot
         private void OnOwnerChanged(Settlement s, bool openToClaim, Hero newOwner, Hero oldOwner,
             Hero capturer, ChangeOwnerOfSettlementAction.ChangeOwnerOfSettlementDetail detail)
         {
+            if (!Util.WorldGen.Ready) return; // skip the parallel world-gen distribution (see Util/WorldGen.cs)
             if (newOwner != Hero.MainHero || s == null || !(s.IsTown || s.IsCastle)) return;
             if (PlayerIsSovereign() || M == null) return;
             if (M.CanHold(Clan.PlayerClan, s)) return;
@@ -220,13 +221,25 @@ namespace TakhtyaTaboot
             return preferred ?? villages.FirstOrDefault();
         }
 
-        // A castle or town from the sovereign's own demesne, never his last of that kind.
+        // A castle or town the crown can bestow on a deserving vassal. Prefers a vacant fief, then the
+        // sovereign's surplus; failing both, the crown will part with even its last of the kind for a
+        // worthy claimant (previously this only ever offered the crown's SURPLUS, so the option almost
+        // never appeared — an AI emperor rarely holds two towns or two castles himself).
         private Settlement FindSovereignDemesne(Kingdom k, bool isTown)
         {
-            Clan ruling = k?.Leader?.Clan;
+            if (k == null) return null;
+            bool Match(Settlement s) => isTown ? s.IsTown : s.IsCastle;
+
+            // 1) A fief the realm holds that sits in no clan's hands.
+            Settlement vacant = k.Settlements.FirstOrDefault(s => Match(s) && s.OwnerClan == null);
+            if (vacant != null) return vacant;
+
+            Clan ruling = k.Leader?.Clan;
             if (ruling == null) return null;
-            var of = ruling.Settlements.Where(s => isTown ? s.IsTown : s.IsCastle).ToList();
-            return of.Count > 1 ? of.OrderBy(s => s.IsTown ? s.Town.Prosperity : 0).First() : null;
+            var of = ruling.Settlements.Where(Match)
+                .OrderBy(s => isTown ? (s.Town?.Prosperity ?? 0f) : 0f).ToList();
+            // 2) Surplus first (keep one), 3) else spare even the last for a worthy vassal.
+            return of.Count > 1 ? of.First() : of.FirstOrDefault();
         }
 
         private static string Kind(Settlement s) => s.IsTown ? "town" : s.IsCastle ? "castle" : "village";

@@ -11,6 +11,7 @@ using TaleWorlds.Library;
 using TaleWorlds.Localization;
 using TakhtyaTaboot.Config;
 using TakhtyaTaboot.UI;
+using TakhtyaTaboot.Util;
 
 namespace TakhtyaTaboot
 {
@@ -77,6 +78,7 @@ namespace TakhtyaTaboot
         private void OnOwnerChanged(Settlement s, bool openToClaim, Hero newOwner, Hero oldOwner, Hero capturer,
             ChangeOwnerOfSettlementAction.ChangeOwnerOfSettlementDetail detail)
         {
+            if (!Util.WorldGen.Ready) return; // skip the parallel world-gen distribution (see Util/WorldGen.cs)
             if (s == null || !s.IsTown) return;
             // A capital that has left its realm's hands must be re-seated.
             foreach (string kid in _capital.Keys.ToList())
@@ -141,7 +143,9 @@ namespace TakhtyaTaboot
             => !IsRuler && PlayerHoldsCouncil() && s != null && (s.IsTown || s.IsCastle) && s.OwnerClan == Clan.PlayerClan;
 
         // ── Cadence enforcement ──────────────────────────────────────────────────────
-        private void OnDailyTick()
+        private void OnDailyTick() => Util.TYTLog.Guard("ImperialCourt.OnDailyTick", OnDailyTickImpl);
+
+        private void OnDailyTickImpl()
         {
             if (!PlayerHoldsCouncil()) { _cadenceDeadline = -1; return; }
             int today = (int)CampaignTime.Now.ToDays;
@@ -314,6 +318,77 @@ namespace TakhtyaTaboot
                 "The court's will be done");
         }
 
+        // ── Declare a vassal a traitor: strip his rank and confiscate his fiefs ───────────
+        // A defiant lord can be branded a traitor — stripped to the lowest mansab, shorn of influence,
+        // and his fiefs seized to the crown. A strong, embittered house with land may take up arms and
+        // secede into open rebellion rather than submit.
+        private void OpenDeclareTraitor()
+        {
+            Kingdom k = PK;
+            if (k == null || !IsRuler) { Notify("Only the sovereign may brand a lord a traitor.", true); return; }
+            var m = MansabdariBehavior.Instance;
+            var clans = k.Clans.Where(c => !c.IsEliminated && c.Leader != null && c.Leader != Hero.MainHero
+                                           && c != k.RulingClan && !c.IsMinorFaction).ToList();
+            if (clans.Count == 0) { Notify("There is no vassal to call to account.", false); return; }
+
+            var elements = clans.Select(c => new InquiryElement(c,
+                $"{c.Leader.Name} — {m?.GetTitle(c) ?? "lord"}", null, true,
+                $"Relation {CharacterRelationManager.GetHeroRelation(Hero.MainHero, c.Leader)}, " +
+                $"{c.Settlements.Count(s => s.IsTown || s.IsCastle)} fief(s). Strip his rank and seize his lands — he may rebel."))
+                .ToList();
+
+            MBInformationManager.ShowMultiSelectionInquiry(new MultiSelectionInquiryData(
+                "Declare a Traitor",
+                "Name the lord to be branded a traitor to the throne. He will be stripped of rank and lands, and may rise in revolt.",
+                elements, true, 1, 1, "Pronounce him traitor", "Cancel",
+                sel => { if (sel != null && sel.Count > 0 && sel[0].Identifier is Clan c) DoDeclareTraitor(k, c); },
+                _ => { }, "", false), false, false);
+        }
+
+        private void DoDeclareTraitor(Kingdom k, Clan vassal)
+        {
+            Hero lord = vassal.Leader;
+            if (lord == null) return;
+            int rel = CharacterRelationManager.GetHeroRelation(Hero.MainHero, lord);
+            bool hasFief = vassal.Settlements.Any(s => s.IsTown || s.IsCastle);
+
+            // Strip rank and standing first.
+            MansabdariBehavior.Instance?.AdjustRank(vassal, -10);     // clamps to the lowest mansab
+            if (vassal.Influence > 0) ChangeClanInfluenceAction.Apply(vassal, -vassal.Influence);
+            ChangeRelationAction.ApplyRelationChangeBetweenHeroes(Hero.MainHero, lord, -40);
+
+            // A powerful, aggrieved, landed house may defy the sentence and rise in revolt.
+            float defiance = vassal.CurrentTotalStrength + (-rel) * 5f + (hasFief ? 300f : 0f) + MBRandom.RandomFloatRanged(-200f, 200f);
+            bool rebels = hasFief && defiance > 600f && RevoltCascadeBehavior.Instance != null;
+
+            if (rebels)
+            {
+                Settlement seat = vassal.Settlements.FirstOrDefault(s => s.IsTown)
+                    ?? vassal.Settlements.FirstOrDefault(s => s.IsCastle)
+                    ?? vassal.Settlements.FirstOrDefault();
+                Kingdom rebel = seat != null ? RevoltCascadeBehavior.Instance.CreateRebelKingdom(vassal, seat, $"{lord.Name}'s Defiance") : null;
+                if (rebel != null)
+                {
+                    RevoltCascadeBehavior.Instance.EnsureAtWar(rebel, k);
+                    ImperialAuthorityBehavior.Instance?.ModifyAuthority(k, -5f, "a branded traitor rose in revolt");
+                    RoyalFarmaan.FromRuler(k, "A Traitor Defies the Throne",
+                        $"{lord.Name} is branded a traitor — but rather than submit, he raises his banner in open revolt. " +
+                        "The realm is at war with the rebel until he is brought to heel.", "He will be crushed");
+                    return;
+                }
+            }
+
+            // Otherwise he submits: lands confiscated to the crown, cast out of the realm in disgrace.
+            Hero crown = k.Leader;
+            foreach (Settlement s in vassal.Settlements.Where(s => s.IsTown || s.IsCastle).ToList())
+                if (crown != null) try { ChangeOwnerOfSettlementAction.ApplyByGift(s, crown); } catch { }
+            try { ChangeKingdomAction.ApplyByLeaveKingdom(vassal, true); } catch { }
+            ImperialAuthorityBehavior.Instance?.ModifyAuthority(k, 4f, "a traitor brought to heel");
+            RoyalFarmaan.FromRuler(k, "A Traitor Brought Low",
+                $"{lord.Name} is branded a traitor and stripped of rank and lands, which revert to the crown. " +
+                "His house is cast from the realm in disgrace.", "Justice is done");
+        }
+
         // ── Menus ────────────────────────────────────────────────────────────────────
         private void OnNewGame(CampaignGameStarter starter) => EnsureCapitals();
 
@@ -361,6 +436,26 @@ namespace TakhtyaTaboot
                 args => { args.optionLeaveType = GameMenuOption.LeaveType.Bribe; return IsRuler; },
                 args => { OpenGrantMansab(false); });
 
+            starter.AddGameMenuOption("hindostan_convene", "convene_traitor", "{=!}Declare a vassal a traitor",
+                args => { args.optionLeaveType = GameMenuOption.LeaveType.Bribe; return IsRuler; },
+                args => OpenDeclareTraitor());
+
+            starter.AddGameMenuOption("hindostan_convene", "convene_tenure", "{=!}Proclaim the law of tenure",
+                args => { args.optionLeaveType = GameMenuOption.LeaveType.Bribe; return IsRuler; },
+                args => OpenTenureEdict());
+
+            starter.AddGameMenuOption("hindostan_convene", "convene_succlaw", "{=!}Proclaim the law of succession",
+                args => { args.optionLeaveType = GameMenuOption.LeaveType.Bribe; return IsRuler; },
+                args => OpenSuccessionLawEdict());
+
+            starter.AddGameMenuOption("hindostan_convene", "convene_name_heir", "{=!}Name your heir (Wali Ahd)",
+                args =>
+                {
+                    args.optionLeaveType = GameMenuOption.LeaveType.Manage;
+                    return IsRuler && PK != null && SuccessionLawBehavior.Instance?.GetLaw(PK) == SuccessionLaw.AppointedHeir;
+                },
+                args => OpenAppointHeir());
+
             starter.AddGameMenuOption("hindostan_convene", "convene_council", "{=!}Appoint your council offices",
                 args => { args.optionLeaveType = GameMenuOption.LeaveType.Manage; return true; },
                 args => CouncilScreen.Open());
@@ -368,6 +463,96 @@ namespace TakhtyaTaboot
             starter.AddGameMenuOption("hindostan_convene", "convene_leave", "{=!}Conclude the council",
                 args => { args.optionLeaveType = GameMenuOption.LeaveType.Leave; return true; },
                 args => GameMenu.SwitchToMenu(Settlement.CurrentSettlement != null && Settlement.CurrentSettlement.IsTown ? "town" : "castle"), true);
+        }
+
+        // The sovereign proclaims (or repeals) Mansabdari tenure for the whole realm. Shows the live
+        // cost and risk, then enacts through the guarded MansabdariTenureBehavior.
+        private void OpenTenureEdict()
+        {
+            var b = MansabdariTenureBehavior.Instance;
+            Kingdom k = PK;
+            if (b == null || k == null) return;
+
+            if (b.IsMansabdari(k))
+            {
+                InformationManager.ShowInquiry(new InquiryData(
+                    "Restore Feudal Tenure",
+                    $"{k.Name} holds to Mansabdari tenure — fiefs are non-hereditary, rotational crown grants. " +
+                    $"Restore the old hereditary custom? The magnates will rejoice.",
+                    true, true, "Restore feudal law", "Cancel",
+                    () => { if (b.RevertToFeudal(k, out string r) == false && !string.IsNullOrEmpty(r)) Notify(r, true); },
+                    null), true);
+                return;
+            }
+
+            var q = b.QuoteMansabdari(k);
+            string text = q.Allowed
+                ? $"Convert {k.Name} to Mansabdari tenure: every fief becomes a non-hereditary, rotational grant of " +
+                  $"the crown — reverting on a holder's death and transferred at the throne's pleasure.\n\n" +
+                  $"Cost: {q.Influence} influence and {q.Gold} dinars to buy off {q.AffectedNobles} magnates." +
+                  (q.Resisters > 0 ? $"\n\nBeware: {q.Resisters} entrenched magnate(s) are too rooted to buy — they will resist, and reform may turn to revolt." : "")
+                : "You cannot impose Mansabdari now. " + q.Reason;
+
+            InformationManager.ShowInquiry(new InquiryData(
+                "Edict of Mansabdari Tenure", text,
+                q.Allowed, true,
+                q.Allowed ? "Proclaim the edict" : "Understood", "Cancel",
+                () => { if (q.Allowed && !b.TryEnactMansabdari(k, out string r) && !string.IsNullOrEmpty(r)) Notify(r, true); },
+                null), true);
+        }
+
+        // The sovereign proclaims a new law of succession — the per-kingdom constitution that drives the
+        // war-of-princes engine. Each option shows its live influence cost and whose pride it wounds.
+        private void OpenSuccessionLawEdict()
+        {
+            var b = SuccessionLawBehavior.Instance;
+            Kingdom k = PK;
+            if (b == null || k == null || !IsRuler) { Notify("Only the sovereign may proclaim the law of succession.", true); return; }
+
+            SuccessionLaw current = b.GetLaw(k);
+            var laws = new[]
+            {
+                SuccessionLaw.Undeclared, SuccessionLaw.MalePrimogeniture, SuccessionLaw.PrincelyElection,
+                SuccessionLaw.MagnateElection, SuccessionLaw.AppointedHeir,
+            };
+            var elements = new List<InquiryElement>();
+            foreach (SuccessionLaw law in laws)
+            {
+                if (law == current) continue;
+                var q = b.QuoteLawChange(k, law);
+                string hint = q.Allowed ? $"Costs {q.Influence} influence. {q.Reason}" : q.Reason;
+                elements.Add(new InquiryElement(law, SuccessionLawBehavior.LawName(law), null, q.Allowed, hint));
+            }
+
+            MBInformationManager.ShowMultiSelectionInquiry(new MultiSelectionInquiryData(
+                $"The Law of Succession — {k.Name}",
+                $"The realm holds to {SuccessionLawBehavior.LawName(current)}. Proclaim a new law of succession?",
+                elements, true, 1, 1, "Proclaim it", "Cancel",
+                sel => { if (sel != null && sel.Count > 0 && sel[0].Identifier is SuccessionLaw law && !b.TryEnactLawChange(k, law, out string r) && !string.IsNullOrEmpty(r)) Notify(r, true); },
+                _ => { }, "", false), false, false);
+        }
+
+        // Under the law of the appointed Wali Ahd, the sovereign names the prince who shall succeed him.
+        private void OpenAppointHeir()
+        {
+            var b = SuccessionLawBehavior.Instance;
+            Kingdom k = PK;
+            if (b == null || k == null || !IsRuler) { Notify("Only the sovereign may name an heir.", true); return; }
+
+            var princes = b.EligibleHeirs(k);
+            if (princes.Count == 0) { Notify("You have no eligible prince to name as your heir.", false); return; }
+            Hero current = b.GetWaliAhd(k);
+
+            var elements = princes.Select(h => new InquiryElement(h,
+                h.Name.ToString() + (h == current ? " — current Wali Ahd" : ""), null, true,
+                $"Age {(int)h.Age}. Name him heir apparent to the throne of {k.Name}.")).ToList();
+
+            MBInformationManager.ShowMultiSelectionInquiry(new MultiSelectionInquiryData(
+                $"Name the Wali Ahd of {k.Name}",
+                "Name the prince who shall succeed you as sovereign of the realm.",
+                elements, true, 1, 1, "Name him", "Cancel",
+                sel => { if (sel != null && sel.Count > 0 && sel[0].Identifier is Hero h && !b.AppointWaliAhd(k, h, out string r) && !string.IsNullOrEmpty(r)) Notify(r, true); },
+                _ => { }, "", false), false, false);
         }
 
         private void ConveneInit(MenuCallbackArgs args)

@@ -145,6 +145,35 @@ In the Great Civil War, the Indo-Persian culture is at war with its own shadow. 
 			<name name="{=hm_mn38}Itimad" />
 			<name name="{=hm_mn39}Sher" />
 			<name name="{=hm_mn40}Rustam" />
+		
+			<name name="{=!}Sikandar" />
+			<name name="{=!}Iskandar" />
+			<name name="{=!}Khurram" />
+			<name name="{=!}Salim" />
+			<name name="{=!}Jahandar" />
+			<name name="{=!}Farrukh" />
+			<name name="{=!}Nekusiyar" />
+			<name name="{=!}Bidar Bakht" />
+			<name name="{=!}Akbar" />
+			<name name="{=!}Babur" />
+			<name name="{=!}Jahangir" />
+			<name name="{=!}Shahryar" />
+			<name name="{=!}Parviz" />
+			<name name="{=!}Hoshang" />
+			<name name="{=!}Mahabat" />
+			<name name="{=!}Samsam" />
+			<name name="{=!}Zulfiqar" />
+			<name name="{=!}Asadullah" />
+			<name name="{=!}Saif" />
+			<name name="{=!}Mukarram" />
+			<name name="{=!}Mubariz" />
+			<name name="{=!}Diler" />
+			<name name="{=!}Ghazi" />
+			<name name="{=!}Nusrat" />
+			<name name="{=!}Sarfaraz" />
+			<name name="{=!}Intizam" />
+			<name name="{=!}Sipahdar" />
+			<name name="{=!}Raushan" />
 		</male_names>
 		<female_names>
 			<name name="{=hm_fn01}Nur Jahan" />
@@ -167,6 +196,24 @@ In the Great Civil War, the Indo-Persian culture is at war with its own shadow. 
 			<name name="{=hm_fn18}Hamida" />
 			<name name="{=hm_fn19}Ruqaiya" />
 			<name name="{=hm_fn20}Badshah Begum" />
+		
+			<name name="{=!}Zeb-un-Nisa" />
+			<name name="{=!}Gauharara" />
+			<name name="{=!}Zinat-un-Nisa" />
+			<name name="{=!}Badr-un-Nisa" />
+			<name name="{=!}Udaipuri" />
+			<name name="{=!}Nadira" />
+			<name name="{=!}Arjumand" />
+			<name name="{=!}Mehr-un-Nisa" />
+			<name name="{=!}Sati-un-Nisa" />
+			<name name="{=!}Khair-un-Nisa" />
+			<name name="{=!}Lutf-un-Nisa" />
+			<name name="{=!}Salima" />
+			<name name="{=!}Gulbadan" />
+			<name name="{=!}Bega" />
+			<name name="{=!}Maham" />
+			<name name="{=!}Harkha" />
+			<name name="{=!}Sahibji" />
 		</female_names>
 		<clan_names>
 			<name name="{=hm_cn01}Timurid" />
@@ -423,8 +470,8 @@ In the Great Civil War, the Indo-Persian culture is at war with its own shadow. 
 		id="aserai"
 		name="{=!}Mysore"
 		is_main_culture="true"
-		color="0xffC8102E"
-		color2="0xffFFA500"
+		color="0xff7A1F2B"
+		color2="0xffE8B923"
 		elite_basic_troop="NPCCharacter.aserai_youth"
 		basic_troop="NPCCharacter.aserai_recruit"
 		melee_militia_troop="NPCCharacter.aserai_militia_spearman"
@@ -550,6 +597,18 @@ In the context of the Mughal Civil War, Mysore stands as a defiant, isolationist
 			<name name="{=hm_mymn23}Veerabhadra" />
 			<name name="{=hm_mymn24}Rangappa" />
 			<name name="{=hm_mymn25}Obanna" />
+		
+			<name name="{=!}Chikka Deva" />
+			<name name="{=!}Dodda Krishna" />
+			<name name="{=!}Hyder" />
+			<name name="{=!}Fateh" />
+			<name name="{=!}Karim" />
+			<name name="{=!}Ghulam Ali" />
+			<name name="{=!}Purnaiah" />
+			<name name="{=!}Channa" />
+			<name name="{=!}Veerappa" />
+			<name name="{=!}Srinivasa" />
+			<name name="{=!}Narasaraja" />
 		</male_names>
 		<female_names>
 			<name name="{=hm_myfn01}Devaja Ammani" />
@@ -564,6 +623,19 @@ In the context of the Mughal Civil War, Mysore stands as a defiant, isolationist
 			<name name="{=hm_myfn10}Nagalambika" />
 			<name name="{=hm_myfn11}Kamalamma" />
 			<name name="{=hm_myfn12}Chandramma" />
+		
+			<name name="{=!}Lakshmi" />
+			<name name="{=!}Kempananjammani" />
+			<name name="{=!}Devajammani" />
+			<name name="{=!}Cheluvajammani" />
+			<name name="{=!}Lingajammani" />
+			<name name="{=!}Krishnajammani" />
+			<name name="{=!}Maranayaki" />
+			<name name="{=!}Bommakka" />
+			<name name="{=!}Chennamma" />
+			<name name="{=!}Doddamma" />
+			<name name="{=!}Puttamma" />
+			<name name="{=!}Lakshmammani" />
 		</female_names>
 		<clan_names>
 			<name name="{=hm_mycn01}Wodeyar" />
@@ -889,6 +961,21 @@ During the collapse of the Mughal Empire, the Durranis see themselves as the Sco
 			<name name="{=hm_afmn23}Alam Khan" />
 			<name name="{=hm_afmn24}Mir Wais" />
 			<name name="{=hm_afmn25}Painda Khan" />
+		
+			<name name="{=!}Zaman" />
+			<name name="{=!}Mirwais" />
+			<name name="{=!}Painda" />
+			<name name="{=!}Sher" />
+			<name name="{=!}Dost" />
+			<name name="{=!}Wali" />
+			<name name="{=!}Gul" />
+			<name name="{=!}Hayat" />
+			<name name="{=!}Rahim" />
+			<name name="{=!}Nadir" />
+			<name name="{=!}Samad" />
+			<name name="{=!}Ayub" />
+			<name name="{=!}Faiz" />
+			<name name="{=!}Sardar Jan" />
 		</male_names>
 		<female_names>
 			<name name="{=hm_affn01}Zarghuna" />
@@ -903,6 +990,16 @@ During the collapse of the Mughal Empire, the Durranis see themselves as the Sco
 			<name name="{=hm_affn10}Bakhtawara" />
 			<name name="{=hm_affn11}Roqia" />
 			<name name="{=hm_affn12}Nangialai" />
+		
+			<name name="{=!}Gulnar" />
+			<name name="{=!}Shirin" />
+			<name name="{=!}Adela" />
+			<name name="{=!}Gulalai" />
+			<name name="{=!}Spozhmai" />
+			<name name="{=!}Khurshid" />
+			<name name="{=!}Nasrin" />
+			<name name="{=!}Bibi Mahro" />
+			<name name="{=!}Shahgul" />
 		</female_names>
 		<clan_names>
 			<name name="{=hm_afcn01}Durrani" />
@@ -1097,8 +1194,8 @@ During the collapse of the Mughal Empire, the Durranis see themselves as the Sco
 		id="vlandia"
 		name="{=!}Rajput"
 		is_main_culture="true"
-		color="0xffDD6600"
-		color2="0xff8B0000"
+		color="0xffB31B1B"
+		color2="0xffD4AF37"
 		elite_basic_troop="NPCCharacter.vlandian_squire"
 		basic_troop="NPCCharacter.vlandian_recruit"
 		melee_militia_troop="NPCCharacter.vlandian_militia_spearman"
@@ -1229,6 +1326,16 @@ During the Great Civil War, the Rajputaana Union has entered a state of Armed Ne
 			<name name="{=hm_rjmn28}Sanga" />
 			<name name="{=hm_rjmn29}Raj Singh" />
 			<name name="{=hm_rjmn30}Durjan Sal" />
+		
+			<name name="{=!}Bijai Singh" />
+			<name name="{=!}Ram Singh" />
+			<name name="{=!}Prithvi Singh" />
+			<name name="{=!}Chhatrasal" />
+			<name name="{=!}Surajmal" />
+			<name name="{=!}Sangram" />
+			<name name="{=!}Karan" />
+			<name name="{=!}Anup" />
+			<name name="{=!}Sawai" />
 		</male_names>
 		<female_names>
 			<name name="{=hm_rjfn01}Padmini" />
@@ -1246,6 +1353,16 @@ During the Great Civil War, the Rajputaana Union has entered a state of Armed Ne
 			<name name="{=hm_rjfn13}Gulab Kanwar" />
 			<name name="{=hm_rjfn14}Chand Kunwar" />
 			<name name="{=hm_rjfn15}Jaswant Kunwar" />
+		
+			<name name="{=!}Mirabai" />
+			<name name="{=!}Krishna Kumari" />
+			<name name="{=!}Jodha" />
+			<name name="{=!}Manavati" />
+			<name name="{=!}Ajab Kanwar" />
+			<name name="{=!}Phul Kanwar" />
+			<name name="{=!}Champa" />
+			<name name="{=!}Kesar" />
+			<name name="{=!}Suraj Kanwar" />
 		</female_names>
 		<clan_names>
 			<name name="{=hm_rjcn01}Sisodia" />
@@ -1557,6 +1674,11 @@ In the Great Civil War, the Marathas are the primary aggressors. They do not wan
 			<name name="{=hm_mrmn28}Tukoji" />
 			<name name="{=hm_mrmn29}Jayappa" />
 			<name name="{=hm_mrmn30}Bhimrao" />
+		
+			<name name="{=!}Baji Rao" />
+			<name name="{=!}Shahu" />
+			<name name="{=!}Malhar Rao" />
+			<name name="{=!}Damaji" />
 		</male_names>
 		<female_names>
 			<name name="{=hm_mrfn01}Jijabai" />
@@ -1574,6 +1696,11 @@ In the Great Civil War, the Marathas are the primary aggressors. They do not wan
 			<name name="{=hm_mrfn13}Ahilyabai" />
 			<name name="{=hm_mrfn14}Umabai" />
 			<name name="{=hm_mrfn15}Mathura" />
+		
+			<name name="{=!}Soyrabai" />
+			<name name="{=!}Mastani" />
+			<name name="{=!}Ramabai" />
+			<name name="{=!}Saibai" />
 		</female_names>
 		<clan_names>
 			<name name="{=hm_mrcn01}Bhonsale" />
@@ -1857,6 +1984,23 @@ During the Mughal Civil War, the Sikh Empire acts as the Steel Gate of the North
 			<name name="{=hm_skmn23}Pratap Singh" />
 			<name name="{=hm_skmn24}Sham Singh" />
 			<name name="{=hm_skmn25}Lehna Singh" />
+		
+			<name name="{=!}Ranjit" />
+			<name name="{=!}Jassa" />
+			<name name="{=!}Charat" />
+			<name name="{=!}Maha" />
+			<name name="{=!}Naudh" />
+			<name name="{=!}Gurbaksh" />
+			<name name="{=!}Sham" />
+			<name name="{=!}Tara" />
+			<name name="{=!}Karam" />
+			<name name="{=!}Nawab Kapur" />
+			<name name="{=!}Budh" />
+			<name name="{=!}Sukha" />
+			<name name="{=!}Mehtab" />
+			<name name="{=!}Desa" />
+			<name name="{=!}Jhanda" />
+			<name name="{=!}Nidhan" />
 		</male_names>
 		<female_names>
 			<name name="{=hm_skfn01}Sada Kaur" />
@@ -1871,6 +2015,15 @@ During the Mughal Civil War, the Sikh Empire acts as the Steel Gate of the North
 			<name name="{=hm_skfn10}Khem Kaur" />
 			<name name="{=hm_skfn11}Gurdit Kaur" />
 			<name name="{=hm_skfn12}Hardevi" />
+		
+			<name name="{=!}Mai Bhago" />
+			<name name="{=!}Rajinder Kaur" />
+			<name name="{=!}Mata Sundri" />
+			<name name="{=!}Mata Sahib" />
+			<name name="{=!}Roop Kaur" />
+			<name name="{=!}Nanaki" />
+			<name name="{=!}Pyar Kaur" />
+			<name name="{=!}Bibi Bhani" />
 		</female_names>
 		<clan_names>
 			<name name="{=hm_skcn01}Sukerchakia" />
@@ -3757,6 +3910,19 @@ The Bengali nobility combines the refined culture of the Mughal court with a dis
 			<name name="{=hm_bnmn13}Sarfaraz" />
 			<name name="{=hm_bnmn14}Mahabat" />
 			<name name="{=hm_bnmn15}Zain" />
+		
+			<name name="{=!}Murshid Quli" />
+			<name name="{=!}Shuja-ud-Din" />
+			<name name="{=!}Nawazish" />
+			<name name="{=!}Hussain Quli" />
+			<name name="{=!}Rajballabh" />
+			<name name="{=!}Krishnachandra" />
+			<name name="{=!}Gobindram" />
+			<name name="{=!}Umichand" />
+			<name name="{=!}Jagat Seth" />
+			<name name="{=!}Mohanlal" />
+			<name name="{=!}Ramnarayan" />
+			<name name="{=!}Mir Habib" />
 		</male_names>
 		<female_names>
 			<name name="{=hm_bnfn01}Ghasiti Begum" />
@@ -3764,6 +3930,14 @@ The Bengali nobility combines the refined culture of the Mughal court with a dis
 			<name name="{=hm_bnfn03}Lutfunnisa" />
 			<name name="{=hm_bnfn04}Sahebzadi" />
 			<name name="{=hm_bnfn05}Rokeya" />
+		
+			<name name="{=!}Ghaseti" />
+			<name name="{=!}Lutf-un-Nisa" />
+			<name name="{=!}Bhabani" />
+			<name name="{=!}Sharfunnisa" />
+			<name name="{=!}Munni Begum" />
+			<name name="{=!}Azim-un-Nisa" />
+			<name name="{=!}Durdana" />
 		</female_names>
 		<clan_names>
 			<name name="{=hm_bncn01}Nasiri" />
@@ -3930,6 +4104,19 @@ The Deccan is a fortress in itself. The plateau's broken terrain, dotted with hi
 			<name name="{=hm_hydmn13}Ghazanfar" />
 			<name name="{=hm_hydmn14}Yusuf" />
 			<name name="{=hm_hydmn15}Sikandar" />
+		
+			<name name="{=!}Nasir Jung" />
+			<name name="{=!}Muzaffar Jung" />
+			<name name="{=!}Salabat Jung" />
+			<name name="{=!}Ghazi-ud-Din" />
+			<name name="{=!}Basalat Jung" />
+			<name name="{=!}Anwaruddin" />
+			<name name="{=!}Chanda Sahib" />
+			<name name="{=!}Iwaz Khan" />
+			<name name="{=!}Shah Nawaz" />
+			<name name="{=!}Ramdas" />
+			<name name="{=!}Vithal Das" />
+			<name name="{=!}Rai Rayan" />
 		</male_names>
 		<female_names>
 			<name name="{=hm_hydfn01}Hayat Bakshi" />
@@ -3937,6 +4124,15 @@ The Deccan is a fortress in itself. The plateau's broken terrain, dotted with hi
 			<name name="{=hm_hydfn03}Rabia Durrani" />
 			<name name="{=hm_hydfn04}Dilras" />
 			<name name="{=hm_hydfn05}Zuhra" />
+		
+			<name name="{=!}Umda Begum" />
+			<name name="{=!}Tahniyat" />
+			<name name="{=!}Khair-un-Nisa" />
+			<name name="{=!}Sharaf-un-Nisa" />
+			<name name="{=!}Taj-un-Nisa" />
+			<name name="{=!}Fakhr-un-Nisa" />
+			<name name="{=!}Husn Ara" />
+			<name name="{=!}Bakshi Begum" />
 		</female_names>
 		<clan_names>
 			<name name="{=hm_hydcn01}Asaf Jahi" />

@@ -16,6 +16,9 @@ bin/
 **/obj/
 [Oo]bj/
 
+# ── Machine-local build configuration (absolute paths — never committed) ──
+BannerlordDir.local.props
+
 # ── Visual Studio / IDE ──
 .vs/
 *.user

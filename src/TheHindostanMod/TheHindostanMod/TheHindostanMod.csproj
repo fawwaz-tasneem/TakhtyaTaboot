@@ -1,5 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+  <!-- Machine-specific game location, NEVER committed: set it in BannerlordDir.local.props
+       (gitignored) next to this file, or via -p:BannerlordDir=... / the BANNERLORD_DIR env var. -->
+  <Import Project="BannerlordDir.local.props" Condition="Exists('$(MSBuildThisFileDirectory)BannerlordDir.local.props')" />
+
   <PropertyGroup>
     <AssemblyName>TakhtyaTaboot</AssemblyName>
     <RootNamespace>TakhtyaTaboot</RootNamespace>
@@ -12,8 +16,11 @@
     <OutputPath>..\..\..\bin\Win64_Shipping_Client\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
-    <!-- Game install dir for reference DLLs; override with -p:BannerlordDir=... -->
-    <BannerlordDir Condition="'$(BannerlordDir)' == ''">D:\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord</BannerlordDir>
+    <!-- Game install dir for reference DLLs. Resolution order: BannerlordDir.local.props
+         (see Import above) -> -p:BannerlordDir=... -> BANNERLORD_DIR env var -> the
+         default Steam location. No machine-specific path lives in this file. -->
+    <BannerlordDir Condition="'$(BannerlordDir)' == ''">$(BANNERLORD_DIR)</BannerlordDir>
+    <BannerlordDir Condition="'$(BannerlordDir)' == ''">C:\Program Files (x86)\Steam\steamapps\common\Mount &amp; Blade II Bannerlord</BannerlordDir>
   </PropertyGroup>
 
   <!-- Game DLLs — never shipped with the mod (Private=False) -->

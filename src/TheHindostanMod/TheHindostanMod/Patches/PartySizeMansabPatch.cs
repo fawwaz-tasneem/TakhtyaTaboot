@@ -6,12 +6,19 @@ using TaleWorlds.Localization;
 
 namespace TakhtyaTaboot
 {
-    // Military benefit of rank: your personal contingent grows to the mansab's troop
-    // target. Rather than a flat per-step bonus (which could demand more men than it
-    // granted, causing a promote->over-cap->demote spiral), we add exactly the gap
-    // between the rank's target and the assumed vanilla base, so a clan leader's party
-    // cap lands ON the target (plus any genuine perk bonuses). The retention floor the
-    // career system enforces is a fraction of this same target, so it is always fieldable.
+    // Military benefit of rank: the mansab's troop target acts as a FLOOR on the clan
+    // leader's party cap. We raise the live, fully-computed vanilla limit up to the target
+    // when it falls short, and leave it untouched when vanilla already grants more (high
+    // clan tier, Leadership/Steward perks, kingdom policies). This lands the cap exactly ON
+    // the target without the old promote->over-cap->demote spiral.
+    //
+    // The earlier version added (target - BaseTroopCapacity) on the ASSUMPTION that the
+    // incoming vanilla limit equalled the BaseTroopCapacity constant. It never does — the
+    // real limit varies per clan (tier/perks/policies) — so the cap drifted off target
+    // (e.g. a target of 100 landed at 90 for a low-tier clan whose real base was ~20).
+    // Keying off the live __result.ResultNumber instead makes the floor exact for everyone.
+    // The retention floor the career system enforces is a fraction of this same target, so
+    // it is always fieldable.
     [HarmonyPatch(typeof(DefaultPartySizeLimitModel), "GetPartyMemberSizeLimit")]
     public static class PartySizeMansabPatch
     {
@@ -23,9 +30,9 @@ namespace TakhtyaTaboot
             if (idx <= 0) return;
 
             int target = MansabdariBehavior.RequiredTroopsForIndex(idx);
-            float bonus = target - Config.Tune.BaseTroopCapacity;
-            if (bonus > 0f)
-                __result.Add(bonus, new TextObject("{=!}Mansabdari rank"));
+            float gap = target - __result.ResultNumber;
+            if (gap > 0f)
+                __result.Add(gap, new TextObject("{=!}Mansabdari rank"));
         }
     }
 }

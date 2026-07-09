@@ -22,7 +22,6 @@ namespace TakhtyaTaboot.Config
 
         // Career: muster, demotion, stipend
         public static float TroopCapacityMultiplier => S?.TroopCapacityMultiplier ?? 1f;
-        public static int BaseTroopCapacity => S?.BaseTroopCapacity ?? 30;
         public static float RetentionFraction => S?.RetentionFraction ?? 0.8f;
         public static int DemoteGraceDays => S?.DemoteGraceDays ?? 30;
         public static float StipendPerTroop => S?.StipendPerTroop ?? 2f;
@@ -51,5 +50,24 @@ namespace TakhtyaTaboot.Config
         public static float PatrolOverwhelmChance => S?.PatrolOverwhelmChance ?? 0.05f;
         public static float MilitiaDefenceWeight => S?.MilitiaDefenceWeight ?? 1f;
         public static int ReliefDetachmentSize => S?.ReliefDetachmentSize ?? 40;
+
+        // Village fiefs (development, treasury, AI zamindars)
+        public static float VillageTaxPerHearth => S?.VillageTaxPerHearth ?? 0.004f;
+        public static float VillageDevelopmentPace => S?.VillageDevelopmentPace ?? 1f;
+        public static bool AiVillageDevelopment => S?.AiVillageDevelopment ?? true;
+        public static int AiVillageBuildsPerWeek => S?.AiVillageBuildsPerWeek ?? 10;
+        public static bool AiZamindarEngineOwnership => S?.AiZamindarEngineOwnership ?? false;
+        public static int VillageTaxCollectRelationPenalty => S?.VillageTaxCollectRelationPenalty ?? 2;
+
+        // Nazrana (the courtly gift cycle)
+        public static bool NazranaEnabled => S?.NazranaEnabled ?? true;
+        public static int NazranaCycleDays => S?.NazranaCycleDays ?? 90;
+        public static float NazranaBaseScale => S?.NazranaBaseScale ?? 1f;
+
+        // Seasons
+        public static bool MonsoonEnabled => S?.MonsoonEnabled ?? true;
+
+        // Debug
+        public static bool EnableDebugVerification => S?.EnableDebugVerification ?? false;
     }
 }

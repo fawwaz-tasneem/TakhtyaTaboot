@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using TaleWorlds.CampaignSystem;
+using TaleWorlds.CampaignSystem.Actions;
 using TaleWorlds.CampaignSystem.GameMenus;
 using TaleWorlds.CampaignSystem.Party;
 using TaleWorlds.CampaignSystem.Settlements;
@@ -14,29 +15,95 @@ using TakhtyaTaboot.Util;
 
 namespace TakhtyaTaboot
 {
-    // Village fief mechanics (design: wiki Chapter 15). A village the player's clan
-    // holds carries a living bandit threat that the player must keep down by patrol
-    // and by building works (watchtower, militia post). Works also raise the village's
-    // hearths and the bound town's prosperity. All effects are applied directly to
-    // hearth/prosperity each day — no model overrides needed.
+    // Village fief mechanics (design: wiki Chapter 15). EVERY village with a seated
+    // zamindar runs the daily simulation — bandit threat, construction, hearth growth,
+    // and tax accrual into a per-village coffer — so the world develops alongside the
+    // player. The interactive layer (patrols, relief pleas, warnings, collection) is
+    // the player's alone. AI zamindars fund and pick their own works weekly.
+    // All effects are applied directly to hearth/prosperity each day — no model
+    // overrides needed. Formulas live in Util.VillageFiefMath (unit-tested).
     public class VillageDevelopmentBehavior : CampaignBehaviorBase
     {
-        public enum VillageProject { Granary, Watchtower, IrrigationCanal, MilitiaPost, TradePost }
+        // The first five entries predate the fief expansion; their NAMES are serialized
+        // in the completed-works CSV, so they must never be renamed.
+        public enum VillageProject
+        {
+            Granary, Watchtower, IrrigationCanal, MilitiaPost, TradePost,
+            GranaryII, WatchtowerII, Stepwell, Bazaar, Shrine, Kotwali, Serai
+        }
 
         private struct ProjectDef
         {
             public string Name; public int Cost; public int Days; public string Effect;
-            public ProjectDef(string n, int c, int d, string e) { Name = n; Cost = c; Days = d; Effect = e; }
+            public VillageProject? Requires;      // upgrade-tier prerequisite
+            public float HearthPerDay;            // daily hearth growth
+            public float ThreatFlat;              // daily flat threat reduction
+            public float ThreatMult;              // multiplier on the day's remaining threat (1 = none)
+            public float BoundProsperity;         // daily prosperity to the bound town
+            public float TaxBonusPct;             // % added to the village's daily tax
+            public float DefenceBonus;            // standing addition to DefenceStrength
+            public int RelationOnComplete;        // one-time relation with the village's notables
+
+            public ProjectDef(string n, int cost, int days, string effect, VillageProject? requires = null,
+                              float hearth = 0f, float threatFlat = 0f, float threatMult = 1f,
+                              float prosperity = 0f, float taxPct = 0f, float defence = 0f, int relation = 0)
+            {
+                Name = n; Cost = cost; Days = days; Effect = effect; Requires = requires;
+                HearthPerDay = hearth; ThreatFlat = threatFlat; ThreatMult = threatMult;
+                BoundProsperity = prosperity; TaxBonusPct = taxPct; DefenceBonus = defence;
+                RelationOnComplete = relation;
+            }
         }
 
         private static readonly Dictionary<VillageProject, ProjectDef> Defs = new Dictionary<VillageProject, ProjectDef>
         {
-            { VillageProject.Granary,        new ProjectDef("Granary",         500, 30, "+0.6 hearth growth per day") },
-            { VillageProject.Watchtower,     new ProjectDef("Watchtower",      300, 20, "bandit threat grows far slower") },
-            { VillageProject.IrrigationCanal,new ProjectDef("Irrigation Canal",800, 45, "+1.0 hearth growth per day") },
-            { VillageProject.MilitiaPost,    new ProjectDef("Militia Post",    600, 25, "passively lowers bandit threat") },
-            { VillageProject.TradePost,      new ProjectDef("Trade Post",      400, 30, "raises the bound town's prosperity") },
+            // ── Food & hearth ──
+            { VillageProject.Granary,        new ProjectDef("Granary",          500, 30, "+0.6 hearth growth per day",
+                                                            hearth: 0.6f) },
+            { VillageProject.GranaryII,      new ProjectDef("Great Granary",   1200, 40, "+0.6 more hearth per day, +5% tax",
+                                                            requires: VillageProject.Granary, hearth: 0.6f, taxPct: 5f) },
+            { VillageProject.IrrigationCanal,new ProjectDef("Irrigation Canal", 800, 45, "+1.0 hearth growth per day",
+                                                            hearth: 1.0f) },
+            { VillageProject.Stepwell,       new ProjectDef("Stepwell (Baoli)", 700, 35, "+0.4 hearth per day, +5% tax",
+                                                            hearth: 0.4f, taxPct: 5f) },
+            // ── Defence ──
+            { VillageProject.Watchtower,     new ProjectDef("Watchtower",       300, 20, "bandit threat grows far slower",
+                                                            threatMult: 0.6f) },
+            { VillageProject.WatchtowerII,   new ProjectDef("Stone Watchtower", 900, 30, "threat falls further each day",
+                                                            requires: VillageProject.Watchtower, threatFlat: 1.0f, threatMult: 0.85f) },
+            { VillageProject.MilitiaPost,    new ProjectDef("Militia Post",     600, 25, "passively lowers bandit threat",
+                                                            threatFlat: 1.0f, defence: 0.5f) },
+            { VillageProject.Kotwali,        new ProjectDef("Kotwali",         1000, 35, "a police post: strong threat suppression",
+                                                            requires: VillageProject.MilitiaPost, threatFlat: 1.5f, defence: 0.5f) },
+            // ── Economy & faith ──
+            { VillageProject.TradePost,      new ProjectDef("Trade Post",       400, 30, "raises the bound town's prosperity",
+                                                            prosperity: 0.3f) },
+            { VillageProject.Bazaar,         new ProjectDef("Bazaar",          1100, 40, "+10% tax, more prosperity to the bound town",
+                                                            requires: VillageProject.TradePost, prosperity: 0.3f, taxPct: 10f) },
+            { VillageProject.Shrine,         new ProjectDef("Shrine",           600, 30, "the faith kept: +0.2 hearth, the notables' goodwill",
+                                                            hearth: 0.2f, relation: 3) },
+            { VillageProject.Serai,          new ProjectDef("Serai",            800, 35, "a caravanserai: +5% tax, prosperity to the bound town",
+                                                            prosperity: 0.2f, taxPct: 5f) },
         };
+
+        // The Shrine takes the village faith's own house of worship as its display name.
+        private static string ProjectDisplayName(VillageProject p, Settlement s)
+        {
+            if (p != VillageProject.Shrine) return Defs[p].Name;
+            Religion r = ReligionBehavior.Instance?.GetCultureReligion(s?.Culture) ?? Religion.None;
+            return r == Religion.Islam ? "Mosque (Masjid)"
+                 : r == Religion.Hindu ? "Temple (Mandir)"
+                 : r == Religion.Sikh ? "Gurdwara"
+                 : Defs[p].Name;
+        }
+
+        // AI build chains by priority category (see VillageFiefMath.AiPriorityCategory).
+        private static readonly VillageProject[] DefenceChain =
+            { VillageProject.Watchtower, VillageProject.MilitiaPost, VillageProject.WatchtowerII, VillageProject.Kotwali };
+        private static readonly VillageProject[] FoodChain =
+            { VillageProject.Granary, VillageProject.Stepwell, VillageProject.IrrigationCanal, VillageProject.GranaryII };
+        private static readonly VillageProject[] EconomyChain =
+            { VillageProject.TradePost, VillageProject.Shrine, VillageProject.Serai, VillageProject.Bazaar };
 
         public static VillageDevelopmentBehavior Instance { get; private set; }
 
@@ -44,23 +111,30 @@ namespace TakhtyaTaboot
         private Dictionary<string, float> _threat = new Dictionary<string, float>();           // villageId -> 0..100
         private Dictionary<string, string> _completed = new Dictionary<string, string>();        // villageId -> "Granary,Watchtower"
         private Dictionary<string, string> _buildProject = new Dictionary<string, string>();     // villageId -> project name
-        private Dictionary<string, int> _buildDays = new Dictionary<string, int>();              // villageId -> days remaining
+        private Dictionary<string, int> _buildDays = new Dictionary<string, int>();              // villageId -> days remaining (legacy int mirror)
+        private Dictionary<string, float> _buildProgress = new Dictionary<string, float>();      // villageId -> days remaining (fractional)
+        private Dictionary<string, float> _treasury = new Dictionary<string, float>();           // villageId -> coffer (dinars)
+        private Dictionary<string, string> _queued = new Dictionary<string, string>();           // villageId -> queued project name
+        private Dictionary<string, int> _lastCollectDay = new Dictionary<string, int>();         // villageId -> day taxes last collected
         private Dictionary<string, int> _lastPatrolDay = new Dictionary<string, int>();          // villageId -> day index
         private Dictionary<string, int> _reliefUntil = new Dictionary<string, int>();            // villageId -> day relief ends
         private Dictionary<string, int> _reliefTroops = new Dictionary<string, int>();           // villageId -> men to return
         private Dictionary<string, int> _lastOverwhelmDay = new Dictionary<string, int>();       // villageId -> day a plea was last sent
         private const int ReliefDays = 6;
         private const int OverwhelmCooldown = 12;
+        private const int CollectCooldownDays = 7;
 
         public override void RegisterEvents()
         {
             Instance = this;
             CampaignEvents.OnSessionLaunchedEvent.AddNonSerializedListener(this, OnSessionLaunched);
             CampaignEvents.DailyTickSettlementEvent.AddNonSerializedListener(this, OnDailyTickSettlement);
+            CampaignEvents.WeeklyTickEvent.AddNonSerializedListener(this, () => TYTLog.Guard("VillageDev.WeeklyTick", OnWeeklyTick));
         }
 
         // ── Queries ────────────────────────────────────────────────────────────────
         public float GetThreat(Settlement s) => s != null && _threat.TryGetValue(s.StringId, out float v) ? v : 0f;
+        public float GetTreasury(Settlement s) => s != null && _treasury.TryGetValue(s.StringId, out float v) ? v : 0f;
 
         // The player may oversee a village he holds outright (engine owner) OR one he holds in
         // zamindari through our feudal layer — the latter covers a vassal granted a village
@@ -73,6 +147,31 @@ namespace TakhtyaTaboot
         private bool HasProject(Settlement s, VillageProject p)
             => _completed.TryGetValue(s.StringId, out string list)
                && list.Split(',').Contains(Defs[p].Name);
+
+        // Sum an effect over the village's completed works. The daily RATES (hearth,
+        // prosperity) scale with the MCM development pace; structural properties
+        // (threat multiplier, tax %, defence) do not.
+        private float SumBuilt(Settlement s, Func<ProjectDef, float> pick)
+        {
+            if (!_completed.TryGetValue(s.StringId, out string list) || string.IsNullOrEmpty(list)) return 0f;
+            float sum = 0f;
+            var names = list.Split(',');
+            foreach (var kv in Defs)
+                if (names.Contains(kv.Value.Name)) sum += pick(kv.Value);
+            return sum;
+        }
+
+        private float BuiltThreatMultiplier(Settlement s)
+        {
+            float mult = 1f;
+            if (_completed.TryGetValue(s.StringId, out string list) && !string.IsNullOrEmpty(list))
+            {
+                var names = list.Split(',');
+                foreach (var kv in Defs)
+                    if (names.Contains(kv.Value.Name)) mult *= kv.Value.ThreatMult;
+            }
+            return mult;
+        }
 
         // ── Daily simulation ─────────────────────────────────────────────────────────
         private void OnDailyTickSettlement(Settlement s)
@@ -87,50 +186,46 @@ namespace TakhtyaTaboot
 
         private void DailyTickSettlement(Settlement s)
         {
-            if (!IsPlayerVillage(s) || s.Village == null) return;
+            if (s == null || !s.IsVillage || s.Village == null) return;
+
+            // The full pipeline runs for EVERY village with a seated zamindar (this is what
+            // makes the AI world develop); the interactive steps are player-only.
+            bool player = IsPlayerVillage(s);
+            if (!player && FeudalTitlesBehavior.Instance?.GetVillageLord(s) == null) return;
 
             // Per-step breadcrumbs: a NATIVE crash bypasses the outer Guard's try/catch and leaves
             // no managed report, so the heartbeat's last crumb is the only witness. Naming each step
             // turns "died somewhere in Khanna's tick" into "died in Khanna › MaybeOverwhelm".
-            TYTLog.Crumb("UpdateThreat");        UpdateThreat(s);
-            TYTLog.Crumb("AdvanceConstruction");  AdvanceConstruction(s);
+            TYTLog.Crumb("UpdateThreat");        UpdateThreat(s, player);
+            TYTLog.Crumb("AdvanceConstruction");  AdvanceConstruction(s, player);
             TYTLog.Crumb("ApplyHearthProsperity"); ApplyHearthAndProsperity(s);
+            TYTLog.Crumb("AccrueTax");            AccrueTax(s);
+            if (!player) return;
             TYTLog.Crumb("HandleReliefReturn");   HandleReliefReturn(s);
             TYTLog.Crumb("MaybeOverwhelm");       MaybeOverwhelm(s);
             TYTLog.Crumb("NotifyThreat");         NotifyThreat(s);
         }
 
-        private void UpdateThreat(Settlement s)
+        private void UpdateThreat(Settlement s, bool player)
         {
-            // While a relief force holds the district, the threat recedes steadily.
-            if (_reliefUntil.TryGetValue(s.StringId, out int until) && (int)CampaignTime.Now.ToDays < until)
-            {
-                _threat[s.StringId] = MathF.Max(0f, GetThreat(s) - 8f);
-                return;
-            }
-
-            float threat = GetThreat(s);
-            threat += 1.0f; // bandits always return
+            bool reliefActive = player && _reliefUntil.TryGetValue(s.StringId, out int until)
+                                && (int)CampaignTime.Now.ToDays < until;
 
             Kingdom owner = s.OwnerClan?.Kingdom;
             bool atWar = owner != null && Kingdom.All.Any(o => o != owner && !o.IsEliminated && owner.IsAtWarWith(o));
-            if (atWar) threat += 2.0f;
+            bool lordPresent = player && MobileParty.MainParty != null && MobileParty.MainParty.CurrentSettlement == s;
 
-            if (HasProject(s, VillageProject.MilitiaPost)) threat -= 1.0f;
-
-            if (MobileParty.MainParty != null && MobileParty.MainParty.CurrentSettlement == s)
-                threat -= 5.0f; // the lord's presence deters raiders
-
-            // A capable zamindar and a standing militia keep the peace day to day.
-            threat -= DefenceStrength(s);
-
-            if (HasProject(s, VillageProject.Watchtower)) threat *= 0.6f;
-
-            _threat[s.StringId] = MathF.Max(0f, MathF.Min(100f, threat));
+            _threat[s.StringId] = VillageFiefMath.ThreatStep(
+                GetThreat(s), reliefActive, atWar,
+                flatReduction: SumBuilt(s, d => d.ThreatFlat),
+                watchMultiplier: BuiltThreatMultiplier(s),
+                defence: DefenceStrength(s),
+                lordPresent: lordPresent);
         }
 
-        // Daily suppression from the village's own defenders: its militia and the
-        // stewardship of its zamindar. Scaled by the Militia & zamindar defence weight (MCM).
+        // Daily suppression from the village's own defenders: its militia, the built
+        // defence works, and the zamindar's stewardship/charm (the governor effect).
+        // Scaled by the Militia & zamindar defence weight (MCM).
         private float DefenceStrength(Settlement s)
         {
             float w = Config.Tune.MilitiaDefenceWeight;
@@ -138,7 +233,47 @@ namespace TakhtyaTaboot
             float militia = s.Militia;
             Hero z = FeudalTitlesBehavior.Instance?.GetVillageLord(s);
             int steward = z != null ? z.GetSkillValue(DefaultSkills.Steward) : 0;
-            return w * (MathF.Min(2f, militia / 25f) + MathF.Min(2f, steward / 100f));
+            int charm = z != null ? z.GetSkillValue(DefaultSkills.Charm) : 0;
+            return w * (MathF.Min(2f, militia / 25f)
+                        + VillageFiefMath.ThreatDecayBonus(charm, steward)
+                        + SumBuilt(s, d => d.DefenceBonus));
+        }
+
+        // ── Taxes: the village coffer ────────────────────────────────────────────────
+        private void AccrueTax(Settlement s)
+        {
+            float rate = Config.Tune.VillageTaxPerHearth;
+            if (rate <= 0f) return;
+            Hero z = FeudalTitlesBehavior.Instance?.GetVillageLord(s);
+            float authorityRate = 1f;
+            if (s.MapFaction is Kingdom k && ImperialAuthorityBehavior.Instance != null)
+                authorityRate = ImperialAuthorityBehavior.Instance.GetTaxCollectionRate(k);
+            _treasury[s.StringId] = GetTreasury(s) + VillageFiefMath.DailyTax(
+                s.Village.Hearth, SumBuilt(s, d => d.TaxBonusPct), GetThreat(s),
+                authorityRate, z?.GetSkillValue(DefaultSkills.Steward) ?? 0, rate);
+        }
+
+        private void CollectTaxes(Settlement s)
+        {
+            float coffer = GetTreasury(s);
+            if (coffer < 1f) { Notify("The village coffer is empty.", true); return; }
+
+            int today = (int)CampaignTime.Now.ToDays;
+            if (_lastCollectDay.TryGetValue(s.StringId, out int last) && today - last < CollectCooldownDays)
+            {
+                // Squeezing the village more than once a week sours the local gentry.
+                int penalty = Config.Tune.VillageTaxCollectRelationPenalty;
+                if (penalty > 0)
+                    foreach (Hero n in s.Notables?.Where(n => n != null && n.IsAlive) ?? Enumerable.Empty<Hero>())
+                        ChangeRelationAction.ApplyRelationChangeBetweenHeroes(Hero.MainHero, n, -penalty);
+                Notify("You squeeze the district again so soon — the notables take it ill.", true);
+            }
+            _lastCollectDay[s.StringId] = today;
+
+            int amount = (int)coffer;
+            _treasury[s.StringId] = coffer - amount;
+            Hero.MainHero.ChangeHeroGold(amount);
+            Notify($"You collect {amount} dinars from the coffer of {s.Name}.", false);
         }
 
         // ── Bandit raids overwhelm the militia; the zamindar pleads for relief ──────────
@@ -225,11 +360,21 @@ namespace TakhtyaTaboot
             return removed;
         }
 
-        private void AdvanceConstruction(Settlement s)
+        private void AdvanceConstruction(Settlement s, bool player)
         {
             if (!_buildProject.TryGetValue(s.StringId, out string projName)) return;
-            int days = _buildDays.TryGetValue(s.StringId, out int d) ? d - 1 : 0;
-            if (days > 0) { _buildDays[s.StringId] = days; return; }
+
+            // Fractional progress: an able zamindar (Engineering) builds faster.
+            float remaining = _buildProgress.TryGetValue(s.StringId, out float p) ? p
+                : _buildDays.TryGetValue(s.StringId, out int legacy) ? legacy : 0f; // migrate old saves
+            Hero z = FeudalTitlesBehavior.Instance?.GetVillageLord(s);
+            remaining -= VillageFiefMath.BuildSpeedFactor(z?.GetSkillValue(DefaultSkills.Engineering) ?? 0);
+            if (remaining > 0f)
+            {
+                _buildProgress[s.StringId] = remaining;
+                _buildDays[s.StringId] = (int)Math.Ceiling(remaining); // legacy mirror for downgrade tolerance
+                return;
+            }
 
             // Completed.
             string list = _completed.TryGetValue(s.StringId, out string c) && !string.IsNullOrEmpty(c)
@@ -237,29 +382,69 @@ namespace TakhtyaTaboot
             _completed[s.StringId] = list;
             _buildProject.Remove(s.StringId);
             _buildDays.Remove(s.StringId);
+            _buildProgress.Remove(s.StringId);
 
-            if (s.OwnerClan == Clan.PlayerClan)
-                Notify($"Construction complete in {s.Name}: the {projName} now stands.", false);
+            // A finished shrine (etc.) earns the goodwill of the local gentry — for whoever built it.
+            var def = Defs.Values.FirstOrDefault(d => d.Name == projName);
+            if (def.RelationOnComplete > 0 && z != null)
+                foreach (Hero n in s.Notables?.Where(n => n != null && n.IsAlive && n != z) ?? Enumerable.Empty<Hero>())
+                    ChangeRelationAction.ApplyRelationChangeBetweenHeroes(z, n, def.RelationOnComplete);
+
+            if (player)
+            {
+                VillageProject? done = ByName(projName);
+                string shown = done.HasValue ? ProjectDisplayName(done.Value, s) : projName;
+                Notify($"Construction complete in {s.Name}: the {shown} now stands.", false);
+            }
+
+            // A queued work begins at once — if its patron can still pay.
+            if (player && _queued.TryGetValue(s.StringId, out string nextName))
+            {
+                _queued.Remove(s.StringId);
+                VillageProject? next = ByName(nextName);
+                if (next.HasValue)
+                {
+                    if (Hero.MainHero.Gold >= Defs[next.Value].Cost && CanBuild(s, next.Value, out _))
+                    {
+                        Hero.MainHero.ChangeHeroGold(-Defs[next.Value].Cost);
+                        BeginConstruction(s, next.Value);
+                        Notify($"The queued work begins in {s.Name}: the {Defs[next.Value].Name}.", false);
+                    }
+                    else Notify($"The queued {nextName} in {s.Name} is cancelled — the coffers cannot bear it.", true);
+                }
+            }
+        }
+
+        private static VillageProject? ByName(string name)
+        {
+            foreach (var kv in Defs)
+                if (kv.Value.Name == name) return kv.Key;
+            return null;
+        }
+
+        private void BeginConstruction(Settlement s, VillageProject p)
+        {
+            _buildProject[s.StringId] = Defs[p].Name;
+            _buildProgress[s.StringId] = Defs[p].Days;
+            _buildDays[s.StringId] = Defs[p].Days;
         }
 
         private void ApplyHearthAndProsperity(Settlement s)
         {
-            float hearthDelta = 0f;
-            if (HasProject(s, VillageProject.Granary)) hearthDelta += 0.6f;
-            if (HasProject(s, VillageProject.IrrigationCanal)) hearthDelta += 1.0f;
+            float pace = Config.Tune.VillageDevelopmentPace;
+            float hearthDelta = SumBuilt(s, d => d.HearthPerDay) * pace;
 
-            float threat = GetThreat(s);
-            if (threat > 90f) hearthDelta = -1.0f;          // village actively bleeds
-            else if (threat > 80f) hearthDelta = 0f;        // growth halts
-            else if (threat > 60f) hearthDelta *= 0.5f;     // growth slowed
+            float growthFactor = VillageFiefMath.HearthGrowthFactor(GetThreat(s));
+            hearthDelta = growthFactor < 0f ? -1f : hearthDelta * growthFactor;
 
             if (hearthDelta != 0f)
                 s.Village.Hearth = MathF.Max(0f, s.Village.Hearth + hearthDelta);
 
-            if (HasProject(s, VillageProject.TradePost))
+            float prosperity = SumBuilt(s, d => d.BoundProsperity) * pace;
+            if (prosperity > 0f)
             {
                 Town boundTown = s.Village.Bound?.Town;
-                if (boundTown != null) boundTown.Prosperity += 0.3f;
+                if (boundTown != null) boundTown.Prosperity += prosperity;
             }
         }
 
@@ -291,22 +476,114 @@ namespace TakhtyaTaboot
             Notify($"You patrol the lands around {s.Name}. Bandit threat falls by {reduction:0}.", false);
         }
 
-        private bool CanBuild(Settlement s, VillageProject p, out string reason)
+        // Eligibility WITHOUT the "another work active" restriction — used both for a
+        // direct start and for queueing behind the active work.
+        private bool IsEligible(Settlement s, VillageProject p, out string reason)
         {
             reason = "";
             if (HasProject(s, p)) { reason = "Already built."; return false; }
+            if (Defs[p].Requires.HasValue && !HasProject(s, Defs[p].Requires.Value))
+            { reason = $"Requires the {Defs[Defs[p].Requires.Value].Name} first."; return false; }
+            if (_buildProject.TryGetValue(s.StringId, out string active) && active == Defs[p].Name)
+            { reason = "Already under construction."; return false; }
+            if (_queued.TryGetValue(s.StringId, out string queued) && queued == Defs[p].Name)
+            { reason = "Already queued."; return false; }
+            return true;
+        }
+
+        private bool CanBuild(Settlement s, VillageProject p, out string reason)
+        {
+            if (!IsEligible(s, p, out reason)) return false;
             if (_buildProject.ContainsKey(s.StringId)) { reason = "Another work is already under construction here."; return false; }
             if (Hero.MainHero.Gold < Defs[p].Cost) { reason = $"You need {Defs[p].Cost} gold."; return false; }
             return true;
         }
 
+        // One work may be queued behind the active one; it charges when it starts.
+        private bool CanQueue(Settlement s, VillageProject p, out string reason)
+        {
+            if (!IsEligible(s, p, out reason)) return false;
+            if (!_buildProject.ContainsKey(s.StringId)) { reason = "Nothing is being built; start it directly."; return false; }
+            if (_queued.ContainsKey(s.StringId)) { reason = "A work is already queued here."; return false; }
+            return true;
+        }
+
         private void StartBuild(Settlement s, VillageProject p)
         {
-            if (!CanBuild(s, p, out string reason)) { Notify(reason, true); return; }
-            Hero.MainHero.ChangeHeroGold(-Defs[p].Cost);
-            _buildProject[s.StringId] = Defs[p].Name;
-            _buildDays[s.StringId] = Defs[p].Days;
-            Notify($"Work begins on the {Defs[p].Name} in {s.Name}. It will take {Defs[p].Days} days.", false);
+            if (CanBuild(s, p, out _))
+            {
+                Hero.MainHero.ChangeHeroGold(-Defs[p].Cost);
+                BeginConstruction(s, p);
+                Notify($"Work begins on the {Defs[p].Name} in {s.Name}. It will take about {Defs[p].Days} days.", false);
+                return;
+            }
+            if (CanQueue(s, p, out string reason))
+            {
+                _queued[s.StringId] = Defs[p].Name;
+                Notify($"The {Defs[p].Name} is queued in {s.Name}; its {Defs[p].Cost} dinars are charged when work begins.", false);
+                return;
+            }
+            Notify(reason, true);
+        }
+
+        // ── AI development (weekly) ──────────────────────────────────────────────────
+        // AI zamindars draw most of their coffer as income, keep the rest as a build
+        // budget, and start works by need: danger -> defence, hunger -> food, else economy.
+        private void OnWeeklyTick()
+        {
+            if (!Config.Tune.AiVillageDevelopment) return;
+            var ft = FeudalTitlesBehavior.Instance;
+            if (ft == null) return;
+
+            int startsLeft = Config.Tune.AiVillageBuildsPerWeek;
+            foreach (Settlement s in Settlement.All)
+            {
+                if (!s.IsVillage || s.Village == null) continue;
+                if (IsPlayerVillage(s)) continue; // the player runs his own works
+                Hero z = ft.GetVillageLord(s);
+                if (z == null || !z.IsAlive) continue;
+
+                // Income draw: most of the coffer to the zamindar, the rest retained.
+                float coffer = GetTreasury(s);
+                if (coffer >= 10f)
+                {
+                    int draw = (int)(coffer * VillageFiefMath.AiCofferDrawShare);
+                    if (draw > 0) { _treasury[s.StringId] = coffer - draw; z.ChangeHeroGold(draw); }
+                }
+
+                if (startsLeft <= 0) continue;
+                if (_buildProject.ContainsKey(s.StringId)) continue;
+
+                VillageProject? pick = PickAiProject(s);
+                if (!pick.HasValue) continue;
+                int cost = Defs[pick.Value].Cost;
+
+                // Budget: retained coffer first, then the zamindar's purse above his floor.
+                float retained = GetTreasury(s);
+                int fromCoffer = (int)Math.Min(retained, cost);
+                int fromPurse = cost - fromCoffer;
+                if (fromPurse > 0 && z.Gold - fromPurse < VillageFiefMath.AiGoldFloor(z.IsLord)) continue; // cannot afford; no debt
+
+                _treasury[s.StringId] = retained - fromCoffer;
+                if (fromPurse > 0) z.ChangeHeroGold(-fromPurse);
+                BeginConstruction(s, pick.Value);
+                startsLeft--;
+                TYTLog.Info($"AI village work: {z.Name} begins the {Defs[pick.Value].Name} in {s.Name}.");
+            }
+        }
+
+        private VillageProject? PickAiProject(Settlement s)
+        {
+            int category = VillageFiefMath.AiPriorityCategory(GetThreat(s), s.Village.Hearth);
+            VillageProject[][] order = category == VillageFiefMath.PriorityDefence
+                ? new[] { DefenceChain, FoodChain, EconomyChain }
+                : category == VillageFiefMath.PriorityFood
+                    ? new[] { FoodChain, DefenceChain, EconomyChain }
+                    : new[] { EconomyChain, FoodChain, DefenceChain };
+            foreach (var chain in order)
+                foreach (VillageProject p in chain)
+                    if (IsEligible(s, p, out _)) return p;
+            return null;
         }
 
         private static void Notify(string text, bool bad)
@@ -349,6 +626,18 @@ namespace TakhtyaTaboot
                 args => { args.optionLeaveType = GameMenuOption.LeaveType.Continue; return true; },
                 args => { Patrol(Settlement.CurrentSettlement); VillageMenuInit(args); });
 
+            starter.AddGameMenuOption("hindostan_village", "hindostan_village_collect",
+                "{=!}Collect the village taxes",
+                args =>
+                {
+                    args.optionLeaveType = GameMenuOption.LeaveType.Trade;
+                    Settlement s = Settlement.CurrentSettlement;
+                    args.IsEnabled = GetTreasury(s) >= 1f;
+                    if (!args.IsEnabled) args.Tooltip = new TextObject("{=!}The village coffer is empty.");
+                    return true;
+                },
+                args => { CollectTaxes(Settlement.CurrentSettlement); VillageMenuInit(args); });
+
             starter.AddGameMenuOption("hindostan_village", "hindostan_village_projects",
                 "{=!}Order construction works",
                 args => { args.optionLeaveType = GameMenuOption.LeaveType.Trade; return true; },
@@ -381,10 +670,22 @@ namespace TakhtyaTaboot
             {
                 VillageProject proj = p; // capture
                 ProjectDef def = Defs[proj];
+                string prereq = def.Requires.HasValue ? " [needs " + Defs[def.Requires.Value].Name + "]" : "";
                 starter.AddGameMenuOption("hindostan_village_projects", "hindostan_proj_" + proj,
-                    "{=!}Build " + def.Name + " (" + def.Cost + "g, " + def.Days + " days) — " + def.Effect,
-                    args => { args.optionLeaveType = GameMenuOption.LeaveType.Trade;
-                              return CanBuild(Settlement.CurrentSettlement, proj, out _); },
+                    "{=!}Build " + def.Name + " (" + def.Cost + "g, " + def.Days + " days) — " + def.Effect + prereq,
+                    args =>
+                    {
+                        args.optionLeaveType = GameMenuOption.LeaveType.Trade;
+                        Settlement s = Settlement.CurrentSettlement;
+                        // Visible when eligible; enabled to start now, or to queue behind the active work.
+                        if (!IsEligible(s, proj, out _)) return false;
+                        bool canStart = CanBuild(s, proj, out string why);
+                        bool canQueue = !canStart && CanQueue(s, proj, out why);
+                        args.IsEnabled = canStart || canQueue;
+                        if (canQueue) args.Tooltip = new TextObject("{=!}Queued behind the current work; cost charged when it begins.");
+                        else if (!args.IsEnabled) args.Tooltip = new TextObject("{=!}" + why);
+                        return true;
+                    },
                     args => { StartBuild(Settlement.CurrentSettlement, proj); GameMenu.SwitchToMenu("hindostan_village"); });
             }
 
@@ -407,13 +708,35 @@ namespace TakhtyaTaboot
                 sb.AppendLine($"Zamindar (village lord): {(z != null ? z.Name.ToString() : "vacant")}");
                 int steward = z != null ? z.GetSkillValue(DefaultSkills.Steward) : 0;
                 sb.AppendLine($"Militia: {(int)s.Militia}    Zamindar stewardship: {steward}");
+
+                float authorityRate = s.MapFaction is Kingdom k && ImperialAuthorityBehavior.Instance != null
+                    ? ImperialAuthorityBehavior.Instance.GetTaxCollectionRate(k) : 1f;
+                float perDay = VillageFiefMath.DailyTax(s.Village.Hearth, SumBuilt(s, d => d.TaxBonusPct),
+                    GetThreat(s), authorityRate, steward, Config.Tune.VillageTaxPerHearth);
+                sb.AppendLine($"Coffer: {(int)GetTreasury(s)} dinars  (~{perDay:0.0}/day)");
+
                 if (_reliefUntil.TryGetValue(s.StringId, out int until))
                     sb.AppendLine($"Under relief for {Math.Max(0, until - (int)CampaignTime.Now.ToDays)} more days.");
             }
             if (_buildProject.TryGetValue(s.StringId, out string pn))
-                sb.AppendLine($"Under construction: {pn} ({(_buildDays.TryGetValue(s.StringId, out int bd) ? bd : 0)} days left)");
+            {
+                float left = _buildProgress.TryGetValue(s.StringId, out float bp) ? bp
+                    : _buildDays.TryGetValue(s.StringId, out int bd) ? bd : 0f;
+                VillageProject? cur = ByName(pn);
+                float total = cur.HasValue ? Defs[cur.Value].Days : left;
+                int pct = total > 0f ? (int)(100f * (1f - left / total)) : 0;
+                sb.AppendLine($"Under construction: {pn} — {pct}% ({Math.Ceiling(left):0} days left)");
+            }
+            if (_queued.TryGetValue(s.StringId, out string qn))
+                sb.AppendLine($"Queued next: {qn}");
             string built = _completed.TryGetValue(s.StringId, out string c) ? c : "";
-            sb.AppendLine($"Works built: {(string.IsNullOrEmpty(built) ? "none" : built.Replace(",", ", "))}");
+            if (!string.IsNullOrEmpty(built))
+            {
+                var shown = built.Split(',').Select(n =>
+                { VillageProject? bp2 = ByName(n); return bp2.HasValue ? ProjectDisplayName(bp2.Value, s) : n; });
+                sb.AppendLine("Works built: " + string.Join(", ", shown));
+            }
+            else sb.AppendLine("Works built: none");
             sb.AppendLine(" ");
             sb.AppendLine("What is your will?");
             MBTextManager.SetTextVariable("HINDOSTAN_VILLAGE_TEXT", sb.ToString().Replace("\r\n", "\n"), false);
@@ -464,6 +787,24 @@ namespace TakhtyaTaboot
             dataStore.SyncData("hind_vil_reliefTIds", ref reliefTIds);
             dataStore.SyncData("hind_vil_reliefTVals", ref reliefTVals);
 
+            // Fief-expansion keys (append-only: absent on old saves -> empty lists -> defaults).
+            var treasIds = _treasury.Keys.ToList();
+            var treasVals = _treasury.Values.ToList();
+            var queueIds = _queued.Keys.ToList();
+            var queueVals = _queued.Values.ToList();
+            var progIds = _buildProgress.Keys.ToList();
+            var progVals = _buildProgress.Values.ToList();
+            var collectIds = _lastCollectDay.Keys.ToList();
+            var collectVals = _lastCollectDay.Values.ToList();
+            dataStore.SyncData("hind_vil_treasIds", ref treasIds);
+            dataStore.SyncData("hind_vil_treasVals", ref treasVals);
+            dataStore.SyncData("hind_vil_queueIds", ref queueIds);
+            dataStore.SyncData("hind_vil_queueVals", ref queueVals);
+            dataStore.SyncData("hind_vil_progIds", ref progIds);
+            dataStore.SyncData("hind_vil_progVals", ref progVals);
+            dataStore.SyncData("hind_vil_collectIds", ref collectIds);
+            dataStore.SyncData("hind_vil_collectVals", ref collectVals);
+
             if (!dataStore.IsSaving)
             {
                 _threat = Zip(threatIds, threatVals);
@@ -474,6 +815,14 @@ namespace TakhtyaTaboot
                 _reliefUntil = Zip(reliefIds, reliefVals);
                 _reliefTroops = Zip(reliefTIds, reliefTVals);
                 _lastOverwhelmDay = new Dictionary<string, int>();
+                _treasury = Zip(treasIds, treasVals);
+                _queued = Zip(queueIds, queueVals);
+                _buildProgress = Zip(progIds, progVals);
+                _lastCollectDay = Zip(collectIds, collectVals);
+
+                // Migration: an old save has integer _buildDays but no fractional progress.
+                foreach (var kv in _buildDays)
+                    if (!_buildProgress.ContainsKey(kv.Key)) _buildProgress[kv.Key] = kv.Value;
             }
         }
 
@@ -489,10 +838,12 @@ namespace TakhtyaTaboot
         public static string VillageStatus(List<string> args)
         {
             if (Campaign.Current == null || Instance == null) return "Load a campaign first.";
-            var villages = Settlement.All.Where(s => s.IsVillage && s.OwnerClan == Clan.PlayerClan).ToList();
+            var villages = Settlement.All.Where(s => s.IsVillage && Instance.IsPlayerVillage(s)).ToList();
             if (villages.Count == 0) return "Your clan holds no villages.";
             return string.Join("\n", villages.Select(s =>
-                $"{s.Name}: hearth {(int)s.Village.Hearth}, threat {Instance.GetThreat(s):0}"));
+                $"{s.Name}: hearth {(int)s.Village.Hearth}, threat {Instance.GetThreat(s):0}, " +
+                $"coffer {(int)Instance.GetTreasury(s)}" +
+                (Instance._buildProject.TryGetValue(s.StringId, out string bp) ? $", building {bp}" : "")));
         }
 
         [CommandLineFunctionality.CommandLineArgumentFunction("set_village_threat", "hindostan")]

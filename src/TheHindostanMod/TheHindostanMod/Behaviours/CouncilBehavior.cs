@@ -57,7 +57,8 @@ namespace TakhtyaTaboot
         {
             Instance = this;
             CampaignEvents.OnSessionLaunchedEvent.AddNonSerializedListener(this, OnSessionLaunched);
-            CampaignEvents.OnNewGameCreatedEvent.AddNonSerializedListener(this, OnNewGame);
+            // No OnNewGameCreated fill: it iterated clan.Settlements during the engine's PARALLEL
+            // world-gen (native-AV risk, see Util/WorldGen.cs); OnSessionLaunched fills idempotently.
             CampaignEvents.WeeklyTickEvent.AddNonSerializedListener(this, () => Util.TYTLog.Guard("Council.WeeklyTick", OnWeeklyTick));
         }
 
@@ -135,7 +136,6 @@ namespace TakhtyaTaboot
         }
 
         // ── Lifecycle ──────────────────────────────────────────────────────────────
-        private void OnNewGame(CampaignGameStarter starter) => FillAll();
         private void OnSessionLaunched(CampaignGameStarter starter)
         {
             FillAll();

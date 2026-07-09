@@ -24,7 +24,8 @@ namespace TakhtyaTaboot
         public override void RegisterEvents()
         {
             Instance = this;
-            CampaignEvents.OnNewGameCreatedEvent.AddNonSerializedListener(this, OnNewGame);
+            // Seeding happens at session launch, NOT OnNewGameCreated: that event fires while the
+            // engine is still creating kingdoms/clans on parallel threads (see Util/WorldGen.cs).
             CampaignEvents.OnSessionLaunchedEvent.AddNonSerializedListener(this, OnSessionLaunched);
             CampaignEvents.WeeklyTickEvent.AddNonSerializedListener(this, () => Util.TYTLog.Guard("ImperialAuthority.WeeklyTick", OnWeeklyTick));
             CampaignEvents.OnSettlementOwnerChangedEvent.AddNonSerializedListener(this, OnSettlementOwnerChanged);
@@ -78,10 +79,13 @@ namespace TakhtyaTaboot
         public bool CanIssueImperialDecree(Kingdom k) => GetAuthority(k) >= 40f;
 
         // ── Lifecycle ─────────────────────────────────────────────────────────────
-        private void OnNewGame(CampaignGameStarter starter)
+        // Idempotent: only kingdoms without a stored meter are seeded, so loading a save
+        // never clobbers persisted authority values.
+        private void SeedMissing()
         {
             foreach (Kingdom k in Kingdom.All.Where(k => !k.IsEliminated))
-                _authority[k.StringId] = 75f;
+                if (!_authority.ContainsKey(k.StringId))
+                    _authority[k.StringId] = 75f;
         }
 
         private static int CountWars(Kingdom kingdom)
@@ -122,6 +126,7 @@ namespace TakhtyaTaboot
         // ── Menu: State of the Empire ─────────────────────────────────────────────
         private void OnSessionLaunched(CampaignGameStarter starter)
         {
+            SeedMissing();
             starter.AddGameMenuOption("town", "hindostan_empire_town", "{=!}Survey the state of the empire",
                 args => { args.optionLeaveType = GameMenuOption.LeaveType.Submenu; return true; },
                 args => GameMenu.SwitchToMenu("hindostan_empire_state"), false, 5);

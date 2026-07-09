@@ -34,7 +34,11 @@ namespace TakhtyaTaboot
         public static readonly Rank[] Ranks =
         {
             new Rank(0,    "Unranked",             0,   0),
-            new Rank(100,  "Zamindar",             25,  19),
+            // "Mansabdar-e-Sad" (the sadi, holder of 100): renamed from "Zamindar" — that word
+            // is the FEUDAL tier of a village lord (FeudalTitlesBehavior.GetTier), and having a
+            // mansab RANK carry the same name made the hierarchy screen and encyclopedia read as
+            // if the two systems disagreed. Only the index is serialized, so this is save-safe.
+            new Rank(100,  "Mansabdar-e-Sad",      25,  19),
             new Rank(500,  "Mansabdar-e-Panjsad",  100, 75),
             new Rank(1000, "Qiledar",              200, 150),
             new Rank(2000, "Faujdar",              350, 263),
@@ -43,7 +47,10 @@ namespace TakhtyaTaboot
         };
         private const int MaxIndex = 6;
 
-        // Fief eligibility by rank index: villages>=1 (Zamindar), castles>=3 (Qiledar), towns>=5 (Subahdar).
+        // Fief eligibility by rank index: villages>=1 (Mansabdar-e-Sad), castles>=3 (Qiledar), towns>=5 (Subahdar).
+        // CanHold below is THE prescriptive gate for who MAY hold a fief (FeudalTitlesBehavior
+        // checks it before seating a lord as zamindar); FeudalTitlesBehavior.GetTier stays purely
+        // descriptive (what a hero actually holds). Keep that division.
         private const int CastleIndex = 3;
         private const int TownIndex = 5;
 
@@ -281,7 +288,9 @@ namespace TakhtyaTaboot
             if (idx >= 1 && MobileParty.MainParty != null)
             {
                 int floor = GetRetentionFloor(clan);
-                int have = MobileParty.MainParty.MemberRoster.TotalManCount;
+                // Clan-wide regulars, the same measure the rank ladder and the mansab menu use —
+                // not just the main party's TotalManCount (which also counted heroes/companions).
+                int have = GetClanTotalTroops(clan);
                 if (have < floor)
                 {
                     _daysUnderMuster++;
@@ -404,7 +413,9 @@ namespace TakhtyaTaboot
             ElevatePlayer(nextIdx);
         }
 
-        // ── Amir-ul-Umara leadership challenge (simplified; full system is Chapter 16) ──
+        // ── Amir-ul-Umara leadership challenge (Ch.16). The PLAYER's challenge opens a
+        // War of Accession (AccessionWarBehavior, incl. desertion-on-challenge); the AI
+        // half — amirs rising against their own rulers — lives in CivilWarBehavior. ──
         public bool PlayerCanChallenge(out string reason)
         {
             reason = "";

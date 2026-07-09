@@ -103,7 +103,8 @@ namespace TakhtyaTaboot
         public override void RegisterEvents()
         {
             Instance = this;
-            CampaignEvents.OnNewGameCreatedEvent.AddNonSerializedListener(this, OnNewGame);
+            // No OnNewGameCreated snapshot: Kingdom.All is still being built on parallel world-gen
+            // threads at that point (see Util/WorldGen.cs); OnSessionLaunched snapshots safely.
             CampaignEvents.OnSessionLaunchedEvent.AddNonSerializedListener(this, OnSessionLaunched);
             CampaignEvents.DailyTickEvent.AddNonSerializedListener(this, () => Util.TYTLog.Guard("Succession.DailyTick", OnDailyTick));
             CampaignEvents.WeeklyTickEvent.AddNonSerializedListener(this, () => Util.TYTLog.Guard("Succession.WeeklyTick", OnWeeklyTick));
@@ -128,9 +129,15 @@ namespace TakhtyaTaboot
             dataStore.SyncData("suc_rulerHIds",    ref _rulerHeroIds);
             dataStore.SyncData("suc_prisonKIds",   ref _prisonKingdomIds);
             dataStore.SyncData("suc_prisonDays",   ref _prisonDays);
-        }
 
-        private void OnNewGame(CampaignGameStarter _) => SnapshotRulers();
+            // ClaimantClan's hero->origin-clan map lives in a static helper; persist it here so
+            // that a temp cadet clan surviving a save/load can still be dissolved back correctly.
+            Util.ClaimantClan.Export(out var originHeroes, out var originClans);
+            dataStore.SyncData("hind_claimorigin_heroes", ref originHeroes);
+            dataStore.SyncData("hind_claimorigin_clans",  ref originClans);
+            if (!dataStore.IsSaving)
+                Util.ClaimantClan.Import(originHeroes, originClans);
+        }
 
         private void OnSessionLaunched(CampaignGameStarter starter)
         {
@@ -159,6 +166,12 @@ namespace TakhtyaTaboot
             // mutate a ruling clan from here until the session is live. Nothing meaningful exists to act on
             // during world-gen anyway (no crises, empty ruler snapshot).
             if (!Util.WorldGen.Ready) return;
+
+            // The scripted 1707 emperor cascade crowns the heir and then kills the outgoing
+            // emperor in one scripted act; that death must not open a generic succession crisis
+            // on the very day the appointed heir is enthroned. Keep the snapshot fresh though,
+            // so the new emperor is tracked from here on.
+            if (Util.ScriptedSuccession.InProgress) { SnapshotRulers(); return; }
 
             // Was the victim a known ruler?
             int ri = _rulerHeroIds.IndexOf(victim.StringId);

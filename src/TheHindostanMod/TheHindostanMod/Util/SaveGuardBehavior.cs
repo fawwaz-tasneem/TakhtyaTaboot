@@ -22,13 +22,20 @@ namespace TakhtyaTaboot.Util
         {
             CampaignEvents.OnBeforeSaveEvent.AddNonSerializedListener(this, () => { IsSaving = true; TYTLog.Crumb("save: serialization started"); });
             CampaignEvents.OnSaveOverEvent.AddNonSerializedListener(this, (_, __) => { IsSaving = false; TYTLog.Crumb("save: serialization finished"); });
-            CampaignEvents.OnSessionLaunchedEvent.AddNonSerializedListener(this, _ => { CampaignReady = true; });
-            CampaignEvents.OnGameLoadedEvent.AddNonSerializedListener(this, _ => { CampaignReady = true; });
+            CampaignEvents.OnSessionLaunchedEvent.AddNonSerializedListener(this, _ => { CampaignReady = true; IsSaving = false; });
+            CampaignEvents.OnGameLoadedEvent.AddNonSerializedListener(this, _ => { CampaignReady = true; IsSaving = false; });
 
             // Drain any farmaan that was queued during a settlement tick. This fires on the campaign
             // tick — outside the engine's settlement iteration — so pushing the focus layer here is
             // safe, unlike pushing it synchronously from inside the tick (which native-crashed).
-            CampaignEvents.TickEvent.AddNonSerializedListener(this, _ => UI.RoyalFarmaan.Pump());
+            // Also a stuck-flag backstop: campaign ticks never run during synchronous serialization,
+            // so a tick observed with IsSaving still set means OnSaveOverEvent was missed (an
+            // errored/aborted save) — clear it, or every guarded getter stays degraded forever.
+            CampaignEvents.TickEvent.AddNonSerializedListener(this, _ =>
+            {
+                if (IsSaving) { IsSaving = false; TYTLog.Warn("save: IsSaving was still set on a campaign tick — cleared (missed OnSaveOverEvent)."); }
+                UI.RoyalFarmaan.Pump();
+            });
         }
 
         public override void SyncData(IDataStore dataStore) { }

@@ -58,11 +58,6 @@ namespace TakhtyaTaboot.Config
         public float TroopCapacityMultiplier { get; set; } = 1f;
 
         [SettingPropertyGroup("Career & Mansab")]
-        [SettingPropertyInteger("Assumed vanilla base party size", 0, 200, "0", RequireRestart = false,
-            HintText = "The party-size the game gives before mansab. The mansab bonus is (rank target minus this) so the cap lands on the target.", Order = 7)]
-        public int BaseTroopCapacity { get; set; } = 30;
-
-        [SettingPropertyGroup("Career & Mansab")]
         [SettingPropertyFloatingInteger("Muster retention fraction", 0.4f, 1f, "0.00", RequireRestart = false,
             HintText = "You must keep at least this fraction of your rank's troop target. Fall below it and a demotion clock starts.", Order = 8)]
         public float RetentionFraction { get; set; } = 0.8f;
@@ -165,5 +160,64 @@ namespace TakhtyaTaboot.Config
         [SettingPropertyInteger("Troops a dispatched commander takes", 10, 150, "0", RequireRestart = false,
             HintText = "When you send a companion to relieve a village, this many men leave your party for the relief.", Order = 2)]
         public int ReliefDetachmentSize { get; set; } = 40;
+
+        // ── Village fiefs ────────────────────────────────────────────────────────────
+        [SettingPropertyGroup("Village Fiefs")]
+        [SettingPropertyFloatingInteger("Village tax per hearth per day", 0f, 0.02f, "0.0000", RequireRestart = false,
+            HintText = "Daily dinars accrued to a village's coffer per point of hearth (before works and the zamindar's stewardship).", Order = 0)]
+        public float VillageTaxPerHearth { get; set; } = 0.004f;
+
+        [SettingPropertyGroup("Village Fiefs")]
+        [SettingPropertyFloatingInteger("Development pace", 0.25f, 3f, "0.00", RequireRestart = false,
+            HintText = "Scales every village work's daily effect (hearth growth, prosperity, militia). 1.0 = normal.", Order = 1)]
+        public float VillageDevelopmentPace { get; set; } = 1f;
+
+        [SettingPropertyGroup("Village Fiefs")]
+        [SettingPropertyBool("AI zamindars develop their villages", RequireRestart = false,
+            HintText = "AI-held villages fund and build their own works, so the world develops alongside you.", Order = 2)]
+        public bool AiVillageDevelopment { get; set; } = true;
+
+        [SettingPropertyGroup("Village Fiefs")]
+        [SettingPropertyInteger("AI project starts per week (realm-wide)", 0, 50, "0", RequireRestart = false,
+            HintText = "Upper bound on how many new village works the AI may begin each week across the whole map.", Order = 3)]
+        public int AiVillageBuildsPerWeek { get; set; } = 10;
+
+        [SettingPropertyGroup("Village Fiefs")]
+        [SettingPropertyBool("AI zamindars take engine ownership (experimental)", RequireRestart = true,
+            HintText = "Give AI zamindars real engine ownership of their village. Off by default: engine ownership distorts fief votes and clan income, and conquest of the bound town reverts it.", Order = 4)]
+        public bool AiZamindarEngineOwnership { get; set; } = false;
+
+        [SettingPropertyGroup("Village Fiefs")]
+        [SettingPropertyInteger("Relation cost of over-frequent tax collection", 0, 10, "0", RequireRestart = false,
+            HintText = "Collecting the village coffer more than once a week costs this much relation with the village's notables.", Order = 5)]
+        public int VillageTaxCollectRelationPenalty { get; set; } = 2;
+
+        // ── Nazrana & tribute ────────────────────────────────────────────────────────
+        [SettingPropertyGroup("Nazrana & Tribute")]
+        [SettingPropertyBool("Nazrana gift cycle", RequireRestart = false,
+            HintText = "Vassals owe their sovereign a periodic ceremonial gift (nazrana); rulers receive it from their lords.", Order = 0)]
+        public bool NazranaEnabled { get; set; } = true;
+
+        [SettingPropertyGroup("Nazrana & Tribute")]
+        [SettingPropertyInteger("Days between nazrana calls", 30, 360, "0", RequireRestart = false,
+            HintText = "Base interval between the court's calls for your nazrana gift.", Order = 1)]
+        public int NazranaCycleDays { get; set; } = 90;
+
+        [SettingPropertyGroup("Nazrana & Tribute")]
+        [SettingPropertyFloatingInteger("Nazrana amount scale", 0.25f, 4f, "0.00", RequireRestart = false,
+            HintText = "Scales every nazrana amount (yours and the AI lords').", Order = 2)]
+        public float NazranaBaseScale { get; set; } = 1f;
+
+        // ── Seasons ──────────────────────────────────────────────────────────────────
+        [SettingPropertyGroup("Seasons")]
+        [SettingPropertyBool("Monsoon slows parties", RequireRestart = false,
+            HintText = "The rains of the monsoon season mire armies on the march; the dry season quickens them.", Order = 0)]
+        public bool MonsoonEnabled { get; set; } = true;
+
+        // ── Debug ────────────────────────────────────────────────────────────────────
+        [SettingPropertyGroup("Debug")]
+        [SettingPropertyBool("Enable culture verification (debug)", RequireRestart = true,
+            HintText = "Runs the developer culture-audit banner at the start of a new game. Leave off for normal play.", Order = 0)]
+        public bool EnableDebugVerification { get; set; } = false;
     }
 }

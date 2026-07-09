@@ -36,7 +36,9 @@ namespace TakhtyaTaboot
         {
             Instance = this;
             CampaignEvents.OnSessionLaunchedEvent.AddNonSerializedListener(this, OnSessionLaunched);
-            CampaignEvents.OnNewGameCreatedEvent.AddNonSerializedListener(this, OnNewGame);
+            // No OnNewGameCreated seeding: EnsureCapitals reads leader-clan settlement lists, which
+            // the engine is still mutating on parallel world-gen threads at that point (native-AV
+            // risk); the OnSessionLaunched call below is sufficient and idempotent.
             CampaignEvents.OnSettlementOwnerChangedEvent.AddNonSerializedListener(this, OnOwnerChanged);
             CampaignEvents.DailyTickEvent.AddNonSerializedListener(this, OnDailyTick);
         }
@@ -390,8 +392,6 @@ namespace TakhtyaTaboot
         }
 
         // ── Menus ────────────────────────────────────────────────────────────────────
-        private void OnNewGame(CampaignGameStarter starter) => EnsureCapitals();
-
         private void OnSessionLaunched(CampaignGameStarter starter)
         {
             EnsureCapitals();

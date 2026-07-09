@@ -19,7 +19,9 @@ namespace TakhtyaTaboot
         public override void RegisterEvents()
         {
             Instance = this;
-            CampaignEvents.OnNewGameCreatedEvent.AddNonSerializedListener(this, OnNewGame);
+            // Seeding happens at session launch, NOT OnNewGameCreated: that event fires while the
+            // engine is still creating kingdoms/heroes on parallel threads (see Util/WorldGen.cs).
+            CampaignEvents.OnSessionLaunchedEvent.AddNonSerializedListener(this, OnSessionLaunched);
             CampaignEvents.WeeklyTickEvent.AddNonSerializedListener(this, () => Util.TYTLog.Guard("Legitimacy.WeeklyTick", OnWeeklyTick));
         }
 
@@ -59,10 +61,13 @@ namespace TakhtyaTaboot
                 _     => 0.20f,
             };
 
-        private void OnNewGame(CampaignGameStarter starter)
+        // Idempotent: only rulers without a stored meter are seeded, so loading a save
+        // never clobbers persisted legitimacy values.
+        private void OnSessionLaunched(CampaignGameStarter starter)
         {
             foreach (Kingdom k in Kingdom.All.Where(k => !k.IsEliminated && k.Leader != null))
-                SetLegitimacy(k.Leader, 60f);
+                if (!_legitimacy.ContainsKey(k.Leader.StringId))
+                    SetLegitimacy(k.Leader, 60f);
         }
 
         private void OnWeeklyTick()

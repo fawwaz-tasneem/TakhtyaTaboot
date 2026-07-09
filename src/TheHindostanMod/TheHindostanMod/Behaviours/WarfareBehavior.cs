@@ -68,6 +68,13 @@ namespace TakhtyaTaboot
             IFaction other = f1 == pk ? f2 : f1;
             if (!(other is Kingdom ok)) return;
 
+            // War with a tributary breaks the pact — once, here, rather than the old daily
+            // forced re-peace, which fought the war system every tick if anyone re-declared.
+            if (_tributaryUntil.Remove(ok.StringId))
+                RoyalFarmaan.FromRuler(pk, "The Tributary Yoke Is Cast Off",
+                    $"The pact of tribute with {ok.Name} is broken: the two realms are at war once more, " +
+                    "and no further nazrana will flow.", "So be it");
+
             _score[ok.StringId] = 0;
             _weary[ok.StringId] = 0f;
             _peaceUrged.Remove(ok.StringId);
@@ -396,12 +403,13 @@ namespace TakhtyaTaboot
                 }
             }
 
-            // Tributaries pay their nazrana; their bond keeps the peace.
+            // Tributaries pay their nazrana while the bond holds. A re-declared war breaks the
+            // pact in OnWarDeclared (one-shot); it is never force-peaced from here.
             foreach (string id in _tributaryUntil.Keys.ToList())
             {
                 Kingdom trib = Find(id);
                 if (trib == null || today >= _tributaryUntil[id]) { _tributaryUntil.Remove(id); continue; }
-                if (pk.IsAtWarWith(trib)) MakePeaceAction.Apply(pk, trib);
+                if (pk.IsAtWarWith(trib)) continue; // pact break is handled by OnWarDeclared
                 if (today % 7 == 0 && trib.Leader != null && pk.Leader != null && trib.Leader.Gold > 500)
                     GiveGoldAction.ApplyBetweenCharacters(trib.Leader, pk.Leader, 500, true);
             }
@@ -442,8 +450,11 @@ namespace TakhtyaTaboot
             bool byUs = killer != null && (killer == Hero.MainHero || killer.Clan?.Kingdom == pk);
             if (!byUs) return;
 
-            // The leaderless realm reels and sues for peace...
-            if (pk.IsAtWarWith(theirs)) try { MakePeaceAction.Apply(pk, theirs); } catch { }
+            // The leaderless realm reels and sues for peace... (WithInternalPeace: if either
+            // realm is a hind_rebel_* kingdom, NoThroneWarPeacePatch would otherwise silently
+            // block this mod-driven settlement and leave the war permanent.)
+            if (pk.IsAtWarWith(theirs))
+                try { Util.ThroneWar.WithInternalPeace(() => MakePeaceAction.Apply(pk, theirs)); } catch { }
 
             // ...but every house of the slain king's realm now nurses a blood grudge against you,
             // and holds just cause for a war of vengeance.
@@ -539,17 +550,21 @@ namespace TakhtyaTaboot
                         _tributaryUntil[ok.StringId] = (int)CampaignTime.Now.ToDays + 365 * 3;
                         break;
                     case Term.Subjugate:
-                        // Annex the entire realm: every house swears to you, then the kingdom is dissolved.
+                        // Annex the entire realm. Peace is concluded FIRST, while both kingdoms
+                        // are still alive — annexing every clan can leave ok empty and destroyed,
+                        // and making peace with a dead kingdom is incoherent (it used to run on
+                        // the destroyed realm and get swallowed by the catch below).
+                        if (pk.IsAtWarWith(ok)) MakePeaceAction.Apply(pk, ok);
                         foreach (Clan c in ok.Clans.ToList())
                             try { ChangeKingdomAction.ApplyByJoinToKingdom(c, pk, default(CampaignTime), false); } catch { }
-                        if (!ok.Settlements.Any() && !ok.Clans.Any())
+                        if (!ok.IsEliminated && !ok.Settlements.Any() && !ok.Clans.Any())
                             try { DestroyKingdomAction.Apply(ok); } catch { }
                         break;
                     case Term.SurrenderCulprit:
                         Util.WarAimsBehavior.Instance?.JudgeCulprit(ok);
                         break;
                 }
-                MakePeaceAction.Apply(pk, ok);
+                if (!ok.IsEliminated && pk.IsAtWarWith(ok)) MakePeaceAction.Apply(pk, ok);
                 RoyalFarmaan.FromRuler(pk, "Peace Is Dictated",
                     $"Peace is sealed with {ok.Name} on your terms ({Describe(t)}). The war is ended.", "It is done");
             }

@@ -18,7 +18,26 @@ namespace TakhtyaTaboot.Util
     public static class ClaimantClan
     {
         // heroId -> original clanId, so Dissolve can return each moved hero to its house.
+        // NOT saved here (this is a static helper, not a behavior): SuccessionBehavior persists it
+        // through Export/Import in its SyncData, because temp clans can survive across a save/load
+        // mid-civil-war and Dissolve must still know where each hero came from afterwards.
         private static readonly Dictionary<string, string> _origin = new Dictionary<string, string>();
+
+        // ── Persistence hooks (called from SuccessionBehavior.SyncData) ─────────────
+        public static void Export(out List<string> heroIds, out List<string> clanIds)
+        {
+            heroIds = _origin.Keys.ToList();
+            clanIds = _origin.Values.ToList();
+        }
+
+        public static void Import(List<string> heroIds, List<string> clanIds)
+        {
+            _origin.Clear();
+            if (heroIds == null || clanIds == null) return;
+            for (int i = 0; i < heroIds.Count && i < clanIds.Count; i++)
+                if (!string.IsNullOrEmpty(heroIds[i]) && !string.IsNullOrEmpty(clanIds[i]))
+                    _origin[heroIds[i]] = clanIds[i];
+        }
 
         public static Clan Create(Hero leader, CultureObject culture)
         {
@@ -100,7 +119,16 @@ namespace TakhtyaTaboot.Util
                 {
                     Clan back = _origin.TryGetValue(h.StringId, out string oid)
                         ? Clan.All.FirstOrDefault(c => c.StringId == oid) : null;
+                    if (back == null || back.IsEliminated || back == temp)
+                    {
+                        // Origin lost (e.g. a pre-fix save) or destroyed: never leave the hero in
+                        // the doomed temp clan — fall back to close kin, then the realm's rulers.
+                        back = FallbackHouse(h, temp);
+                        if (back != null)
+                            TYTLog.Warn($"ClaimantClan.Dissolve: origin of {h.Name} unknown/destroyed; returning to {back.Name}.");
+                    }
                     if (back != null) MoveHero(h, back);
+                    else TYTLog.Error($"ClaimantClan.Dissolve: no house found for {h.Name}; hero left clanless.");
                     _origin.Remove(h.StringId);
                 }
                 if (temp.Kingdom != null) try { ChangeKingdomAction.ApplyByLeaveKingdom(temp, false); } catch { }
@@ -108,6 +136,15 @@ namespace TakhtyaTaboot.Util
                 TYTLog.Info($"ClaimantClan.Dissolve: {temp.StringId} dissolved.");
             }
             catch (Exception e) { TYTLog.Error("ClaimantClan.Dissolve failed", e); }
+        }
+
+        private static Clan FallbackHouse(Hero h, Clan temp)
+        {
+            foreach (Clan candidate in new[] { h.Father?.Clan, h.Mother?.Clan, h.Spouse?.Clan,
+                                               temp.Kingdom?.RulingClan })
+                if (candidate != null && candidate != temp && !candidate.IsEliminated)
+                    return candidate;
+            return null;
         }
 
         private static int SafeCount(Clan c) { try { return c.Heroes?.Count ?? -1; } catch { return -1; } }

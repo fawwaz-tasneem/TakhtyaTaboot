@@ -75,6 +75,10 @@ namespace TakhtyaTaboot
             { TYTLog.Warn("Imperial succession: Aurangzeb or the House of Timur not found; cascade idle."); return; }
             if (aurangzeb != Hero.MainHero && clan.Leader != aurangzeb)
                 ChangeClanLeaderAction.ApplyWithSelectedNewLeader(clan, aurangzeb);
+
+            // The initial diplomacy pass at session launch targeted the XML-default leaders;
+            // now that the real first emperor sits the throne, re-anchor leader relations on him.
+            FactionRelationsBehavior.Instance?.ApplyLeaderRelations();
         }
 
         private void Accede(int idx)
@@ -91,14 +95,22 @@ namespace TakhtyaTaboot
             { TYTLog.Warn($"Imperial succession: cannot crown {heirName}; skipped (dynasty/heir gone)."); return; }
 
             // Crown the heir FIRST so the throne is never vacant, THEN the old emperor passes.
-            if (clan.Leader != heir) ChangeClanLeaderAction.ApplyWithSelectedNewLeader(clan, heir);
-            LegitimacyBehavior.Instance?.SetLegitimacy(heir, idx == ImperialSuccessionPlan.FinalEmperorIndex ? 60f : 30f);
-
-            if (dying != null && dying.IsAlive && dying != Hero.MainHero)
+            // The whole act is bracketed so SuccessionBehavior does not read the scripted death
+            // as an open throne and spawn a war-of-princes on top of the appointed accession.
+            ScriptedSuccession.WithSuppressedCrisis(() =>
             {
-                if (idx == 1) KillCharacterAction.ApplyByRemove(dying, false, true);  // Aurangzeb — dies of illness
-                else KillCharacterAction.ApplyByMurder(dying, heir);                  // intrigue: the new emperor's faction
-            }
+                if (clan.Leader != heir) ChangeClanLeaderAction.ApplyWithSelectedNewLeader(clan, heir);
+                LegitimacyBehavior.Instance?.SetLegitimacy(heir, idx == ImperialSuccessionPlan.FinalEmperorIndex ? 60f : 30f);
+
+                if (dying != null && dying.IsAlive && dying != Hero.MainHero)
+                {
+                    if (idx == 1) KillCharacterAction.ApplyByRemove(dying, false, true);  // Aurangzeb — dies of illness
+                    else KillCharacterAction.ApplyByMurder(dying, heir);                  // intrigue: the new emperor's faction
+                }
+            });
+
+            // Each new emperor inherits the dynasty's geopolitical stance (kinship bonds, Maratha enmity).
+            FactionRelationsBehavior.Instance?.ApplyLeaderRelations();
 
             UI.RoyalFarmaan.Issue("The Emperor Has Died",
                 idx == 1 ? "From the imperial camp in the Deccan" : "From Shahjahanabad",

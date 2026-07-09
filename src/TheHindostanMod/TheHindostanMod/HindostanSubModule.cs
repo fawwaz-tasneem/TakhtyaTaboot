@@ -31,19 +31,30 @@ namespace TakhtyaTaboot
             }
             catch (System.Exception e) { TYTLog.Error("UIExtenderEx registration FAILED", e); }
 
+            // Patch each [HarmonyPatch] class individually: a single bad target (e.g. a
+            // method signature that changed between game versions) must not disable every
+            // other patch, which is what a lone PatchAll inside try/catch did.
             var harmony = new Harmony("com.hindostanmod");
-            try
+            int patchedOk = 0, patchedFailed = 0;
+            foreach (var type in typeof(HindostanSubModule).Assembly.GetTypes())
             {
-                harmony.PatchAll(typeof(HindostanSubModule).Assembly);
-                var patched = new System.Collections.Generic.List<string>();
-                foreach (var m in harmony.GetPatchedMethods())
-                    patched.Add((m.DeclaringType?.Name ?? "?") + "." + m.Name);
-                TYTLog.Info($"Harmony PatchAll OK — {patched.Count} method(s) patched:\n  " + string.Join("\n  ", patched));
+                if (type.GetCustomAttributes(typeof(HarmonyPatch), true).Length == 0) continue;
+                try
+                {
+                    harmony.CreateClassProcessor(type).Patch();
+                    patchedOk++;
+                }
+                catch (System.Exception e)
+                {
+                    patchedFailed++;
+                    TYTLog.Error($"Harmony patch FAILED for {type.FullName} — this patch is disabled, others continue", e);
+                }
             }
-            catch (System.Exception e)
-            {
-                TYTLog.Error("Harmony PatchAll FAILED", e);
-            }
+            var patched = new System.Collections.Generic.List<string>();
+            foreach (var m in harmony.GetPatchedMethods())
+                patched.Add((m.DeclaringType?.Name ?? "?") + "." + m.Name);
+            TYTLog.Info($"Harmony: {patchedOk} patch class(es) applied, {patchedFailed} failed — {patched.Count} method(s) patched:\n  "
+                        + string.Join("\n  ", patched));
         }
 
         public override void OnMissionBehaviorInitialize(Mission mission)
@@ -75,7 +86,8 @@ namespace TakhtyaTaboot
             starter.AddBehavior(new Util.WorldGenGuardBehavior());
 
             starter.AddBehavior(new Util.SaveGuardBehavior());
-            starter.AddBehavior(new CultureVerificationBehavior());
+            if (Config.Tune.EnableDebugVerification)
+                starter.AddBehavior(new CultureVerificationBehavior()); // debug-only culture audit (MCM "Debug" group)
             starter.AddBehavior(new ReligionBehavior());
             starter.AddBehavior(new FactionRelationsBehavior());
             starter.AddBehavior(new UI.HierarchyMenuBehavior());
@@ -99,8 +111,9 @@ namespace TakhtyaTaboot
             starter.AddBehavior(new Util.WarAimsBehavior()); // trait-driven affronts -> casus belli -> judgement
 
             // Phase 3 — Economy
-            // starter.AddBehavior(new NazranaBehavior());
-            // starter.AddModel(new HindostanPartySpeedModel());
+            starter.AddBehavior(new NazranaBehavior()); // the courtly gift cycle
+            // Monsoon party speed ships as Patches/MonsoonSpeedPatch (Harmony postfix on the
+            // vanilla speed model) rather than a GameModel override — see the patch header.
 
             // Phase 5 — Succession
             starter.AddBehavior(new SuccessionLawBehavior()); // per-kingdom succession law; consulted by the engine below
@@ -110,15 +123,15 @@ namespace TakhtyaTaboot
 
             // Phase 6 — Revolts and estates
             starter.AddBehavior(new RevoltCascadeBehavior());
-            // starter.AddBehavior(new CourtFactionsBehavior());
-            // starter.AddBehavior(new EstatesBehavior());
+            starter.AddBehavior(new CourtFactionsBehavior()); // the court's four parties
+            // starter.AddBehavior(new EstatesBehavior()); // deferred: overlaps council/authority; see wiki Ch.19
 
             // Phase 7 — Military/political depth
             starter.AddBehavior(new CouncilBehavior());
             starter.AddBehavior(new ImperialCourtBehavior());
             starter.AddBehavior(new PartyOrdersBehavior());
-            // starter.AddBehavior(new CivilWarBehavior());
-            // starter.AddBehavior(new ReligiousToleranceBehavior());
+            starter.AddBehavior(new CivilWarBehavior());          // AI leadership challenges (Ch.16)
+            starter.AddBehavior(new ReligiousToleranceBehavior()); // realm faith policy + jizya (Ch.17)
 
             // Phase 8 — QoL systems
             // starter.AddBehavior(new TradeRouteBehavior());

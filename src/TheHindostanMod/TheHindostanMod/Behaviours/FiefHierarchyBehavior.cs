@@ -61,11 +61,19 @@ namespace TakhtyaTaboot
         public Hero GetLiege(Hero lord)
         {
             if (lord == null) return null;
+
+            // ONE canonical liege chain: FeudalTitlesBehavior.GetFeudalLiege honours the
+            // stored zamindar layer and explicit liege bonds. Before this delegation, tribute
+            // and the call-to-arms were computed from engine ownership alone, so the player
+            // was shown one liege on the hierarchy screen while paying and serving another.
+            Hero canonical = FeudalTitlesBehavior.Instance?.GetFeudalLiege(lord);
+            if (canonical != null) return canonical;
+
             Kingdom kingdom = lord.Clan?.Kingdom;
             if (kingdom == null) return null;
             if (lord == kingdom.Leader) return null; // the sovereign answers to none
 
-            // A village-only holder answers to whoever holds the bound town/castle.
+            // Fallback (feudal layer not available): engine-derived resolution as before.
             var fiefs = GetFiefs(lord);
             if (fiefs.Count > 0 && fiefs.All(s => s.IsVillage))
             {
@@ -107,6 +115,11 @@ namespace TakhtyaTaboot
         {
             if (settlement == null || newHolder == null) return;
             ChangeOwnerOfSettlementAction.ApplyByGift(settlement, newHolder);
+
+            // A village grant must also register in the feudal layer, or GetTier/hierarchy
+            // would show the holder as an unlanded noble while the tax code charged for it.
+            if (settlement.IsVillage)
+                FeudalTitlesBehavior.Instance?.AssignZamindar(settlement, newHolder);
 
             if (newHolder == Hero.MainHero)
             {
@@ -268,9 +281,13 @@ namespace TakhtyaTaboot
 
         private int ComputeSeasonalTax(Hero lord)
         {
+            // Villages: tribute owed UP scales with hearth (see VillageFiefMath) — the
+            // village COFFER (VillageDevelopmentBehavior) is what the fief yields DOWN,
+            // so a maintained village nets its zamindar a positive income.
             float baseSum = 0f;
             foreach (Settlement s in GetFiefs(lord))
-                baseSum += s.IsTown ? 600f : s.IsCastle ? 300f : 120f;
+                baseSum += s.IsTown ? 600f : s.IsCastle ? 300f
+                    : Util.VillageFiefMath.SeasonalTributeForVillage(s.Village?.Hearth ?? 0f);
 
             // A firm emperor collects in full; a weakened one cannot reach into the provinces.
             float authorityRate = 1f;

@@ -142,17 +142,22 @@ namespace TakhtyaTaboot
             { Notify($"The court expects {ClaimInfluenceCost} influence to process the grant.", true); return; }
 
             Kingdom k = Clan.PlayerClan.Kingdom;
-            ChangeClanInfluenceAction.Apply(Clan.PlayerClan, -ClaimInfluenceCost);
 
             if (villageZamindari)
             {
-                FeudalTitlesBehavior.Instance?.AssignZamindar(target, Hero.MainHero);
+                // Seat FIRST; charge and proclaim only if the seat took. AssignZamindar can
+                // legitimately refuse (mercenary service, rank gate) — the old order spent the
+                // influence and announced a grant that never happened.
+                if (FeudalTitlesBehavior.Instance?.AssignZamindar(target, Hero.MainHero) != true)
+                { Notify("The grant could not be sealed — the court finds you ineligible to hold land.", true); return; }
+                ChangeClanInfluenceAction.Apply(Clan.PlayerClan, -ClaimInfluenceCost);
                 RoyalFarmaan.FromRuler(k, "Your First Fief",
                     $"As a {M.GetTitle(Clan.PlayerClan)}, you are granted the zamindari of {target.Name}. Hold it well — " +
                     "rise in mansab, and greater fiefs will follow.", "I am honoured");
             }
             else
             {
+                ChangeClanInfluenceAction.Apply(Clan.PlayerClan, -ClaimInfluenceCost);
                 Hero sovereign = k?.Leader;
                 ChangeOwnerOfSettlementAction.ApplyByGift(target, Hero.MainHero);
                 if (sovereign != null && sovereign != Hero.MainHero)

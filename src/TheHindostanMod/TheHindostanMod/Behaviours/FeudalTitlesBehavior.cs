@@ -39,15 +39,78 @@ namespace TakhtyaTaboot
         private Dictionary<string, string> _liegeOverride = new Dictionary<string, string>();
         private int _lastSummonDay = -100;
         private const int SummonCooldownDays = 21;
+        private const int LiegeChainDepthCap = 16; // override chains are short; anything deeper is a bug
+
+        // ── Derived state (never serialized; rebuilt from _zamindar on load/launch) ──
+        // Reverse index heroId -> villageIds and a settlement lookup, because the naive
+        // forms (Values.Contains, Settlement.All.FirstOrDefault per village) are O(n)/O(n·m)
+        // and sit inside the hierarchy screen's recursion and the weekly assignment pass.
+        private readonly Dictionary<string, List<string>> _villagesOf = new Dictionary<string, List<string>>();
+        private Dictionary<string, Settlement> _settlementById;
+
+        private Settlement SettlementById(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return null;
+            if (_settlementById == null)
+            {
+                _settlementById = new Dictionary<string, Settlement>();
+                foreach (Settlement s in Settlement.All)
+                    _settlementById[s.StringId] = s;
+            }
+            return _settlementById.TryGetValue(id, out Settlement found) ? found : null;
+        }
+
+        private void RebuildIndexes()
+        {
+            _villagesOf.Clear();
+            foreach (var kv in _zamindar)
+            {
+                if (string.IsNullOrEmpty(kv.Value)) continue;
+                if (!_villagesOf.TryGetValue(kv.Value, out List<string> list))
+                    _villagesOf[kv.Value] = list = new List<string>();
+                list.Add(kv.Key);
+            }
+        }
+
+        // ALL writes to _zamindar go through these two, so the reverse index never drifts.
+        private void SetZamindarEntry(string villageId, string heroId)
+        {
+            if (string.IsNullOrEmpty(villageId) || string.IsNullOrEmpty(heroId)) return;
+            RemoveZamindarEntry(villageId);
+            _zamindar[villageId] = heroId;
+            if (!_villagesOf.TryGetValue(heroId, out List<string> list))
+                _villagesOf[heroId] = list = new List<string>();
+            if (!list.Contains(villageId)) list.Add(villageId);
+        }
+
+        private void RemoveZamindarEntry(string villageId)
+        {
+            if (string.IsNullOrEmpty(villageId)) return;
+            if (!_zamindar.TryGetValue(villageId, out string prev)) return;
+            _zamindar.Remove(villageId);
+            if (!string.IsNullOrEmpty(prev) && _villagesOf.TryGetValue(prev, out List<string> list))
+            {
+                list.Remove(villageId);
+                if (list.Count == 0) _villagesOf.Remove(prev);
+            }
+        }
 
         public override void RegisterEvents()
         {
             Instance = this;
             CampaignEvents.OnSessionLaunchedEvent.AddNonSerializedListener(this, OnSessionLaunched);
-            CampaignEvents.OnNewGameCreatedEvent.AddNonSerializedListener(this, OnNewGame);
+            // No OnNewGameCreated assignment: AssignAllVillages walks Settlement.All and notables
+            // while the engine is still creating them on parallel threads (see Util/WorldGen.cs);
+            // OnSessionLaunched runs it safely a moment later.
             CampaignEvents.WeeklyTickEvent.AddNonSerializedListener(this, () => Util.TYTLog.Guard("FeudalTitles.WeeklyTick", OnWeeklyTick));
             CampaignEvents.HeroKilledEvent.AddNonSerializedListener(this, OnHeroKilled);
             CampaignEvents.OnClanChangedKingdomEvent.AddNonSerializedListener(this, OnClanChangedKingdom);
+            // Pruning hooks: without these, _zamindar/_liegeOverride entries for destroyed
+            // clans/kingdoms and conquered seats accumulated forever (and were re-serialized
+            // into every save), while reads papered over them lazily.
+            CampaignEvents.OnClanDestroyedEvent.AddNonSerializedListener(this, OnClanDestroyed);
+            CampaignEvents.KingdomDestroyedEvent.AddNonSerializedListener(this, OnKingdomDestroyed);
+            CampaignEvents.OnSettlementOwnerChangedEvent.AddNonSerializedListener(this, OnOwnerChanged);
         }
 
         // ── Village levies: every zamindar commands a small body of men ─────────────
@@ -71,49 +134,63 @@ namespace TakhtyaTaboot
         }
 
         public bool IsVillageZamindar(Hero hero)
-            => hero != null && _zamindar.Values.Contains(hero.StringId);
+            => hero != null && _villagesOf.ContainsKey(hero.StringId);
 
         // Directly seat a hero (incl. the player) as a village's zamindar — used by the
         // career-progression "claim your first fief" path. Auto-fill won't displace a
         // living assigned lord, so a player zamindar persists.
-        public void AssignZamindar(Settlement village, Hero hero)
+        //
+        // Returns TRUE only if the seat actually took. Callers that charge influence or
+        // announce a grant MUST check this — the old void version silently no-oped on the
+        // mercenary guard while ClaimFief still spent influence and proclaimed success.
+        public bool AssignZamindar(Settlement village, Hero hero)
         {
-            if (village == null || !village.IsVillage || hero == null) return;
+            if (village == null || !village.IsVillage || hero == null) return false;
             // Mercenaries hold no land — they serve for pay, not for fiefs.
-            if (hero == Hero.MainHero && (Clan.PlayerClan?.IsUnderMercenaryService ?? false)) return;
+            if (hero == Hero.MainHero && (Clan.PlayerClan?.IsUnderMercenaryService ?? false)) return false;
+            // A LORD must hold the rank for a village (Mansabdar-e-Sad or better); local
+            // notables sit outside the mansab ladder and are exempt.
+            if (hero.IsLord && hero.Clan != null
+                && MansabdariBehavior.Instance?.CanHold(hero.Clan, village) == false) return false;
 
-            _zamindar[village.StringId] = hero.StringId;
+            SetZamindarEntry(village.StringId, hero.StringId);
 
             // The PLAYER's zamindari is a real village fief: it then shows among the clan's
             // holdings (clan management screen), names the player as the village's owner in
             // the encyclopedia, and can be administered and developed through the fief menu.
-            // AI zamindars remain a flavour layer over a local notable, with no transfer.
-            if (hero == Hero.MainHero && village.OwnerClan != Clan.PlayerClan)
+            // AI zamindars remain a stored layer by default (engine ownership for AI distorts
+            // fief votes/income and is reverted by conquest of the bound seat); the
+            // AiZamindarEngineOwnership tunable exists to experiment with the alternative.
+            bool wantsEngineOwnership = hero == Hero.MainHero
+                || (Config.Tune.AiZamindarEngineOwnership && hero.IsLord && hero.Clan != null);
+            if (wantsEngineOwnership && village.OwnerClan != hero.Clan)
             {
                 try
                 {
                     ChangeOwnerOfSettlementAction.ApplyByGift(village, hero);
-                    if (village.OwnerClan == Clan.PlayerClan)
-                        Util.TYTLog.Info($"AssignZamindar: {village.Name} is now a player-owned village fief.");
+                    if (village.OwnerClan == hero.Clan)
+                        Util.TYTLog.Info($"AssignZamindar: {village.Name} is now a real village fief of {hero.Name}.");
                     else
                         Util.TYTLog.Warn($"AssignZamindar: gift of {village.Name} did not transfer ownership " +
                                          $"(still {village.OwnerClan?.Name?.ToString() ?? "unowned"}). " +
-                                         "Player can still oversee it via the feudal layer.");
+                                         "The holder can still oversee it via the feudal layer.");
                 }
                 catch (Exception e) { Util.TYTLog.Error($"AssignZamindar: ApplyByGift({village.Name}) threw", e); }
             }
+            return true;
         }
 
+        // Ordered by StringId so every "which village comes first" decision (liege seat,
+        // bound realm) is deterministic rather than at the mercy of dictionary order.
         public List<Settlement> GetVillagesLordedBy(Hero hero)
         {
             var result = new List<Settlement>();
-            if (hero == null) return result;
-            foreach (var kv in _zamindar)
-                if (kv.Value == hero.StringId)
-                {
-                    Settlement s = Settlement.All.FirstOrDefault(x => x.StringId == kv.Key);
-                    if (s != null) result.Add(s);
-                }
+            if (hero == null || !_villagesOf.TryGetValue(hero.StringId, out List<string> ids)) return result;
+            foreach (string id in ids.OrderBy(x => x, StringComparer.Ordinal))
+            {
+                Settlement s = SettlementById(id);
+                if (s != null) result.Add(s);
+            }
             return result;
         }
 
@@ -127,6 +204,11 @@ namespace TakhtyaTaboot
             {
                 if (hero.Clan.Settlements.Any(s => s.IsTown)) return "Town Lord";
                 if (hero.Clan.Settlements.Any(s => s.IsCastle)) return "Castle Lord";
+                // Engine ownership counts too: a clan that really owns a village (cheat /
+                // GrantFief path) is a zamindar even if no dict entry was ever written —
+                // otherwise the display said "Unlanded Noble" while the tax code charged
+                // for the village.
+                if (hero == hero.Clan.Leader && hero.Clan.Settlements.Any(s => s.IsVillage)) return "Village Zamindar";
             }
             if (IsVillageZamindar(hero)) return "Village Zamindar";
             if (hero.IsLord && k != null) return "Unlanded Noble";
@@ -160,11 +242,37 @@ namespace TakhtyaTaboot
             return liege;
         }
 
-        public void SetLiege(Hero hero, Hero liege)
+        // Returns false when the bond would close a cycle (A answers to B answers to A):
+        // a cycled pair is unreachable from the sovereign in the hierarchy tree's top-down
+        // walk, so both nobles simply VANISHED from the hierarchy screen.
+        public bool SetLiege(Hero hero, Hero liege)
         {
-            if (hero == null) return;
-            if (liege == null) _liegeOverride.Remove(hero.StringId);
-            else _liegeOverride[hero.StringId] = liege.StringId;
+            if (hero == null) return false;
+            if (liege == null) { _liegeOverride.Remove(hero.StringId); return true; }
+            if (liege == hero) return false;
+            if (ChainReaches(liege, hero))
+            {
+                Util.TYTLog.Warn($"SetLiege: refused {hero.Name} -> {liege.Name}; it would close a liege cycle.");
+                return false;
+            }
+            _liegeOverride[hero.StringId] = liege.StringId;
+            return true;
+        }
+
+        // Walk the OVERRIDE chain upward from 'from'; true if it reaches 'target'.
+        // Raw storage on purpose (not GetLiegeOverride): a half-invalid stored entry must
+        // still count for cycle detection or the reconcile pass could resurrect a loop.
+        private bool ChainReaches(Hero from, Hero target)
+        {
+            var visited = new HashSet<string>();
+            string cur = from?.StringId;
+            for (int depth = 0; depth < LiegeChainDepthCap && !string.IsNullOrEmpty(cur); depth++)
+            {
+                if (cur == target?.StringId) return true;
+                if (!visited.Add(cur)) return false; // pre-existing loop not involving target
+                if (!_liegeOverride.TryGetValue(cur, out cur)) return false;
+            }
+            return false;
         }
 
         // Who a hero answers to in OUR feudal hierarchy.
@@ -191,13 +299,179 @@ namespace TakhtyaTaboot
         }
 
         // ── Auto-assignment ─────────────────────────────────────────────────────────
-        private void OnNewGame(CampaignGameStarter starter) => AssignAllVillages();
         private void OnSessionLaunched(CampaignGameStarter starter)
         {
+            _settlementById = null; // new session, new settlement set
+            RebuildIndexes();
+            Reconcile();
             AssignAllVillages();
             AddSummonMenus(starter);
         }
-        private void OnWeeklyTick() { AssignAllVillages(); EnsurePlayerPlacement(); }
+        private void OnWeeklyTick() { Reconcile(); GrantVillagesToUnlandedLords(); AssignAllVillages(); EnsurePlayerPlacement(); }
+
+        // The court seats unlanded nobles of sufficient mansab in villages of their realm
+        // (over a mere notable, never over another lord) — the AI half of "villages are
+        // fiefs": AI lords climb the same first rung the player does. One grant per realm
+        // per week keeps the transition gentle.
+        private void GrantVillagesToUnlandedLords()
+        {
+            foreach (Kingdom k in Kingdom.All.Where(x => !x.IsEliminated))
+            {
+                Hero candidate = k.Clans
+                    .Where(c => !c.IsEliminated && !c.IsUnderMercenaryService && c.Leader != null
+                                && c.Leader != Hero.MainHero && c.Leader != k.Leader
+                                && !c.Settlements.Any()
+                                && (MansabdariBehavior.Instance?.GetRankIndex(c) ?? 0) >= 1
+                                && GetVillagesLordedBy(c.Leader).Count == 0)
+                    .OrderByDescending(c => MansabdariBehavior.Instance?.GetRankIndex(c) ?? 0)
+                    .ThenByDescending(c => c.Renown)
+                    .Select(c => c.Leader)
+                    .FirstOrDefault();
+                if (candidate == null) continue;
+
+                Settlement seat = Settlement.All
+                    .Where(s => s.IsVillage && s.MapFaction == k)
+                    .Where(s => { Hero cur = GetVillageLord(s); return cur == null || !cur.IsLord; })
+                    .OrderBy(s => s.StringId, StringComparer.Ordinal)
+                    .FirstOrDefault();
+                if (seat == null) continue;
+
+                if (GrantVillageToLord(seat, candidate))
+                    Util.TYTLog.Info($"Court grant: {candidate.Name} seated as zamindar of {seat.Name} ({k.Name}).");
+            }
+        }
+
+        // ── Weekly reconciliation ────────────────────────────────────────────────────
+        // Validates every stored entry so the layer can never drift from the live world:
+        // dead/vanished zamindars, lords whose village left their realm, overrides whose
+        // liege died/defected/lost his seat, and liege cycles are all scrubbed here.
+        private void Reconcile()
+        {
+            // 1. Zamindar seats.
+            foreach (string villageId in _zamindar.Keys.ToList())
+            {
+                Settlement village = SettlementById(villageId);
+                if (village == null || !village.IsVillage) { RemoveZamindarEntry(villageId); continue; }
+
+                string heroId = _zamindar[villageId];
+                Hero holder = Hero.AllAliveHeroes.FirstOrDefault(h => h.StringId == heroId);
+                if (holder == null) { RemoveZamindarEntry(villageId); continue; } // refilled by AssignAllVillages
+
+                // A LORD zamindar whose village now sits in a foreign realm has lost it;
+                // local notables persist under conquest (they are of the village, not the realm).
+                if (holder.IsLord)
+                {
+                    Kingdom villageRealm = village.MapFaction as Kingdom;
+                    Kingdom holderRealm = holder.Clan?.Kingdom;
+                    if (villageRealm != null && villageRealm != holderRealm)
+                    {
+                        RemoveZamindarEntry(villageId);
+                        Hero replacement = ChooseZamindar(village, holder);
+                        if (replacement != null) SetZamindarEntry(villageId, replacement.StringId);
+                        if (holder == Hero.MainHero)
+                            Notify($"{village.Name} has passed out of your realm; your zamindari there is forfeit.", true);
+                    }
+                }
+            }
+
+            // 2. Liege overrides: hero and liege alive, same realm, liege still landed.
+            //    (GetLiegeOverride validates lazily on read; this prunes the STORAGE so a
+            //    stale bond cannot silently reactivate when conditions realign.)
+            foreach (string heroId in _liegeOverride.Keys.ToList())
+            {
+                Hero hero = Hero.AllAliveHeroes.FirstOrDefault(h => h.StringId == heroId);
+                Hero liege = hero == null ? null
+                    : Hero.AllAliveHeroes.FirstOrDefault(h => h.StringId == _liegeOverride[heroId]);
+                if (hero == null || liege == null || liege == hero
+                    || liege.Clan?.Kingdom == null || liege.Clan.Kingdom != hero.Clan?.Kingdom
+                    || !HoldsTownOrCastle(liege)
+                    || HoldsTownOrCastle(hero)) // a lord with his own seat answers to the sovereign, not an old bond
+                { _liegeOverride.Remove(heroId); continue; }
+            }
+
+            // 3. Cycle scrub (pre-existing loops from old saves; SetLiege refuses new ones).
+            foreach (string heroId in _liegeOverride.Keys.ToList())
+            {
+                Hero hero = Hero.AllAliveHeroes.FirstOrDefault(h => h.StringId == heroId);
+                Hero liege = hero == null ? null
+                    : Hero.AllAliveHeroes.FirstOrDefault(h => h.StringId == _liegeOverride[heroId]);
+                if (hero != null && liege != null && ChainReaches(liege, hero))
+                {
+                    Util.TYTLog.Warn($"Reconcile: broke a liege cycle at {hero.Name} -> {liege.Name}.");
+                    _liegeOverride.Remove(heroId);
+                }
+            }
+        }
+
+        private void OnClanDestroyed(Clan clan)
+        {
+            if (clan == null) return;
+            var memberIds = new HashSet<string>(clan.Heroes.Where(h => h != null).Select(h => h.StringId));
+            foreach (string villageId in _zamindar.Keys.ToList())
+                if (memberIds.Contains(_zamindar[villageId]))
+                {
+                    RemoveZamindarEntry(villageId);
+                    Settlement village = SettlementById(villageId);
+                    Hero replacement = village != null ? ChooseZamindar(village, null) : null;
+                    if (replacement != null) SetZamindarEntry(villageId, replacement.StringId);
+                }
+            foreach (string heroId in _liegeOverride.Keys.ToList())
+                if (memberIds.Contains(heroId) || memberIds.Contains(_liegeOverride[heroId]))
+                    _liegeOverride.Remove(heroId);
+        }
+
+        private void OnKingdomDestroyed(Kingdom kingdom)
+        {
+            // Realm gone: every bond anchored inside it is void. Zamindar seats survive
+            // (villages and their notables outlive the realm); Reconcile reseats lord-zamindars.
+            if (kingdom == null) return;
+            foreach (string heroId in _liegeOverride.Keys.ToList())
+            {
+                Hero liege = Hero.AllAliveHeroes.FirstOrDefault(h => h.StringId == _liegeOverride[heroId]);
+                if (liege == null || liege.Clan?.Kingdom == null || liege.Clan.Kingdom == kingdom)
+                    _liegeOverride.Remove(heroId);
+            }
+        }
+
+        // A town/castle changing hands across realms reseats the LORD zamindars of its bound
+        // villages (a foreign lord cannot keep lording a village inside the conqueror's realm);
+        // notable zamindars stay — the local gentry bends to whoever holds the seat.
+        private void OnOwnerChanged(Settlement s, bool openToClaim, Hero newOwner, Hero oldOwner, Hero capturer,
+            ChangeOwnerOfSettlementAction.ChangeOwnerOfSettlementDetail detail)
+        {
+            if (!Util.WorldGen.Ready) return; // skip the parallel world-gen distribution (see Util/WorldGen.cs)
+            if (s == null) return;
+
+            if (s.IsVillage)
+            {
+                // The village itself was granted/taken through the ENGINE (cheat, GrantFief,
+                // conquest side-effect): keep the feudal layer in step with reality.
+                Hero engineLord = newOwner?.Clan?.Leader ?? newOwner;
+                Hero current = GetVillageLord(s);
+                if (engineLord != null && engineLord.IsLord && current != engineLord
+                    && newOwner?.Clan != null && s.OwnerClan == newOwner.Clan)
+                    SetZamindarEntry(s.StringId, engineLord.StringId);
+                return;
+            }
+
+            if (!s.IsTown && !s.IsCastle) return;
+            Kingdom newRealm = newOwner?.Clan?.Kingdom;
+            Kingdom oldRealm = oldOwner?.Clan?.Kingdom;
+            if (newRealm == oldRealm || s.Town?.Villages == null) return;
+
+            foreach (Village v in s.Town.Villages)
+            {
+                Settlement vs = v?.Settlement;
+                Hero holder = vs != null ? GetVillageLord(vs) : null;
+                if (holder == null || !holder.IsLord) continue;
+                if (holder.Clan?.Kingdom == newRealm) continue; // his realm took the seat — he keeps it
+                RemoveZamindarEntry(vs.StringId);
+                Hero replacement = ChooseZamindar(vs, holder);
+                if (replacement != null) SetZamindarEntry(vs.StringId, replacement.StringId);
+                if (holder == Hero.MainHero)
+                    Notify($"{s.Name} has fallen, and with it your zamindari of {vs.Name}.", true);
+            }
+        }
 
         // ── Call your vassals to war (from a town or castle you hold) ────────────────
         private void AddSummonMenus(CampaignGameStarter starter)
@@ -271,7 +545,7 @@ namespace TakhtyaTaboot
                 if (!s.IsVillage) continue;
                 if (GetVillageLord(s) != null) continue; // already held by a living lord
                 Hero pick = ChooseZamindar(s, null);
-                if (pick != null) _zamindar[s.StringId] = pick.StringId;
+                if (pick != null) SetZamindarEntry(s.StringId, pick.StringId);
             }
         }
 
@@ -297,11 +571,11 @@ namespace TakhtyaTaboot
                 Hero successor = ChooseZamindar(village, victim);
                 if (successor != null)
                 {
-                    _zamindar[village.StringId] = successor.StringId;
+                    SetZamindarEntry(village.StringId, successor.StringId);
                     if (village.Village?.Bound?.OwnerClan == Clan.PlayerClan)
                         Notify($"The zamindar of {village.Name} has died; {successor.Name} succeeds to the village.", false);
                 }
-                else _zamindar.Remove(village.StringId);
+                else RemoveZamindarEntry(village.StringId);
             }
         }
 
@@ -310,6 +584,26 @@ namespace TakhtyaTaboot
             ChangeKingdomAction.ChangeKingdomActionDetail detail, bool showNotification)
         {
             if (!Util.WorldGen.Ready) return; // skip the parallel world-gen distribution (see Util/WorldGen.cs)
+            if (clan == null) return;
+
+            // ANY clan changing realm (not just the player, as before): bonds anchored in the
+            // old realm dissolve, and its lords lose village seats left behind in it.
+            var memberIds = new HashSet<string>(clan.Heroes.Where(h => h != null).Select(h => h.StringId));
+            foreach (string heroId in _liegeOverride.Keys.ToList())
+            {
+                bool heroMoved = memberIds.Contains(heroId);
+                bool liegeMoved = memberIds.Contains(_liegeOverride[heroId]);
+                if (heroMoved || liegeMoved) _liegeOverride.Remove(heroId);
+            }
+            foreach (Hero lord in clan.Heroes.Where(h => h != null && h.IsLord))
+                foreach (Settlement village in GetVillagesLordedBy(lord).ToList())
+                    if (village.MapFaction as Kingdom != newKingdom)
+                    {
+                        RemoveZamindarEntry(village.StringId);
+                        Hero replacement = ChooseZamindar(village, lord);
+                        if (replacement != null) SetZamindarEntry(village.StringId, replacement.StringId);
+                    }
+
             if (clan == Clan.PlayerClan) EnsurePlayerPlacement();
         }
 
@@ -327,7 +621,7 @@ namespace TakhtyaTaboot
             Hero existing = GetLiegeOverride(Hero.MainHero);
             Hero liege = existing ?? ChooseLiege(k);
             if (liege == null || liege == Hero.MainHero) return;
-            if (existing == null) SetLiege(Hero.MainHero, liege);
+            if (existing == null && !SetLiege(Hero.MainHero, liege)) return; // refused (would cycle)
 
             bool hasVillage = GetVillagesLordedBy(Hero.MainHero).Count > 0 || pc.Settlements.Any(s => s.IsVillage);
             Settlement granted = hasVillage ? null : GrantVillageUnder(liege);
@@ -371,10 +665,22 @@ namespace TakhtyaTaboot
                     Settlement vs = v?.Settlement;
                     if (vs == null) continue;
                     if (GetVillageLord(vs) == Hero.MainHero) return vs; // already ours
-                    AssignZamindar(vs, Hero.MainHero);
-                    return vs;
+                    // Only report a village the seat actually TOOK — the old version returned
+                    // vs unconditionally, so a refused assignment was still announced as granted.
+                    if (AssignZamindar(vs, Hero.MainHero)) return vs;
                 }
             return null;
+        }
+
+        // Seat an AI LORD as zamindar of a village in his realm (the AI half of "villages are
+        // fiefs": unlanded nobles get real village seats). Returns true if the seat took.
+        public bool GrantVillageToLord(Settlement village, Hero lord)
+        {
+            if (village == null || !village.IsVillage || lord == null || !lord.IsLord) return false;
+            if (village.MapFaction as Kingdom != lord.Clan?.Kingdom) return false;
+            Hero current = GetVillageLord(village);
+            if (current != null && current.IsLord) return false; // never displace a seated lord
+            return AssignZamindar(village, lord);
         }
 
         // ── Player appointment / dismissal (with cost) ───────────────────────────────
@@ -435,7 +741,7 @@ namespace TakhtyaTaboot
             Hero previous = GetVillageLord(village);
             ChangeClanInfluenceAction.Apply(Clan.PlayerClan, -AppointInfluenceCost);
             Hero.MainHero.ChangeHeroGold(-AppointGoldCost);
-            _zamindar[village.StringId] = hero.StringId;
+            SetZamindarEntry(village.StringId, hero.StringId);
 
             ChangeRelationAction.ApplyRelationChangeBetweenHeroes(Hero.MainHero, hero, 10);
             if (previous != null && previous != hero)
@@ -458,8 +764,8 @@ namespace TakhtyaTaboot
             ChangeRelationAction.ApplyRelationChangeBetweenHeroes(Hero.MainHero, current, -10);
 
             Hero successor = ChooseZamindar(village, current);
-            if (successor != null) _zamindar[village.StringId] = successor.StringId;
-            else _zamindar.Remove(village.StringId);
+            if (successor != null) SetZamindarEntry(village.StringId, successor.StringId);
+            else RemoveZamindarEntry(village.StringId);
 
             Notify($"{current.Name} is stripped of the zamindari of {village.Name}." +
                    (successor != null ? $" {successor.Name} is raised in his place." : ""), false);
@@ -514,6 +820,9 @@ namespace TakhtyaTaboot
 
                 _liegeOverride = new Dictionary<string, string>();
                 for (int i = 0; i < lIds.Count && i < lVals.Count; i++) _liegeOverride[lIds[i]] = lVals[i];
+
+                _settlementById = null;
+                RebuildIndexes();
             }
         }
 

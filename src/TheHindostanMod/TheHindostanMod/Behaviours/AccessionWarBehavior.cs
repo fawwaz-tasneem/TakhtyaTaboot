@@ -82,6 +82,26 @@ namespace TakhtyaTaboot
             }
             RevoltCascadeBehavior.Instance?.EnsureAtWar(rebel, kingdom);
 
+            // Soldiers desert a lord who turns on his superior (Ch.16) — same rule the AI
+            // challengers face in CivilWarBehavior.
+            float desertion = Util.CivilWarMath.DesertionRate(
+                MansabdariBehavior.Instance?.GetRankIndex(Clan.PlayerClan) ?? 0, MansabdariBehavior.MaxRankIndex + 1);
+            int deserted = 0;
+            if (desertion > 0f && MobileParty.MainParty != null)
+            {
+                var roster = MobileParty.MainParty.MemberRoster;
+                int toRemove = (int)(roster.TotalRegulars * desertion);
+                for (int i = roster.Count - 1; i >= 0 && toRemove > 0; i--)
+                {
+                    var e = roster.GetElementCopyAtIndex(i);
+                    if (e.Character == null || e.Character.IsHero) continue;
+                    int take = Math.Min(e.Number, toRemove);
+                    if (take > 0) { roster.AddToCounts(e.Character, -take); toRemove -= take; deserted += take; }
+                }
+                if (deserted > 0)
+                    Notify($"{deserted} of your men will not raise a sword against the Emperor — they slip away in the night.", true);
+            }
+
             _kingdomId = kingdom.StringId;
             _rebelKingdomId = rebel.StringId;
             _emperorId = emperor.StringId;
@@ -139,7 +159,9 @@ namespace TakhtyaTaboot
         private void OnHeroKilled(Hero victim, Hero killer, KillCharacterAction.KillCharacterActionDetail detail, bool showNotification)
         {
             if (!_active) return;
-            if (victim == Emperor) ResolveWin("the Emperor has fallen");
+            // Compare by id: the Emperor property resolves through AllAliveHeroes, which no
+            // longer contains the victim at this point, so `victim == Emperor` never matched.
+            if (victim != null && victim.StringId == _emperorId) ResolveWin("the Emperor has fallen");
             else if (victim == Hero.MainHero) EndWar(); // dead challengers make no kings
         }
 
@@ -170,7 +192,11 @@ namespace TakhtyaTaboot
             if (orig == null) return;
             try
             {
-                if (rebel != null && rebel.IsAtWarWith(orig)) MakePeaceAction.Apply(rebel, orig);
+                // WithInternalPeace: our own NoThroneWarPeacePatch blocks MakePeaceAction on
+                // hind_rebel_* kingdoms; without the scope the peace silently never happens
+                // and the two realms stay at war forever.
+                if (rebel != null && rebel.IsAtWarWith(orig))
+                    Util.ThroneWar.WithInternalPeace(() => MakePeaceAction.Apply(rebel, orig));
                 if (rebel != null)
                     foreach (Clan c in rebel.Clans.ToList())
                         try { ChangeKingdomAction.ApplyByJoinToKingdom(c, orig, default(CampaignTime), false); } catch { }
@@ -194,7 +220,8 @@ namespace TakhtyaTaboot
             EndWar();
             try
             {
-                if (rebel != null && orig != null && rebel.IsAtWarWith(orig)) MakePeaceAction.Apply(rebel, orig);
+                if (rebel != null && orig != null && rebel.IsAtWarWith(orig))
+                    Util.ThroneWar.WithInternalPeace(() => MakePeaceAction.Apply(rebel, orig)); // see ResolveWin note
                 if (rebel != null && orig != null)
                     foreach (Clan c in rebel.Clans.ToList())
                         try { ChangeKingdomAction.ApplyByJoinToKingdom(c, orig, default(CampaignTime), false); } catch { }

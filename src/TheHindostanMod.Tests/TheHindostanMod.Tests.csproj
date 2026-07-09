@@ -36,6 +36,12 @@
     <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\MansabTenureMath.cs" Link="Linked\MansabTenureMath.cs" />
     <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\SuccessionLawMath.cs" Link="Linked\SuccessionLawMath.cs" />
     <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\WarAimMath.cs" Link="Linked\WarAimMath.cs" />
+    <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\VillageFiefMath.cs" Link="Linked\VillageFiefMath.cs" />
+    <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\NazranaMath.cs" Link="Linked\NazranaMath.cs" />
+    <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\CivilWarMath.cs" Link="Linked\CivilWarMath.cs" />
+    <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\ToleranceMath.cs" Link="Linked\ToleranceMath.cs" />
+    <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\CourtFactionMath.cs" Link="Linked\CourtFactionMath.cs" />
+    <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\SeasonMath.cs" Link="Linked\SeasonMath.cs" />
   </ItemGroup>
 
 </Project>

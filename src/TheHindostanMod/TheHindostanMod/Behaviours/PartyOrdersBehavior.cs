@@ -160,7 +160,10 @@ namespace TakhtyaTaboot
             if (IsVassalParty(p))
             {
                 Hero leader = p.LeaderHero;
-                int rel = CharacterRelationManager.GetHeroRelation(Hero.MainHero, leader);
+                // HIS opinion of you, not just clan-book relation: oaths, favours and
+                // grudges in the personal ledger sway whether he rides at your word.
+                float rel = OpinionBehavior.Instance?.EffectiveOpinion(leader, Hero.MainHero)
+                            ?? CharacterRelationManager.GetHeroRelation(Hero.MainHero, leader);
                 float auth = Hero.MainHero.Clan?.Kingdom?.Leader == Hero.MainHero
                     ? (ImperialAuthorityBehavior.Instance?.GetAuthority(Hero.MainHero.Clan.Kingdom) ?? 50f) : 0f;
                 bool accept = rel + auth / 2f + MBRandom.RandomInt(-20, 20) >= 20f;

@@ -476,12 +476,12 @@ namespace TakhtyaTaboot
         // ── Call your vassals to war (from a town or castle you hold) ────────────────
         private void AddSummonMenus(CampaignGameStarter starter)
         {
-            foreach (string root in new[] { "town", "castle" })
-                starter.AddGameMenuOption(root, "hindostan_summon_levies_" + root,
-                    "{=!}Summon your vassals' levies to war",
-                    args => { args.optionLeaveType = GameMenuOption.LeaveType.Recruit;
-                              return CanSummonHere(Settlement.CurrentSettlement, out string reason, args); },
-                    args => SummonLevies(Settlement.CurrentSettlement), false, 6);
+            // Lives under the consolidated court menu (CourtMenuBehavior).
+            starter.AddGameMenuOption(CourtMenuBehavior.MenuId, "hindostan_summon_levies",
+                "{=!}Summon your vassals' levies to war",
+                args => { args.optionLeaveType = GameMenuOption.LeaveType.Recruit;
+                          return CanSummonHere(Settlement.CurrentSettlement, out string reason, args); },
+                args => SummonLevies(Settlement.CurrentSettlement), false, 6);
         }
 
         private bool CanSummonHere(Settlement seat, out string reason, MenuCallbackArgs args)

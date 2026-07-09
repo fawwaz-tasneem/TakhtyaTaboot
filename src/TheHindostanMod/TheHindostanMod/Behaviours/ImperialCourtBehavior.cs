@@ -168,7 +168,8 @@ namespace TakhtyaTaboot
                 LegitimacyBehavior.Instance?.ModifyLegitimacy(Hero.MainHero, -3f, "neglecting the council");
                 RoyalFarmaan.FromRuler(k, "The Darbar Sits Empty",
                     "Too long has the imperial council gone unconvened. The nobles murmur that you neglect the rites of rule, " +
-                    "and your authority and legitimacy suffer for it. Convene the Darbar at your capital.", "I shall summon them");
+                    "and your authority and legitimacy suffer for it. Convene the Darbar at your capital.", "I shall summon them",
+                    dedupeKey: "darbar_cadence", priority: Util.FarmaanPriority.Routine, cooldownDays: ConveneIntervalDays());
             }
             else if (Clan.PlayerClan != null)
             {
@@ -400,16 +401,16 @@ namespace TakhtyaTaboot
 
         private void AddMenus(CampaignGameStarter starter)
         {
-            starter.AddGameMenuOption("town", "hindostan_convene_imperial", "{=!}Convene the imperial council (Darbar)",
+            // All court business lives under the consolidated court menu (CourtMenuBehavior).
+            starter.AddGameMenuOption(CourtMenuBehavior.MenuId, "hindostan_convene_imperial", "{=!}Convene the imperial council (Darbar)",
                 args => { args.optionLeaveType = GameMenuOption.LeaveType.Submenu; return CanConveneImperial(Settlement.CurrentSettlement); },
                 args => Convene(), false, 9);
 
-            foreach (string root in new[] { "town", "castle" })
-                starter.AddGameMenuOption(root, "hindostan_convene_lordly_" + root, "{=!}Convene your council",
-                    args => { args.optionLeaveType = GameMenuOption.LeaveType.Submenu; return CanConveneLordly(Settlement.CurrentSettlement); },
-                    args => Convene(), false, 9);
+            starter.AddGameMenuOption(CourtMenuBehavior.MenuId, "hindostan_convene_lordly", "{=!}Convene your council",
+                args => { args.optionLeaveType = GameMenuOption.LeaveType.Submenu; return CanConveneLordly(Settlement.CurrentSettlement); },
+                args => Convene(), false, 9);
 
-            starter.AddGameMenuOption("town", "hindostan_move_capital", "{=!}Seat the imperial capital here",
+            starter.AddGameMenuOption(CourtMenuBehavior.MenuId, "hindostan_move_capital", "{=!}Seat the imperial capital here",
                 args => { args.optionLeaveType = GameMenuOption.LeaveType.Manage;
                           Settlement s = Settlement.CurrentSettlement;
                           if (!IsRuler || s == null || !s.IsTown || s.OwnerClan != Clan.PlayerClan || GetCapital(PK) == s) return false;

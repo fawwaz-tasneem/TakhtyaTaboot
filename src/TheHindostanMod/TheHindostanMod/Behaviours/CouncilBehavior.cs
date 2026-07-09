@@ -230,7 +230,11 @@ namespace TakhtyaTaboot
                 case Post.Treasurer:     skill = h.GetSkillValue(DefaultSkills.Steward) + h.GetSkillValue(DefaultSkills.Trade); break;
                 default:                 skill = h.GetSkillValue(DefaultSkills.Roguery) + h.GetSkillValue(DefaultSkills.Scouting); break; // Spymaster
             }
-            float rel = holder != null ? CharacterRelationManager.GetHeroRelation(h, holder) : 0;
+            // The candidate's PERSONAL disposition toward the holder (oaths, favours,
+            // grudges), not just the clan ledger.
+            float rel = holder != null
+                ? OpinionBehavior.Instance?.EffectiveOpinion(h, holder) ?? CharacterRelationManager.GetHeroRelation(h, holder)
+                : 0f;
             return skill + rel * 2f;
         }
 
@@ -431,17 +435,16 @@ namespace TakhtyaTaboot
 
         private void AddMenus(CampaignGameStarter starter)
         {
-            // View / manage the council — available to anyone in a town or castle.
-            foreach (string root in new[] { "town", "castle" })
-                starter.AddGameMenuOption(root, "hindostan_council_" + root, "{=!}The Council (Darbar)",
-                    args => { args.optionLeaveType = GameMenuOption.LeaveType.Submenu; return true; },
-                    args => CouncilScreen.Open(), false, 5);
+            // View / manage the council. Lives under the consolidated court menu.
+            starter.AddGameMenuOption(CourtMenuBehavior.MenuId, "hindostan_council", "{=!}The Council (Darbar)",
+                args => { args.optionLeaveType = GameMenuOption.LeaveType.Submenu; return true; },
+                args => CouncilScreen.Open(), false, 5);
 
-            // The sovereign's Darbar of state — issue Royal Farmaans.
-            foreach (string root in new[] { "town", "castle" })
-                starter.AddGameMenuOption(root, "hindostan_darbar_" + root, "{=!}Hold court and issue decrees",
-                    args => { args.optionLeaveType = GameMenuOption.LeaveType.Submenu; return IsPlayerRuler(); },
-                    args => GameMenu.SwitchToMenu("hindostan_darbar"), false, 6);
+            // The sovereign's Darbar of state — issue Royal Farmaans. Lives under the
+            // consolidated court menu (CourtMenuBehavior).
+            starter.AddGameMenuOption(CourtMenuBehavior.MenuId, "hindostan_darbar_entry", "{=!}Hold court and issue decrees",
+                args => { args.optionLeaveType = GameMenuOption.LeaveType.Submenu; return IsPlayerRuler(); },
+                args => GameMenu.SwitchToMenu("hindostan_darbar"), false, 6);
 
             starter.AddGameMenu("hindostan_darbar", "{=!}{HINDOSTAN_DARBAR_TEXT}", DarbarInit);
             starter.AddGameMenuOption("hindostan_darbar", "darbar_decree", "{=!}Issue a Royal Farmaan of state",
@@ -455,7 +458,7 @@ namespace TakhtyaTaboot
                 args => CouncilScreen.Open());
             starter.AddGameMenuOption("hindostan_darbar", "darbar_leave", "{=!}Leave the Darbar",
                 args => { args.optionLeaveType = GameMenuOption.LeaveType.Leave; return true; },
-                args => GameMenu.SwitchToMenu(Settlement.CurrentSettlement != null && Settlement.CurrentSettlement.IsTown ? "town" : "castle"), true);
+                args => GameMenu.SwitchToMenu(CourtMenuBehavior.MenuId), true);
 
             starter.AddGameMenu("hindostan_darbar_decrees", "{=!}{HINDOSTAN_DECREE_TEXT}", DecreeInit);
             starter.AddGameMenuOption("hindostan_darbar_decrees", "decree_remit", "{=!}Proclaim a remission of taxes  (+legitimacy, -authority)",

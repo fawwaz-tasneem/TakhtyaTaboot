@@ -72,6 +72,17 @@ namespace TakhtyaTaboot
             TYTLog.WriteCrashReport($"AppDomain unhandled exception (terminating={e.IsTerminating})", ex);
         }
 
+        // ── UX / information-architecture charter ─────────────────────────────────────────
+        // Every feature names its surface BEFORE implementation, by this rule:
+        //   • Person-to-person acts (oaths, gifts, grievances, invitations) → DIALOGUE
+        //     (HindostanDialogsBehavior, hero_main_options).
+        //   • Place-bound acts (court business, decrees, works) → SETTLEMENT MENUS, all
+        //     town/castle entries consolidated under ONE "hindostan_court" submenu
+        //     (CourtMenuBehavior); villages keep their own hindostan_village menu.
+        //   • Realm overviews → GAUNTLET SCREENS (Council, Hierarchy).
+        //   • Events & decrees → FARMAANS: paused, deduped and digest-managed by
+        //     FarmaanDirectorBehavior (Util/FarmaanFlow rules).
+        //   • Ambient information → the message log (InformationManager), never a popup.
         protected override void OnGameStart(Game game, IGameStarter gameStarter)
         {
             base.OnGameStart(game, gameStarter);
@@ -86,6 +97,11 @@ namespace TakhtyaTaboot
             starter.AddBehavior(new Util.WorldGenGuardBehavior());
 
             starter.AddBehavior(new Util.SaveGuardBehavior());
+            starter.AddBehavior(new FarmaanDirectorBehavior()); // decree dedup/cooldowns + Court Circular digest
+            starter.AddBehavior(new CourtMenuBehavior());       // the ONE court submenu — must precede every behavior that adds options to it
+            starter.AddBehavior(new OpinionBehavior());         // personal opinion ledger (individuals, not clans)
+            starter.AddBehavior(new DynastyBehavior());         // dynasty registry, royal styles, cadet houses
+            starter.AddBehavior(new HindostanDialogsBehavior()); // the court dialogue pack
             if (Config.Tune.EnableDebugVerification)
                 starter.AddBehavior(new CultureVerificationBehavior()); // debug-only culture audit (MCM "Debug" group)
             starter.AddBehavior(new ReligionBehavior());

@@ -214,6 +214,38 @@ namespace TakhtyaTaboot.Config
             HintText = "The rains of the monsoon season mire armies on the march; the dry season quickens them.", Order = 0)]
         public bool MonsoonEnabled { get; set; } = true;
 
+        // ── Farmaans ─────────────────────────────────────────────────────────────────
+        [SettingPropertyGroup("Farmaans")]
+        [SettingPropertyBool("Farmaans pause the game", RequireRestart = false,
+            HintText = "Campaign time halts while a royal decree is on screen and resumes when it is dismissed.", Order = 0)]
+        public bool FarmaanPausesTime { get; set; } = true;
+
+        [SettingPropertyGroup("Farmaans")]
+        [SettingPropertyBool("Weekly Court Circular digest", RequireRestart = false,
+            HintText = "Routine court notices (stipends, summaries) are bundled into one weekly digest instead of separate popups.", Order = 1)]
+        public bool FarmaanDigest { get; set; } = true;
+
+        // ── Dynasty & cadet houses ───────────────────────────────────────────────────
+        [SettingPropertyGroup("Dynasty & Cadet Houses")]
+        [SettingPropertyInteger("Gold to charter a cadet house", 0, 200000, "0", RequireRestart = false,
+            HintText = "What it costs a house to establish an adult kinsman as the head of his own cadet house.", Order = 0)]
+        public int CadetGoldCost { get; set; } = 25000;
+
+        [SettingPropertyGroup("Dynasty & Cadet Houses")]
+        [SettingPropertyInteger("AI renown floor for cadet houses", 0, 5000, "0", RequireRestart = false,
+            HintText = "Only AI clans at or above this renown consider chartering a cadet house.", Order = 1)]
+        public int CadetAiRenownFloor { get; set; } = 900;
+
+        [SettingPropertyGroup("Dynasty & Cadet Houses")]
+        [SettingPropertyInteger("Maximum cadet houses (campaign-wide)", 0, 30, "0", RequireRestart = false,
+            HintText = "Upper bound on how many cadet houses may be founded across the whole campaign.", Order = 2)]
+        public int CadetMaxHouses { get; set; } = 8;
+
+        [SettingPropertyGroup("Dynasty & Cadet Houses")]
+        [SettingPropertyBool("Daughters may head cadet houses", RequireRestart = false,
+            HintText = "Allow adult daughters of the house to be chartered as cadet-house heads.", Order = 3)]
+        public bool CadetAllowFemale { get; set; } = false;
+
         // ── Debug ────────────────────────────────────────────────────────────────────
         [SettingPropertyGroup("Debug")]
         [SettingPropertyBool("Enable culture verification (debug)", RequireRestart = true,

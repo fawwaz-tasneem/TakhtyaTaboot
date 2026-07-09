@@ -98,7 +98,8 @@ namespace TakhtyaTaboot
                     if (k == Hero.MainHero?.Clan?.Kingdom)
                         RoyalFarmaan.FromRuler(k, "Unrest in the Provinces",
                             $"Word reaches the court that the country around {s.Name} seethes with discontent. " +
-                            "Left unchecked, it will boil over into open revolt.", "We are warned");
+                            "Left unchecked, it will boil over into open revolt.", "We are warned",
+                            dedupeKey: "unrest:" + s.StringId, priority: Util.FarmaanPriority.Routine, cooldownDays: 15);
                 }
                 if (after < WarnAt) _warned.Remove(s.StringId);
 

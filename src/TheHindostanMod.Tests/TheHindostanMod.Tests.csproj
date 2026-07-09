@@ -42,6 +42,8 @@
     <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\ToleranceMath.cs" Link="Linked\ToleranceMath.cs" />
     <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\CourtFactionMath.cs" Link="Linked\CourtFactionMath.cs" />
     <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\SeasonMath.cs" Link="Linked\SeasonMath.cs" />
+    <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\FarmaanFlow.cs" Link="Linked\FarmaanFlow.cs" />
+    <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\OpinionMath.cs" Link="Linked\OpinionMath.cs" />
   </ItemGroup>
 
 </Project>

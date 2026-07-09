@@ -361,14 +361,17 @@ namespace TakhtyaTaboot
             {
                 RoyalFarmaan.FromRuler(clan.Kingdom, "The Treasury Is Bare",
                     "The day for your mansab's stipend comes, but the imperial treasury cannot meet it. The court regrets the lapse.",
-                    "So it is");
+                    "So it is",
+                    dedupeKey: "stipend", priority: Util.FarmaanPriority.Routine, cooldownDays: 0);
                 return;
             }
             GiveGoldAction.ApplyBetweenCharacters(king, Hero.MainHero, pay, true);
+            // Routine, no cooldown: permanently a log line + Court Circular item, never a popup.
             RoyalFarmaan.FromRuler(clan.Kingdom, "A Stipend from the Treasury",
                 $"As is owed to your mansab of {Ranks[idx].Title}, the treasury disburses {pay} dinars toward the upkeep of " +
                 $"your {GetRequiredTroops(clan)}-man contingent.",
-                "I am grateful");
+                "I am grateful",
+                dedupeKey: "stipend", priority: Util.FarmaanPriority.Routine, cooldownDays: 0);
         }
 
         private static int QualifiedIndex(int sawar)

@@ -16,12 +16,9 @@ namespace TakhtyaTaboot.UI
 
         private void OnSessionLaunched(CampaignGameStarter starter)
         {
-            starter.AddGameMenuOption("town", "hindostan_hierarchy_town",
-                "{=!}Survey the imperial hierarchy",
-                args => { args.optionLeaveType = GameMenuOption.LeaveType.Submenu; return true; },
-                args => HierarchyScreen.Open(), false, 7);
-
-            starter.AddGameMenuOption("castle", "hindostan_hierarchy_castle",
+            // Lives under the consolidated court menu (CourtMenuBehavior), not the
+            // settlement root — one option, both settlement kinds.
+            starter.AddGameMenuOption(CourtMenuBehavior.MenuId, "hindostan_hierarchy",
                 "{=!}Survey the imperial hierarchy",
                 args => { args.optionLeaveType = GameMenuOption.LeaveType.Submenu; return true; },
                 args => HierarchyScreen.Open(), false, 7);

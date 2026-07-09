@@ -67,6 +67,16 @@ namespace TakhtyaTaboot.Config
         // Seasons
         public static bool MonsoonEnabled => S?.MonsoonEnabled ?? true;
 
+        // Farmaans (royal decrees)
+        public static bool FarmaanPausesTime => S?.FarmaanPausesTime ?? true;
+        public static bool FarmaanDigest => S?.FarmaanDigest ?? true;
+
+        // Dynasty & cadet houses
+        public static int CadetGoldCost => S?.CadetGoldCost ?? 25000;
+        public static int CadetAiRenownFloor => S?.CadetAiRenownFloor ?? 900;
+        public static int CadetMaxHouses => S?.CadetMaxHouses ?? 8;
+        public static bool CadetAllowFemale => S?.CadetAllowFemale ?? false;
+
         // Debug
         public static bool EnableDebugVerification => S?.EnableDebugVerification ?? false;
     }

@@ -399,7 +399,8 @@ namespace TakhtyaTaboot
                     RoyalFarmaan.Issue("The Realm Wearies of War", $"From the Imperial Council of {pk.Name}",
                         $"The war with {ok.Name} drags on and the realm grows weary. The council urges you to seek terms — " +
                         "press for what advantage your war score allows, or grant peace. Direct the war effort from any town or castle.",
-                        seal: null, primary: "I shall consider it");
+                        seal: null, primary: "I shall consider it",
+                        dedupeKey: "weary:" + id, cooldownDays: 30);
                 }
             }
 

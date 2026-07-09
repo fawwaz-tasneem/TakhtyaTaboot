@@ -307,7 +307,8 @@ namespace TakhtyaTaboot
                 $"will you send a commander with {men} men to drive them off, or ride to patrol the lands yourself?",
                 seal: "Sealed in haste",
                 primary: $"Send a commander with {men} men", onPrimary: () => DispatchRelief(s),
-                secondary: "I will see to it myself", onSecondary: () => SelfRelief(s));
+                secondary: "I will see to it myself", onSecondary: () => SelfRelief(s),
+                dedupeKey: "plea:" + s.StringId, cooldownDays: OverwhelmCooldown);
         }
 
         private void DispatchRelief(Settlement s)
@@ -458,6 +459,13 @@ namespace TakhtyaTaboot
                 Notify($"Bandits overrun the country around {s.Name}. Patrol soon or the village will wither.", true);
             else if (t >= 60f && MBRandom.RandomFloat < 0.25f)
                 Notify($"Banditry is rising around {s.Name}. Consider a patrol.", true);
+        }
+
+        // A word with the local gentry steadies the district (the dialogue pack's hook).
+        public void ReassureVillage(Settlement s)
+        {
+            if (s == null || !s.IsVillage) return;
+            _threat[s.StringId] = MathF.Max(0f, GetThreat(s) - 5f);
         }
 
         // ── Player actions ───────────────────────────────────────────────────────────

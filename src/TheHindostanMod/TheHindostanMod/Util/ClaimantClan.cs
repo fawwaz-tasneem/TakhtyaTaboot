@@ -85,29 +85,11 @@ namespace TakhtyaTaboot.Util
             catch (Exception e) { TYTLog.Error("CreateExileHouse failed", e); return null; }
         }
 
-        // CreateClan only registers an EMPTY shell — there is no InitializeClan in 1.3.x. The encyclopedia
-        // (and most systems) deref Leader/HomeSettlement/Banner, so every one must be set or the clan page
-        // native-crashes. Name/InformalName use non-public setters; Culture/Banner/SetInitialHomeSettlement
-        // are public engine methods. Caller moves heroes in and calls SetLeader.
+        // The shell recipe (name/banner/home/IsInitialized, every field the encyclopedia
+        // dereferences) now lives in Util.CadetHouse.BuildShell — the ONE clan factory —
+        // shared with the permanent cadet-house founding path. Behavior is unchanged.
         private static Clan BuildShell(string idPrefix, Hero head, CultureObject culture)
-        {
-            string id = idPrefix + head.StringId + "_" + (int)CampaignTime.Now.ToDays;
-            Clan clan = Clan.CreateClan(id);
-            if (clan == null) return null;
-
-            TextObject name = new TextObject("{=!}House of " + head.Name);
-            AccessTools.PropertySetter(typeof(Clan), "Name")?.Invoke(clan, new object[] { name });
-            AccessTools.PropertySetter(typeof(Clan), "InformalName")?.Invoke(clan, new object[] { name });
-            clan.Culture = culture ?? head.Culture ?? head.Clan?.Culture;
-            clan.Banner = Banner.CreateRandomClanBanner(MBRandom.RandomInt());
-
-            Settlement home = head.HomeSettlement ?? head.Clan?.HomeSettlement ?? head.Clan?.InitialHomeSettlement;
-            if (home != null) clan.SetInitialHomeSettlement(home);
-
-            if (!clan.IsInitialized)
-                AccessTools.PropertySetter(typeof(Clan), "IsInitialized")?.Invoke(clan, new object[] { true });
-            return clan;
-        }
+            => CadetHouse.BuildShell(idPrefix, head, culture);
 
         // Return every moved hero to its origin house and destroy the temp clan.
         public static void Dissolve(Clan temp)
@@ -149,14 +131,7 @@ namespace TakhtyaTaboot.Util
 
         private static int SafeCount(Clan c) { try { return c.Heroes?.Count ?? -1; } catch { return -1; } }
 
-        // The Hero.Clan setter is non-public; the engine setter is what maintains both clans' member
-        // lists, so we invoke it (not a raw field write) to keep invariants intact.
-        private static void MoveHero(Hero h, Clan clan)
-        {
-            if (h == null || clan == null || h.Clan == clan) return;
-            var setter = AccessTools.PropertySetter(typeof(Hero), "Clan");
-            if (setter != null) setter.Invoke(h, new object[] { clan });
-            else AccessTools.Field(typeof(Hero), "_clan")?.SetValue(h, clan);
-        }
+        // Hero moves go through the shared, invariant-preserving mover in Util.CadetHouse.
+        private static void MoveHero(Hero h, Clan clan) => CadetHouse.MoveHero(h, clan);
     }
 }

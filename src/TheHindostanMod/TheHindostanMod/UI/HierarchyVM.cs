@@ -158,11 +158,15 @@ namespace TakhtyaTaboot.UI
             var ft = FeudalTitlesBehavior.Instance;
             string tier = ft?.GetTier(h) ?? "";
 
+            // A prince of a reigning (or fallen) line carries the royal style first.
+            string royal = DynastyBehavior.Instance?.RoyalStyle(h);
+            string royalPart = string.IsNullOrEmpty(royal) ? "" : royal + " · ";
+
             if (ft != null && ft.IsVillageZamindar(h) && !(h.Clan?.Settlements.Any(s => s.IsTown || s.IsCastle) ?? false))
             {
                 var villages = ft.GetVillagesLordedBy(h);
                 string vlist = villages.Count > 0 ? string.Join(", ", villages.Select(v => v.Name)) : "";
-                return $"Village Zamindar — {vlist}";
+                return $"{royalPart}Village Zamindar — {vlist}";
             }
 
             string rankTitle = MansabdariBehavior.Instance?.GetTitle(h.Clan) ?? "";
@@ -171,7 +175,7 @@ namespace TakhtyaTaboot.UI
             var seats = h.Clan?.Settlements.Where(s => s.IsTown || s.IsCastle).Select(s => s.Name?.ToString()).ToList() ?? new List<string>();
             string seatPart = seats.Count > 0 ? $" · {string.Join(", ", seats.Take(3))}" : "";
             string tierPart = string.IsNullOrEmpty(tier) ? "" : tier + " · ";
-            return $"{tierPart}{rankPart}{seatPart}";
+            return $"{royalPart}{tierPart}{rankPart}{seatPart}";
         }
 
         private void ActivateLink(string link)

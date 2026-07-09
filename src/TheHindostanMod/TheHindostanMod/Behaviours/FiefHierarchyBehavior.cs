@@ -190,7 +190,8 @@ namespace TakhtyaTaboot
                 $"War is declared upon {enemy.Name}. By the bond of your jagir you are summoned to bring your " +
                 $"retinue to the imperial host within fourteen days. Fail, and your standing at court will suffer.{weak}",
                 "I shall march (heed the summons)", () => HeedCall(),
-                "I will not come (defy the summons)", () => DefyCall());
+                "I will not come (defy the summons)", () => DefyCall(),
+                dedupeKey: "calltoarms:" + (enemy?.StringId ?? "?"), cooldownDays: 14);
         }
 
         private void HeedCall()
@@ -219,7 +220,8 @@ namespace TakhtyaTaboot
                 ChangeClanInfluenceAction.Apply(Clan.PlayerClan, 10f);
                 RoyalFarmaan.FromLiege(liege, "Service Acknowledged",
                     "Your banners stand with mine in the field. The court notes your loyalty with favour.",
-                    "It is my duty");
+                    "It is my duty",
+                    dedupeKey: "service_ack", priority: Util.FarmaanPriority.Routine, cooldownDays: 30);
                 ClearCall();
                 return;
             }
@@ -276,7 +278,8 @@ namespace TakhtyaTaboot
                 $"The season turns, and your jagir owes its tribute. {owed} dinars are due to your liege's treasury. " +
                 "Pay, and keep your honour at court; withhold, and answer for it.",
                 $"Pay {owed} dinars", () => PayTax(liege, owed),
-                "Withhold the tribute", () => WithholdTax(liege, owed));
+                "Withhold the tribute", () => WithholdTax(liege, owed),
+                dedupeKey: "tribute", cooldownDays: 7);
         }
 
         private int ComputeSeasonalTax(Hero lord)
@@ -379,7 +382,8 @@ namespace TakhtyaTaboot
             RoyalFarmaan.FromLiege(liege, "Demand for Tribute",
                 $"{owed} dinars are due to your liege's treasury this season.",
                 $"Pay {owed} dinars", () => PayTax(liege, owed),
-                "Withhold the tribute", () => WithholdTax(liege, owed));
+                "Withhold the tribute", () => WithholdTax(liege, owed),
+                dedupeKey: "tribute", cooldownDays: 7);
             return "A tribute demand has been issued.";
         }
 

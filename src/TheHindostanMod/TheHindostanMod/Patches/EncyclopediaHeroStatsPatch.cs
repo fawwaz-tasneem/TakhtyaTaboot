@@ -30,6 +30,9 @@ namespace TakhtyaTaboot
 
                 if (isLord) AddLordRows(__instance, hero);
                 else AddZamindarRows(__instance, hero);
+
+                AddRoyalStyleRow(__instance, hero);
+                AddDispositionRow(__instance, hero);
             }
             catch { /* never break the encyclopedia */ }
         }
@@ -71,6 +74,28 @@ namespace TakhtyaTaboot
             // since valour is a player mechanic the AI does not use.
             if (hero.Clan == Clan.PlayerClan && MansabdariBehavior.Instance != null)
                 Row(vm, "Valour earned", $"{MansabdariBehavior.Instance.GetValour(hero.Clan):0}");
+        }
+
+        // The dynasty layer: a prince or princess of a reigning (or fallen) line carries
+        // their culture's royal style — Shahzada, Yuvraj, Kanwar...
+        private static void AddRoyalStyleRow(EncyclopediaHeroPageVM vm, Hero hero)
+        {
+            string style = DynastyBehavior.Instance?.RoyalStyle(hero);
+            if (!string.IsNullOrEmpty(style)) Row(vm, "Royal style", style);
+        }
+
+        // What this hero PERSONALLY thinks of the player — vanilla relation plus the
+        // opinion ledger's live records, with the strongest reasons named.
+        private static void AddDispositionRow(EncyclopediaHeroPageVM vm, Hero hero)
+        {
+            var op = OpinionBehavior.Instance;
+            if (op == null || hero == Hero.MainHero) return;
+            float effective = op.EffectiveOpinion(hero, Hero.MainHero);
+            var top = op.TopModifiers(hero, Hero.MainHero, 2);
+            string reasons = top.Count == 0 ? ""
+                : " (" + string.Join(", ", top.Select(t => Util.OpinionMath.Describe(t.type))) + ")";
+            if (top.Count > 0) // only show the row when something personal stands between you
+                Row(vm, "Disposition toward you", $"{effective:0}{reasons}");
         }
 
         private static void AddZamindarRows(EncyclopediaHeroPageVM vm, Hero hero)

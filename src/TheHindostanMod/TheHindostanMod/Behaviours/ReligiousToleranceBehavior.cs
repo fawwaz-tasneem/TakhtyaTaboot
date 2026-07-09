@@ -192,7 +192,8 @@ namespace TakhtyaTaboot
         // ── Player UX (ruler-only decree from a town) ────────────────────────────────
         private void AddMenus(CampaignGameStarter starter)
         {
-            starter.AddGameMenuOption("town", "hindostan_tolerance_decree", "{=!}Decree the realm's religious policy",
+            // Lives under the consolidated court menu (CourtMenuBehavior).
+            starter.AddGameMenuOption(CourtMenuBehavior.MenuId, "hindostan_tolerance_decree", "{=!}Decree the realm's religious policy",
                 args =>
                 {
                     args.optionLeaveType = GameMenuOption.LeaveType.Manage;

@@ -158,7 +158,14 @@ namespace TakhtyaTaboot
         private static void Please(List<Hero> lords, int amount)
         {
             foreach (Hero h in lords)
+            {
                 ChangeRelationAction.ApplyRelationChangeBetweenHeroes(Hero.MainHero, h, amount);
+                // Also a PERSONAL memory: the faction's lords remember whether their
+                // petition was heard (feeds the opinion ledger and everything reading it).
+                OpinionBehavior.Instance?.AddOpinion(h, Hero.MainHero,
+                    amount >= 0 ? OpinionMath.OpinionType.Favor : OpinionMath.OpinionType.Grudge,
+                    amount >= 0 ? amount : amount * 1.5f);
+            }
         }
 
         private static void Displease(List<Hero> lords, int amount) => Please(lords, -amount);

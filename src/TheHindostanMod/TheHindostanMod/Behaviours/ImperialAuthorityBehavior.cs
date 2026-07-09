@@ -127,18 +127,16 @@ namespace TakhtyaTaboot
         private void OnSessionLaunched(CampaignGameStarter starter)
         {
             SeedMissing();
-            starter.AddGameMenuOption("town", "hindostan_empire_town", "{=!}Survey the state of the empire",
-                args => { args.optionLeaveType = GameMenuOption.LeaveType.Submenu; return true; },
-                args => GameMenu.SwitchToMenu("hindostan_empire_state"), false, 5);
-            starter.AddGameMenuOption("castle", "hindostan_empire_castle", "{=!}Survey the state of the empire",
+            // Lives under the consolidated court menu (CourtMenuBehavior).
+            starter.AddGameMenuOption(CourtMenuBehavior.MenuId, "hindostan_empire", "{=!}Survey the state of the empire",
                 args => { args.optionLeaveType = GameMenuOption.LeaveType.Submenu; return true; },
                 args => GameMenu.SwitchToMenu("hindostan_empire_state"), false, 5);
 
             starter.AddGameMenu("hindostan_empire_state", "{=!}{HINDOSTAN_EMPIRE_TEXT}", EmpireMenuInit);
 
-            starter.AddGameMenuOption("hindostan_empire_state", "hindostan_empire_leave", "{=!}Leave",
+            starter.AddGameMenuOption("hindostan_empire_state", "hindostan_empire_leave", "{=!}Back",
                 args => { args.optionLeaveType = GameMenuOption.LeaveType.Leave; return true; },
-                args => GameMenu.SwitchToMenu(Settlement.CurrentSettlement != null && Settlement.CurrentSettlement.IsTown ? "town" : "castle"),
+                args => GameMenu.SwitchToMenu(CourtMenuBehavior.MenuId),
                 true);
         }
 

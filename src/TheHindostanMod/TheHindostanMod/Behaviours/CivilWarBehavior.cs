@@ -4,6 +4,7 @@ using System.Linq;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.CampaignSystem.Actions;
 using TaleWorlds.CampaignSystem.Party;
+using TaleWorlds.CampaignSystem.Settlements;
 using TaleWorlds.Core;
 using TaleWorlds.Library;
 using TakhtyaTaboot.UI;
@@ -87,7 +88,11 @@ namespace TakhtyaTaboot
                     if ((MansabdariBehavior.Instance?.GetRankIndex(c) ?? 0) < MansabdariBehavior.MaxRankIndex) continue;
                     if (!c.Settlements.Any()) continue; // a bid needs a seat to raise the standard from
 
-                    int relation = CharacterRelationManager.GetHeroRelation(c.Leader, k.Leader);
+                    // The challenger's PERSONAL opinion of his ruler (oaths, grudges, favours),
+                    // not just the clan ledger — a nursed grudge can push a loyal book-relation
+                    // over the edge.
+                    int relation = (int)(OpinionBehavior.Instance?.EffectiveOpinion(c.Leader, k.Leader)
+                                         ?? CharacterRelationManager.GetHeroRelation(c.Leader, k.Leader));
                     float ratio = c.CurrentTotalStrength / rulingStrength;
                     if (!CivilWarMath.BidFires(relation, legitimacy, ratio, MBRandom.RandomFloat)) continue;
 
@@ -119,8 +124,10 @@ namespace TakhtyaTaboot
                 if (c == challenger || c == kingdom.RulingClan || c == Clan.PlayerClan) continue;
                 if (c.IsUnderMercenaryService) continue;
                 bool establishment = CouncilBehavior.Instance?.GetPostOf(c.Leader) != null;
-                int relChallenger = CharacterRelationManager.GetHeroRelation(c.Leader, challenger.Leader);
-                int relRuler = CharacterRelationManager.GetHeroRelation(c.Leader, kingdom.Leader);
+                float relChallenger = OpinionBehavior.Instance?.EffectiveOpinion(c.Leader, challenger.Leader)
+                                      ?? CharacterRelationManager.GetHeroRelation(c.Leader, challenger.Leader);
+                float relRuler = OpinionBehavior.Instance?.EffectiveOpinion(c.Leader, kingdom.Leader)
+                                 ?? CharacterRelationManager.GetHeroRelation(c.Leader, kingdom.Leader);
                 if (!establishment && relChallenger > relRuler)
                     try { ChangeKingdomAction.ApplyByJoinToKingdom(c, rebel, default(CampaignTime), false); } catch { }
             }

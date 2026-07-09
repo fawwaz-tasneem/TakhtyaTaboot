@@ -54,6 +54,22 @@ namespace TakhtyaTaboot
         private static Kingdom PK => Hero.MainHero?.Clan?.Kingdom;
         private static bool IsRuler => PK != null && PK.Leader == Hero.MainHero;
 
+        // ── In-person presentation (the dialogue pack's bridge) ─────────────────────
+        private bool _inPerson; // transient: the current tier choice came face to face
+
+        public bool HasPendingCall => _deadlineDay >= 0;
+
+        // Presenting the nazrana in person, before the sovereign himself, carries more
+        // weight than sending it with a courier: +2 relation over the farmaan path.
+        public void PresentInPerson()
+        {
+            Kingdom k = PK;
+            if (k == null || !HasPendingCall) return;
+            int rank = MansabdariBehavior.Instance?.GetRankIndex(Clan.PlayerClan) ?? 0;
+            _inPerson = true;
+            OfferTiers(k, rank);
+        }
+
         private void OnDailyTick()
         {
             if (!Config.Tune.NazranaEnabled) return;
@@ -92,7 +108,8 @@ namespace TakhtyaTaboot
                 $"of some {expected} dinars of {Hero.MainHero.Name} within a fortnight. What is given — and how " +
                 "generously — will be remembered.",
                 "Present a gift", () => OfferTiers(k, rank),
-                "Let them wait", null);
+                "Let them wait", null,
+                dedupeKey: "nazrana_call", cooldownDays: 30);
         }
 
         private void OfferTiers(Kingdom k, int rank)
@@ -125,6 +142,7 @@ namespace TakhtyaTaboot
             if (amount > 0 && k.Leader != null)
                 GiveGoldAction.ApplyBetweenCharacters(Hero.MainHero, k.Leader, amount, true);
             var (rel, infl) = NazranaMath.TierEffects(tier);
+            if (_inPerson) { rel += 2; _inPerson = false; } // laid before the throne with your own hands
             if (k.Leader != null && rel != 0)
                 ChangeRelationAction.ApplyRelationChangeBetweenHeroes(Hero.MainHero, k.Leader, rel);
             if (infl != 0) ChangeClanInfluenceAction.Apply(Clan.PlayerClan, infl);
@@ -179,7 +197,10 @@ namespace TakhtyaTaboot
                                                       && c.Leader != null && c != Clan.PlayerClan))
                 {
                     int rank = MansabdariBehavior.Instance?.GetRankIndex(c) ?? 0;
-                    int relation = CharacterRelationManager.GetHeroRelation(c.Leader, Hero.MainHero);
+                    // Whether a lord bows with a gift is a PERSONAL judgment (his opinion of
+                    // you, oaths and grudges included), not a clan-book number.
+                    int relation = (int)(OpinionBehavior.Instance?.EffectiveOpinion(c.Leader, Hero.MainHero)
+                                         ?? CharacterRelationManager.GetHeroRelation(c.Leader, Hero.MainHero));
                     int pay = NazranaMath.WeeklyAiPayment(rank, relation, scale);
                     if (pay > 0 && c.Leader.Gold > pay)
                     {
@@ -199,12 +220,17 @@ namespace TakhtyaTaboot
             {
                 _lastSummaryDay = today;
                 if (_monthGold > 0 || _monthWithholders > 0)
+                    // A clean month is routine bookkeeping (digest); withheld gifts are a
+                    // political signal that warrants the full decree.
                     RoyalFarmaan.Issue("The Month's Nazrana", "From the imperial treasury",
                         $"This month the lords of {k.Name} laid {_monthGold} dinars of nazrana before the throne." +
                         (_monthWithholders > 0
                             ? $" Yet {_monthWithholders} withholding(s) were recorded — there are lords who no longer bow."
                             : " Every house paid its due."),
-                        seal: "Entered in the registers");
+                        seal: "Entered in the registers",
+                        dedupeKey: "nazrana_summary",
+                        priority: _monthWithholders > 0 ? Util.FarmaanPriority.Urgent : Util.FarmaanPriority.Routine,
+                        cooldownDays: _monthWithholders > 0 ? 25 : 0);
                 _monthGold = 0;
                 _monthWithholders = 0;
             }

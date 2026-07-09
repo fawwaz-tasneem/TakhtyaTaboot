@@ -178,6 +178,38 @@ Four different files own different parts of a lord, and confusing them wastes ti
 - **Load order matters:** `LocalizationOverride.EnsureParsed` loads faction_names **LAST** so it wins. Adding a new term = one map entry + re-run the generator.
 - **Known remaining gap:** dialogue prose stored in `std_*.xml` under **inner `{=}` keys** is NOT covered by either generator — that needs `hindostan_string_map.xml` inner→outer entries (§1.5). If a vanilla name appears *in conversation*, it's almost certainly here.
 
+## 12. World generation is PARALLEL — `OnNewGameCreatedEvent` is a trap
+
+- **Proven crash class** (`0xC0000005`, no managed exception, documented in `bug-reports/2026-06-20-daily-tick-crash.md`): any handler on `OnNewGameCreatedEvent` that iterates `Clan.All` / `clan.Settlements` / `Settlement.All` / notables races the engine's parallel hero/clan/settlement creation. Seven behaviors did this and were fixed (Council, ImperialCourt, ImperialAuthority, Legitimacy, FeudalTitles, FactionRelations, Succession).
+- **Rule:** do NOT hook `OnNewGameCreatedEvent` for collection work at all. Seed **idempotently in `OnSessionLaunched`** (only write values that aren't already stored, so loads don't clobber saves). Gate mid-game event handlers (`OnSettlementOwnerChanged`, `HeroKilledEvent`, `OnClanChangedKingdom`) with `Util.WorldGen.Ready` — those events also fire during world-gen setup.
+- Same class: `NameGenerator` patches run on parallel hero creation — any lazily-built shared structure they touch needs double-checked locking (see `ReligionBehavior.EnsurePools`).
+
+## 13. Harmony — one bad patch target used to kill EVERY patch
+
+- **Trap:** a single `harmony.PatchAll(assembly)` inside `try/catch` means one patch whose target signature changed on a game update throws during discovery and **silently disables all ~15 patches** (bios, renames, map bar, party caps — everything).
+- **Fix (as-built):** `HindostanSubModule` loops the assembly's `[HarmonyPatch]` types and calls `harmony.CreateClassProcessor(type).Patch()` each in its own try/catch, logging failures individually plus a summary count. A broken patch now costs only itself.
+- **Verified against the current game DLLs** (reflection, 2026-07): `DeclareWarAction.ApplyInternal` exists (private) and `MakePeaceAction.Apply` exists (public) — the two risky patch targets (`NoMughalCivilWarPatch`, `NoThroneWarPeacePatch`) are valid.
+- **Namespace traps that cost a compile:** `MBTextManager` lives in **`TaleWorlds.Localization`** — not CampaignSystem, not Core. A file calling `MBTextManager.SetTextVariable` without that using fails with CS0103. `MathF` is **`TaleWorlds.Library.MathF`** (the BCL MathF doesn't exist on net481) — fine in engine code, forbidden in the engine-free `Util/*Math.cs` files (use `System.Math` there, or the tests won't build).
+
+## 14. Save/load — the SyncData conventions that keep saves alive
+
+- **Parallel primitive lists only.** Every behavior serializes dictionaries as parallel key/value lists and rebuilds on load (`!IsSaving`) with **index-guarded** loops. Derived indexes (e.g. FeudalTitles' reverse hero→villages map) are never serialized — rebuilt on load.
+- **Append-only keys.** Loading an old save leaves new keys absent → the locals stay empty → defaults. Never rename or reorder anything serialized by value: enum ints (`OpinionType`, tolerance stances), the `VillageProject` display names inside the completed-works CSV.
+- **The encyclopedia SAVE ERROR root cause:** the save serializer reads `Hero.EncyclopediaText` for every hero mid-save; returning a **fresh `TextObject`** from a patched getter makes it choke ("SAVE ERROR. Cant find … with type TextObject", once per lord). Fix: cache ONE `TextObject` per hero (`EncyclopediaInfoPatch._bioCache`) and always return the same instance; the `IsSaving` guard remains only as a first-read fallback. Related: `SaveGuardBehavior.IsSaving` can stick if a save errors before `OnSaveOverEvent` — a campaign tick observed with the flag set clears it (ticks never run during synchronous serialization).
+- **Static helpers don't persist themselves.** `ClaimantClan._origin` (hero→origin clan) is a static dict; `SuccessionBehavior.SyncData` exports/imports it. Any static helper holding campaign state needs a behavior to own its persistence.
+
+## 15. The farmaan layer — what it actually is, and its two safety mechanisms
+
+- `RoyalFarmaan` is **not a screen**: it adds a `GauntletLayer("HindostanFarmaan", 1010)` onto `ScreenManager.TopScreen` (above the Council/Hierarchy screens at 1000) with full input restriction + focus. One popup at a time from a static queue.
+- **Re-entrancy (native crash):** pushing a focus layer synchronously while the engine iterates settlements (a daily settlement tick) re-enters the screen system and crashes. `SuppressImmediate` (set by settlement-tick callers) makes `Issue` enqueue-only; `Pump()` — driven from `SaveGuardBehavior`'s campaign `TickEvent`, outside the iteration — drains the queue. Don't bypass this.
+- **Pause (as-built, compiles on current DLLs):** `ShowNext` stores `Campaign.Current.TimeControlMode` and sets `CampaignTimeControlMode.Stop`; `Close` restores it only when the queue is empty AND the farmaan system itself did the pausing (a player already on pause stays paused).
+- **Dedup/downgrade rules** live in pure `Util/FarmaanFlow.Decide` (unit-tested): Ceremonial is never suppressed; an identical live `dedupeKey` drops; a Routine notice in cooldown (or with none) downgrades to a log line + the weekly "Court Circular" digest (`FarmaanDirectorBehavior`); **choice-bearing farmaans are never downgraded** — dedupe only, or the player's choices silently vanish.
+
+## 16. Creating clans (and the missing party primitive)
+
+- **Recipe** (one factory: `Util/CadetHouse.BuildShell`, delegated to by `ClaimantClan`): `Clan.CreateClan(id)` registers an EMPTY shell; then Name/InformalName via non-public setters (`AccessTools.PropertySetter`), `Culture`, `Banner.CreateRandomClanBanner` (**mandatory** — the encyclopedia dereferences it), `SetInitialHomeSettlement`, force `IsInitialized`, `clan.SetLeader(hero)` (public — historically the missed step), and move heroes via the **non-public `Hero.Clan` setter** (it maintains both clans' member lists; a raw field write corrupts them).
+- **The party gap:** the mod never created a `MobileParty` for a new lord before cadet houses. Verified present in the current DLLs (reflection): `Helpers.MobilePartyHelper.SpawnLordParty` (public, 2 overloads) and `LordPartyComponent.CreateLordParty` (public). `CadetHouse.TrySpawnLordParty` tries both via reflection with parameter matching; fallback = teleport the leader home and let the engine's clan-party AI raise one. Exact overload behavior is a **runtime** verification item (PLAYTEST.md §G2).
+
 ---
 
 **[Home](Home.md)**

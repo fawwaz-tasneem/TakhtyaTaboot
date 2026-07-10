@@ -106,17 +106,13 @@ namespace TakhtyaTaboot
                 SetRealmRecord(i, UnifiedEmpireMath.Pack(clans.Select(c => c.StringId)), rulerId,
                     UnifiedEmpireMath.Pack(warIds));
 
-                // The subah's quarrels pass to the imperial throne (Mysore's Deccan war reaches
-                // the emperor once Hyderabad is his own province)...
-                foreach (string wid in warIds)
-                {
-                    Kingdom enemy = Find(wid);
-                    if (enemy != null && !enemy.IsEliminated && !FactionRelationsBehavior.IsMughalKingdom(enemy)
-                        && !empire.IsAtWarWith(enemy))
-                        DeclareWarAction.ApplyByDefault(enemy, empire);
-                }
-
-                // ...and its lords take service directly under the Peacock Throne. Fiefs travel
+                // The subah's quarrels are NOT passed to the imperial throne (playtest round 3):
+                // Mysore and its like recognised the Mughal as sovereign in name and fought the
+                // subahs, never the emperor directly. The recorded wars sleep with the shell and
+                // RESUME at the breakaway; while the empire stands whole, only its own quarrels
+                // (the Maratha war, from XML + FactionRelations) bind it.
+                //
+                // The subah's lords take service directly under the Peacock Throne. Fiefs travel
                 // with the clans, so the map shows one empire from the first frame.
                 var colourRecords = new List<string>();
                 foreach (Clan c in clans)

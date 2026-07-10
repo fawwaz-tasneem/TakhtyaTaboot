@@ -1585,7 +1585,21 @@ namespace TakhtyaTaboot
                 AddSupport(o.Rival, 3f);
                 if (treacheryChance > 0f && o.K?.Leader != null && MBRandom.RandomFloat < treacheryChance)
                 { DeclareTreachery(o.K, o.K.Leader); return; }
-                Notify($"{o.Rival.Name} spurns your terms and presses his claim the harder.", true);
+
+                // A refused SITTING king does not merely sulk — a wrathful farmaan arrives with
+                // warnings, threats and demands (playtest round 3), even when he stops short of
+                // naming it treachery outright.
+                if (o.Rival == o.K?.Leader)
+                    RoyalFarmaan.FromRuler(o.K, "The Throne Is Not For Sale",
+                        $"Your purse was weighed at the foot of the throne and found insolent. Hear the words of " +
+                        $"{o.Rival.Name}: the Peacock Throne is not a bazaar stall, and he who haggles for it once " +
+                        "may be forgiven — once. WITHDRAW your designs upon the crown. PRESENT yourself at court " +
+                        "and renew your oath before the season turns. DISBAND whatever host you gather in the " +
+                        "shadows. Press this matter again while the throne stands strong, and it will be answered " +
+                        "not with words but with chains, and what follows chains.",
+                        "I hear the warning");
+                else
+                    Notify($"{o.Rival.Name} spurns your terms and presses his claim the harder.", true);
                 return;
             }
 
@@ -1647,8 +1661,12 @@ namespace TakhtyaTaboot
 
             RoyalFarmaan.FromRuler(k, "Treachery at the Foot of the Throne",
                 $"You dared to bid {king.Name} sell the throne he sits — and he is strong enough to answer as kings answer. " +
-                $"Your house is proclaimed traitor and cast out of {k.Name}. Your lands you keep, for now; his armies will " +
-                "speak to that. There is no court left to appeal to — only the field.",
+                $"Hear the decree, cried in every bazaar of {k.Name}: your house is proclaimed TRAITOR and cast out of the " +
+                "realm. Your name is struck from the rolls of the darbar; no mansab, no jagir, no seat at any court of this " +
+                $"kingdom is yours again. The king DEMANDS you present yourself in chains and throw your fate upon his mercy — " +
+                $"or his armies will collect you, and the ransom of a traitor is counted in the hundreds of thousands, " +
+                "when it is offered at all. Your lands you keep for now; his host will speak to that. There is no court " +
+                "left to appeal to — only the field.",
                 "Then it is war");
             Util.TYTLog.Info($"Treachery declared: {k.StringId} vs the player (ransom {_treacheryRansom}).");
         }

@@ -12,7 +12,7 @@
             <!-- Canvas background -->
             <Widget WidthSizePolicy="StretchToParent" HeightSizePolicy="StretchToParent" Sprite="StdAssets\Popup\canvas" />
 
-            <ListPanel WidthSizePolicy="StretchToParent" HeightSizePolicy="CoverChildren" VerticalAlignment="Top" MarginTop="24" MarginLeft="28" MarginRight="28" StackLayout.LayoutMethod="VerticalTopToBottom">
+            <ListPanel WidthSizePolicy="StretchToParent" HeightSizePolicy="CoverChildren" VerticalAlignment="Top" MarginTop="24" MarginLeft="28" MarginRight="28" StackLayout.LayoutMethod="VerticalBottomToTop">
               <Children>
 
                 <!-- Title -->
@@ -54,7 +54,7 @@
                       <Children>
                         <Widget Id="WorksClip" WidthSizePolicy="StretchToParent" HeightSizePolicy="StretchToParent" ClipContents="true">
                           <Children>
-                            <ListPanel Id="WorksList" DataSource="{Projects}" WidthSizePolicy="StretchToParent" HeightSizePolicy="CoverChildren" StackLayout.LayoutMethod="VerticalTopToBottom">
+                            <ListPanel Id="WorksList" DataSource="{Projects}" WidthSizePolicy="StretchToParent" HeightSizePolicy="CoverChildren" StackLayout.LayoutMethod="VerticalBottomToTop">
                               <ItemTemplate>
                                 <Widget WidthSizePolicy="StretchToParent" HeightSizePolicy="Fixed" SuggestedHeight="76" MarginBottom="4" Sprite="BlankWhiteSquare_9" Color="#FFFFFFFF" AlphaFactor="0.05">
                                   <Children>
@@ -62,7 +62,7 @@
                                       <Children>
 
                                         <!-- Name / cost / effect -->
-                                        <ListPanel WidthSizePolicy="StretchToParent" HeightSizePolicy="CoverChildren" VerticalAlignment="Center" MarginLeft="12" StackLayout.LayoutMethod="VerticalTopToBottom">
+                                        <ListPanel WidthSizePolicy="StretchToParent" HeightSizePolicy="CoverChildren" VerticalAlignment="Center" MarginLeft="12" StackLayout.LayoutMethod="VerticalBottomToTop">
                                           <Children>
                                             <ListPanel WidthSizePolicy="StretchToParent" HeightSizePolicy="Fixed" SuggestedHeight="26" StackLayout.LayoutMethod="HorizontalLeftToRight">
                                               <Children>

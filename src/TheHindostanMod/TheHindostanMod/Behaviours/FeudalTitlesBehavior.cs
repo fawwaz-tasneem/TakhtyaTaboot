@@ -294,7 +294,32 @@ namespace TakhtyaTaboot
                 Hero boundLord = village?.Village?.Bound?.OwnerClan?.Leader;
                 if (boundLord != null && boundLord != hero) return boundLord;
             }
-            // Town/castle lords and unlanded nobles answer to the sovereign.
+
+            // A CASTLE lord (no town of his own) answers to the NEAREST town lord of his realm
+            // (playtest round 3): the qiladar of a fort is a rung below the subahdar of the city
+            // whose country he guards, not the emperor's direct man. Town lords, and castle lords
+            // in a realm with no other town lord, still answer to the sovereign.
+            Clan clan = hero.Clan;
+            if (clan != null && clan.Leader == hero
+                && !clan.Settlements.Any(s => s.IsTown) && clan.Settlements.Any(s => s.IsCastle))
+            {
+                Settlement castle = clan.Settlements.First(s => s.IsCastle);
+                Hero townLord = null;
+                float best = float.MaxValue;
+                foreach (Clan c in k.Clans)
+                {
+                    if (c == null || c.IsEliminated || c == clan || c.Leader == null || c.Leader == k.Leader) continue;
+                    foreach (Settlement t in c.Settlements)
+                    {
+                        if (!t.IsTown) continue;
+                        float d = castle.GetPosition2D.Distance(t.GetPosition2D);
+                        if (d < best) { best = d; townLord = c.Leader; }
+                    }
+                }
+                if (townLord != null) return townLord;
+            }
+
+            // Town lords and unlanded nobles answer to the sovereign.
             return k.Leader;
         }
 

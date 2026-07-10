@@ -1,9 +1,10 @@
 using System;
+using TaleWorlds.Core.ViewModelCollection.ImageIdentifiers;
 using TaleWorlds.Library;
 
 namespace TakhtyaTaboot.UI
 {
-    // One node in the feudal tree: a person with a name and a one-line description,
+    // One node in the feudal tree: a person with a FACE, a name and a one-line description,
     // preceded by a gutter of connector-line columns ({Guides}) that draw the branches
     // back to their liege. Clicking opens the noble's encyclopedia entry.
     public class HierarchyNodeVM : ViewModel
@@ -14,9 +15,11 @@ namespace TakhtyaTaboot.UI
         private string _subtitle;
         private bool _isClickable;
         private MBBindingList<TreeGuideCellVM> _guides;
+        private ImageIdentifierVM _visual;
 
         public HierarchyNodeVM(string name, string subtitle, bool isClickable,
-            string encyclopediaLink, MBBindingList<TreeGuideCellVM> guides, Action<string> onActivate)
+            string encyclopediaLink, MBBindingList<TreeGuideCellVM> guides, Action<string> onActivate,
+            ImageIdentifierVM visual = null)
         {
             _name = name ?? "";
             _subtitle = subtitle ?? "";
@@ -24,7 +27,11 @@ namespace TakhtyaTaboot.UI
             _encyclopediaLink = encyclopediaLink;
             _guides = guides ?? new MBBindingList<TreeGuideCellVM>();
             _onActivate = onActivate;
+            _visual = visual;
         }
+
+        [DataSourceProperty]
+        public ImageIdentifierVM Visual { get => _visual; set { if (_visual != value) { _visual = value; OnPropertyChangedWithValue(value); } } }
 
         [DataSourceProperty]
         public string Name { get => _name; set { if (_name != value) { _name = value; OnPropertyChangedWithValue(value); } } }

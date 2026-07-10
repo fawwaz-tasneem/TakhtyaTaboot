@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.CampaignSystem.Settlements;
+using TaleWorlds.Core;
+using TaleWorlds.Core.ViewModelCollection.ImageIdentifiers;
 using TaleWorlds.Library;
 
 namespace TakhtyaTaboot.UI
@@ -23,7 +25,10 @@ namespace TakhtyaTaboot.UI
         private string _rootName;
         private string _rootSubtitle;
         private string _rootLink;
+        private ImageIdentifierVM _rootVisual;
         private KingdomItemVM _selected;
+        private Kingdom _currentKingdom;
+        private bool _showZamindars; // off by default: the board shows the lords; toggle to see the village rung
 
         public HierarchyVM(Action onClose)
         {
@@ -58,6 +63,19 @@ namespace TakhtyaTaboot.UI
         public string RootSubtitle { get => _rootSubtitle; set { if (_rootSubtitle != value) { _rootSubtitle = value; OnPropertyChangedWithValue(value); } } }
 
         [DataSourceProperty]
+        public ImageIdentifierVM RootVisual { get => _rootVisual; set { if (_rootVisual != value) { _rootVisual = value; OnPropertyChangedWithValue(value); } } }
+
+        [DataSourceProperty]
+        public string ZamindarToggleLabel => _showZamindars ? "Hide the zamindars" : "Show the zamindars";
+
+        public void ExecuteToggleZamindars()
+        {
+            _showZamindars = !_showZamindars;
+            OnPropertyChanged(nameof(ZamindarToggleLabel));
+            if (_currentKingdom != null) BuildTree(_currentKingdom);
+        }
+
+        [DataSourceProperty]
         public string TitleText { get => _titleText; set { if (_titleText != value) { _titleText = value; OnPropertyChangedWithValue(value); } } }
 
         [DataSourceProperty]
@@ -77,9 +95,11 @@ namespace TakhtyaTaboot.UI
 
         // ── Board construction ───────────────────────────────────────────────────────
         // The sovereign crowns the board; each of his DIRECT vassals heads a column, and the
-        // column stacks that lord's own subtree (indented with connector gutters).
+        // column stacks that lord's own subtree (indented with connector gutters). Zamindars
+        // are the lowest rung and only appear when toggled on.
         private void BuildTree(Kingdom kingdom)
         {
+            _currentKingdom = kingdom;
             _branches.Clear();
             RootName = "";
             RootSubtitle = "";
@@ -90,6 +110,7 @@ namespace TakhtyaTaboot.UI
             RootName = ruler.Name?.ToString() ?? "—";
             RootSubtitle = RulerSubtitle(kingdom, ruler);
             _rootLink = ruler.EncyclopediaLink;
+            RootVisual = FaceOf(ruler);
 
             var visited = new HashSet<string> { ruler.StringId };
             foreach (Hero lord in ChildrenOf(ruler, kingdom, visited))
@@ -97,10 +118,14 @@ namespace TakhtyaTaboot.UI
                 var members = new MBBindingList<HierarchyNodeVM>();
                 EmitMembers(members, ChildrenOf(lord, kingdom, visited), kingdom, visited, new List<bool>());
                 _branches.Add(new HierarchyBranchVM(lord.Name?.ToString() ?? "—",
-                    NodeSubtitle(lord), true, lord.EncyclopediaLink, members, ActivateLink));
+                    NodeSubtitle(lord), true, lord.EncyclopediaLink, members, ActivateLink, FaceOf(lord)));
             }
             OnPropertyChanged(nameof(Branches));
         }
+
+        private static ImageIdentifierVM FaceOf(Hero h)
+            => h?.CharacterObject == null ? null
+             : new CharacterImageIdentifierVM(CharacterCode.CreateFrom(h.CharacterObject));
 
         private void EmitMembers(MBBindingList<HierarchyNodeVM> members, List<Hero> kids,
             Kingdom kingdom, HashSet<string> visited, List<bool> path)
@@ -112,7 +137,7 @@ namespace TakhtyaTaboot.UI
                 var myPath = new List<bool>(path) { hasNext };
 
                 members.Add(new HierarchyNodeVM(kid.Name?.ToString() ?? "—",
-                    NodeSubtitle(kid), true, kid.EncyclopediaLink, BuildGuides(myPath), ActivateLink));
+                    NodeSubtitle(kid), true, kid.EncyclopediaLink, BuildGuides(myPath), ActivateLink, FaceOf(kid)));
 
                 EmitMembers(members, ChildrenOf(kid, kingdom, visited), kingdom, visited, myPath);
             }
@@ -138,7 +163,10 @@ namespace TakhtyaTaboot.UI
                 if (ft?.GetFeudalLiege(h) == holder) { visited.Add(h.StringId); lords.Add(h); }
             }
 
-            if (ft != null && holder.Clan != null)
+            // The village rung is heavy (hundreds of names on a big realm) — gathered only
+            // when the toggle asks for it. Zamindars always sort after the lords, so they
+            // land on the LOWEST rung of each branch.
+            if (_showZamindars && ft != null && holder.Clan != null)
                 foreach (Settlement seat in holder.Clan.Settlements.Where(s => s.IsTown || s.IsCastle))
                     foreach (Village v in seat.Town?.Villages ?? Enumerable.Empty<Village>())
                     {

@@ -1,4 +1,5 @@
 using System;
+using TaleWorlds.Core.ViewModelCollection.ImageIdentifiers;
 using TaleWorlds.Library;
 
 namespace TakhtyaTaboot.UI
@@ -15,9 +16,11 @@ namespace TakhtyaTaboot.UI
         private string _subtitle;
         private bool _isClickable;
         private MBBindingList<HierarchyNodeVM> _members;
+        private ImageIdentifierVM _visual;
 
         public HierarchyBranchVM(string name, string subtitle, bool isClickable,
-            string encyclopediaLink, MBBindingList<HierarchyNodeVM> members, Action<string> onActivate)
+            string encyclopediaLink, MBBindingList<HierarchyNodeVM> members, Action<string> onActivate,
+            ImageIdentifierVM visual = null)
         {
             _name = name ?? "";
             _subtitle = subtitle ?? "";
@@ -25,7 +28,11 @@ namespace TakhtyaTaboot.UI
             _encyclopediaLink = encyclopediaLink;
             _members = members ?? new MBBindingList<HierarchyNodeVM>();
             _onActivate = onActivate;
+            _visual = visual;
         }
+
+        [DataSourceProperty]
+        public ImageIdentifierVM Visual { get => _visual; set { if (_visual != value) { _visual = value; OnPropertyChangedWithValue(value); } } }
 
         [DataSourceProperty]
         public string Name { get => _name; set { if (_name != value) { _name = value; OnPropertyChangedWithValue(value); } } }

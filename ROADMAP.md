@@ -4,8 +4,13 @@ The single source of truth for what comes next. Ordered within each block; block
 Design details for many items exist in wiki ch.13–27; as-built ground truth is ch.28.
 Update this file when an item ships (move it to "Shipped") or when priorities change.
 
-## A. Near-term (from playtest round 1, July 2026)
+## A. Near-term (from playtest rounds 1–2, July 2026)
 
+0. **Imperial colours while unified (quick win).** During the unified window the folded
+   Bengal/Hyderabad clans keep their own clan colours, so the day-one map reads as three
+   realms even though it is one (playtest round 2 confusion). At the fold, record each
+   clan's colours and dress it in the empire's; restore the originals at the breakaway
+   (extends the existing `UnifiedEmpireBehavior` per-realm records).
 1. **Succession-crisis economy rework.** Abdication difficulty scales with years reigned
    (a long-seated Aurangzeb costs millions); offers combine gold + troops + fief +
    influence in one package; pressing a secure king (≥3:1 strength against you) risks a

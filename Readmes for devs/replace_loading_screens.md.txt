@@ -1,7 +1,3 @@
-Here is the complete documentation of the process. You can save this as `README_LoadingScreens.md` in your project folder for future reference.
-
----
-
 # How to Override Loading Screens in Bannerlord
 
 **Target:** Replace native loading paintings with custom assets (Total Conversion friendly).
@@ -107,5 +103,3 @@ To make an image appear **only** when playing as or fighting the Mughals (who re
 
 ```xml
 <Sprite Name="loading_screen_empire_1" CategoryName="gauntletui" SheetID="2" SpriteAt="0,0" Width="1920" Height="1080" />
-
-```

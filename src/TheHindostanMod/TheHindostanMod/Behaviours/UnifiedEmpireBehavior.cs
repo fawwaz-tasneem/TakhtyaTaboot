@@ -34,6 +34,7 @@ namespace TakhtyaTaboot
         private string _clansW = "", _clansS = "";   // clans folded in, per realm (CSV of ids)
         private string _rulerW = "", _rulerS = "";   // ruling clan at the fold, per realm
         private string _warsW = "", _warsS = "";     // kingdoms each realm was at war with (CSV)
+        private string _coloursW = "", _coloursS = ""; // each clan's own colours (CSV of id:c1:c2)
 
         public override void RegisterEvents()
         {
@@ -62,6 +63,8 @@ namespace TakhtyaTaboot
             ds.SyncData("tyt_unified_ruler_s", ref _rulerS);
             ds.SyncData("tyt_unified_wars_w", ref _warsW);
             ds.SyncData("tyt_unified_wars_s", ref _warsS);
+            ds.SyncData("tyt_unified_colours_w", ref _coloursW);
+            ds.SyncData("tyt_unified_colours_s", ref _coloursS);
         }
 
         // A live kingdom with no living clans — a realm of nobody. True for the shells during
@@ -115,6 +118,7 @@ namespace TakhtyaTaboot
 
                 // ...and its lords take service directly under the Peacock Throne. Fiefs travel
                 // with the clans, so the map shows one empire from the first frame.
+                var colourRecords = new List<string>();
                 foreach (Clan c in clans)
                 {
                     ChangeKingdomAction.ApplyByJoinToKingdom(c, empire, showNotification: false);
@@ -122,7 +126,16 @@ namespace TakhtyaTaboot
                     // Nawab does not arrive at the darbar politically naked.
                     ChangeClanInfluenceAction.Apply(c,
                         Campaign.Current.Models.ClanTierModel.CalculateInitialInfluence(c) - c.Influence);
+                    // Dress the house in imperial colours for the duration (banners recolour by
+                    // themselves on joining; Color/Color2 — shields, trims, nameplates — do not,
+                    // and left alone they made the unified map read as three realms). The
+                    // ancestral colours are recorded and restored at the breakaway.
+                    colourRecords.Add(UnifiedEmpireMath.PackColour(c.StringId, c.Color, c.Color2));
+                    c.Color = empire.Color;
+                    c.Color2 = empire.Color2;
+                    RedrawClan(c);
                 }
+                SetColourRecord(i, UnifiedEmpireMath.Pack(colourRecords));
 
                 // The emptied shell sleeps at peace — no war may bind a realm of nobody.
                 QuietShell(realm);
@@ -229,6 +242,20 @@ namespace TakhtyaTaboot
                 foreach (Clan c in returning.Where(c => c != ruler))
                     ChangeKingdomAction.ApplyByJoinToKingdom(c, realm, showNotification: false);
 
+                // The houses shed their imperial dress and ride under their own colours again
+                // (restored for every recorded clan still alive, returning or not — a house that
+                // defected mid-window still owns its ancestral colours).
+                GetColourRecord(i, out string coloursCsv);
+                foreach (string entry in UnifiedEmpireMath.Unpack(coloursCsv))
+                    if (UnifiedEmpireMath.TryUnpackColour(entry, out string cid, out uint c1, out uint c2))
+                    {
+                        Clan c = Clan.All.FirstOrDefault(x => x.StringId == cid);
+                        if (c == null || c.IsEliminated) continue;
+                        c.Color = c1;
+                        c.Color2 = c2;
+                        RedrawClan(c);
+                    }
+
                 // The realm resumes the quarrels it carried into the fold (e.g. Mysore vs Hyderabad).
                 foreach (string wid in UnifiedEmpireMath.Unpack(warsCsv))
                 {
@@ -286,6 +313,15 @@ namespace TakhtyaTaboot
             return sb.ToString();
         }
 
+        // Repaint everything that carries the clan's colours (parties and held settlements).
+        private static void RedrawClan(Clan c)
+        {
+            foreach (var wpc in c.WarPartyComponents)
+                wpc.MobileParty?.Party?.SetVisualAsDirty();
+            foreach (var s in c.Settlements)
+                s.Party?.SetVisualAsDirty();
+        }
+
         // ── Per-realm record plumbing (index-aligned with VassalRealmIds) ───────────
         private void SetRealmRecord(int i, string clansCsv, string rulerId, string warsCsv)
         {
@@ -298,5 +334,13 @@ namespace TakhtyaTaboot
             if (i == 0) { clansCsv = _clansW; rulerId = _rulerW; warsCsv = _warsW; }
             else { clansCsv = _clansS; rulerId = _rulerS; warsCsv = _warsS; }
         }
+
+        private void SetColourRecord(int i, string coloursCsv)
+        {
+            if (i == 0) _coloursW = coloursCsv; else _coloursS = coloursCsv;
+        }
+
+        private void GetColourRecord(int i, out string coloursCsv)
+            => coloursCsv = i == 0 ? _coloursW : _coloursS;
     }
 }

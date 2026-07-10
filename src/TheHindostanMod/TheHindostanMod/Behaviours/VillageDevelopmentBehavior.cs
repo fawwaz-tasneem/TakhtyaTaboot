@@ -630,9 +630,9 @@ namespace TakhtyaTaboot
                 args => { CollectTaxes(Settlement.CurrentSettlement); VillageMenuInit(args); });
 
             starter.AddGameMenuOption("hindostan_village", "hindostan_village_projects",
-                "{=!}Order construction works",
-                args => { args.optionLeaveType = GameMenuOption.LeaveType.Trade; return true; },
-                args => GameMenu.SwitchToMenu("hindostan_village_projects"));
+                "{=!}Open the works ledger",
+                args => { args.optionLeaveType = GameMenuOption.LeaveType.Manage; return true; },
+                args => UI.VillageWorksScreen.Open(Settlement.CurrentSettlement));
 
             starter.AddGameMenuOption("hindostan_village", "hindostan_village_appoint_zamindar",
                 "{=!}Appoint or replace the village zamindar",
@@ -654,35 +654,8 @@ namespace TakhtyaTaboot
                 args => { args.optionLeaveType = GameMenuOption.LeaveType.Leave; return true; },
                 args => GameMenu.SwitchToMenu("village"), true);
 
-            // ── Construction sub-menu ──
-            starter.AddGameMenu("hindostan_village_projects", "{=!}{HINDOSTAN_VILLAGE_PROJ_TEXT}", ProjectsMenuInit);
-
-            foreach (VillageProject p in Enum.GetValues(typeof(VillageProject)))
-            {
-                VillageProject proj = p; // capture
-                ProjectDef def = Defs[proj];
-                string prereq = def.Requires.HasValue ? " [needs " + Defs[def.Requires.Value].Name + "]" : "";
-                starter.AddGameMenuOption("hindostan_village_projects", "hindostan_proj_" + proj,
-                    "{=!}Build " + def.Name + " (" + def.Cost + "g, " + def.Days + " days) — " + def.Effect + prereq,
-                    args =>
-                    {
-                        args.optionLeaveType = GameMenuOption.LeaveType.Trade;
-                        Settlement s = Settlement.CurrentSettlement;
-                        // Visible when eligible; enabled to start now, or to queue behind the active work.
-                        if (!IsEligible(s, proj, out _)) return false;
-                        bool canStart = CanBuild(s, proj, out string why);
-                        bool canQueue = !canStart && CanQueue(s, proj, out why);
-                        args.IsEnabled = canStart || canQueue;
-                        if (canQueue) args.Tooltip = new TextObject("{=!}Queued behind the current work; cost charged when it begins.");
-                        else if (!args.IsEnabled) args.Tooltip = new TextObject("{=!}" + why);
-                        return true;
-                    },
-                    args => { StartBuild(Settlement.CurrentSettlement, proj); GameMenu.SwitchToMenu("hindostan_village"); });
-            }
-
-            starter.AddGameMenuOption("hindostan_village_projects", "hindostan_proj_back", "{=!}Back",
-                args => { args.optionLeaveType = GameMenuOption.LeaveType.Leave; return true; },
-                args => GameMenu.SwitchToMenu("hindostan_village"), true);
+            // The old text construction sub-menu is gone: the works ledger is a proper Gauntlet
+            // screen now (UI/VillageWorksScreen — project list, progress bar, coffer, tax estimate).
         }
 
         private void VillageMenuInit(MenuCallbackArgs args)
@@ -733,20 +706,93 @@ namespace TakhtyaTaboot
             MBTextManager.SetTextVariable("HINDOSTAN_VILLAGE_TEXT", sb.ToString().Replace("\r\n", "\n"), false);
         }
 
-        private void ProjectsMenuInit(MenuCallbackArgs args)
-        {
-            Settlement s = Settlement.CurrentSettlement;
-            var sb = new StringBuilder();
-            sb.AppendLine($"Construction works at {s?.Name}");
-            sb.AppendLine($"Your gold: {Hero.MainHero.Gold}");
-            sb.AppendLine(" ");
-            sb.AppendLine("A village may hold one work under construction at a time.");
-            MBTextManager.SetTextVariable("HINDOSTAN_VILLAGE_PROJ_TEXT", sb.ToString().Replace("\r\n", "\n"), false);
-        }
-
         private static string ThreatBand(float t)
             => t >= 90 ? "the village is being ruined" : t >= 80 ? "growth has halted"
              : t >= 60 ? "growth is slowed" : t >= 40 ? "watchful" : "calm";
+
+        // ── UI façade (the Gauntlet works screen reads and acts ONLY through these) ──
+        // One row of the works ledger, flattened for the view model: no engine types leak up.
+        public sealed class WorkItem
+        {
+            public string Id;              // enum name, stable
+            public string Name;            // display (Shrine is faith-flavored)
+            public string Effect;
+            public string PrereqName;      // "" if none
+            public int Cost, Days;
+            public bool IsBuilt, IsActive, IsQueued;
+            public bool CanAct;            // start now, or queue behind the active work
+            public bool WillQueue;         // acting queues rather than starts
+            public string DisabledReason;  // why CanAct is false
+        }
+
+        public List<WorkItem> DescribeWorks(Settlement s)
+        {
+            var list = new List<WorkItem>();
+            if (s == null || !s.IsVillage) return list;
+            string activeName = _buildProject.TryGetValue(s.StringId, out string an) ? an : null;
+            string queuedName = _queued.TryGetValue(s.StringId, out string qn) ? qn : null;
+            foreach (var kv in Defs)
+            {
+                bool eligible = IsEligible(s, kv.Key, out string why);
+                bool canStart = eligible && CanBuild(s, kv.Key, out why);
+                bool canQueue = eligible && !canStart && CanQueue(s, kv.Key, out why);
+                list.Add(new WorkItem
+                {
+                    Id = kv.Key.ToString(),
+                    Name = ProjectDisplayName(kv.Key, s),
+                    Effect = kv.Value.Effect,
+                    PrereqName = kv.Value.Requires.HasValue ? Defs[kv.Value.Requires.Value].Name : "",
+                    Cost = kv.Value.Cost,
+                    Days = kv.Value.Days,
+                    IsBuilt = HasProject(s, kv.Key),
+                    IsActive = activeName == kv.Value.Name,
+                    IsQueued = queuedName == kv.Value.Name,
+                    CanAct = canStart || canQueue,
+                    WillQueue = canQueue,
+                    DisabledReason = why ?? "",
+                });
+            }
+            return list;
+        }
+
+        // The work under way: name + fraction done (0..1) + whole days left; false if idle.
+        public bool TryGetActiveWork(Settlement s, out string name, out float doneFraction, out int daysLeft)
+        {
+            name = ""; doneFraction = 0f; daysLeft = 0;
+            if (s == null || !_buildProject.TryGetValue(s.StringId, out name)) return false;
+            float left = _buildProgress.TryGetValue(s.StringId, out float bp) ? bp
+                : _buildDays.TryGetValue(s.StringId, out int bd) ? bd : 0f;
+            VillageProject? cur = ByName(name);
+            float total = cur.HasValue ? Defs[cur.Value].Days : left;
+            doneFraction = total > 0f ? 1f - left / total : 0f;
+            daysLeft = (int)Math.Ceiling(left);
+            return true;
+        }
+
+        public string GetQueuedWorkName(Settlement s)
+            => s != null && _queued.TryGetValue(s.StringId, out string qn) ? qn : "";
+
+        public float TaxPerDayEstimate(Settlement s)
+        {
+            if (s?.Village == null) return 0f;
+            Hero z = FeudalTitlesBehavior.Instance?.GetVillageLord(s);
+            float authorityRate = s.MapFaction is Kingdom k && ImperialAuthorityBehavior.Instance != null
+                ? ImperialAuthorityBehavior.Instance.GetTaxCollectionRate(k) : 1f;
+            return VillageFiefMath.DailyTax(s.Village.Hearth, SumBuilt(s, d => d.TaxBonusPct),
+                GetThreat(s), authorityRate, z?.GetSkillValue(DefaultSkills.Steward) ?? 0,
+                Config.Tune.VillageTaxPerHearth);
+        }
+
+        public string GetThreatBand(Settlement s) => ThreatBand(GetThreat(s));
+
+        public void UiStartWork(Settlement s, string workId)
+        {
+            if (s == null || !Enum.TryParse(workId, out VillageProject p)) return;
+            StartBuild(s, p);
+        }
+
+        public void UiCollectTaxes(Settlement s) { if (s != null) CollectTaxes(s); }
+        public void UiPatrol(Settlement s) { if (s != null) Patrol(s); }
 
         // ── Save / load ──────────────────────────────────────────────────────────────
         public override void SyncData(IDataStore dataStore)

@@ -8,28 +8,33 @@ using TaleWorlds.Library;
 namespace TakhtyaTaboot.UI
 {
     // Root view model for the imperial hierarchy viewer. The left list holds every
-    // kingdom; selecting one builds a branching feudal TREE on the right — the sovereign
-    // at the top, connector lines fanning down to the town and castle lords, and from
-    // each of them down to the village zamindars and sub-vassals beneath. The tree is
-    // drawn with per-row connector-line gutters (see TreeGuideCellVM).
+    // kingdom; selecting one builds a TROOP-TREE-STYLE BOARD on the right — the sovereign's
+    // card at the top centre, and beneath him one COLUMN per direct vassal (the great town
+    // and castle lords), each column stacking that lord's own subtree: sub-vassals, then
+    // the zamindars of his villages, indented with connector gutters (TreeGuideCellVM).
     public class HierarchyVM : ViewModel
     {
         private readonly Action _onClose;
         private MBBindingList<KingdomItemVM> _kingdoms;
-        private MBBindingList<HierarchyNodeVM> _nodes;
+        private MBBindingList<HierarchyBranchVM> _branches;
         private string _titleText;
         private string _selectedKingdomName;
         private string _hintText;
+        private string _rootName;
+        private string _rootSubtitle;
+        private string _rootLink;
         private KingdomItemVM _selected;
 
         public HierarchyVM(Action onClose)
         {
             _onClose = onClose;
             _kingdoms = new MBBindingList<KingdomItemVM>();
-            _nodes = new MBBindingList<HierarchyNodeVM>();
+            _branches = new MBBindingList<HierarchyBranchVM>();
             _titleText = "The Imperial Hierarchy of Hindostan";
             _hintText = "Select a realm. The tree branches from the sovereign down through his lords to the village zamindars. Click any noble for their encyclopedia entry.";
             _selectedKingdomName = "";
+            _rootName = "";
+            _rootSubtitle = "";
 
             foreach (Kingdom k in Kingdom.All.Where(k => !k.IsEliminated && !UnifiedEmpireBehavior.IsDormant(k))
                                           .OrderByDescending(k => k.CurrentTotalStrength))
@@ -44,7 +49,13 @@ namespace TakhtyaTaboot.UI
         public MBBindingList<KingdomItemVM> Kingdoms { get => _kingdoms; set { if (_kingdoms != value) { _kingdoms = value; OnPropertyChangedWithValue(value); } } }
 
         [DataSourceProperty]
-        public MBBindingList<HierarchyNodeVM> Nodes { get => _nodes; set { if (_nodes != value) { _nodes = value; OnPropertyChangedWithValue(value); } } }
+        public MBBindingList<HierarchyBranchVM> Branches { get => _branches; set { if (_branches != value) { _branches = value; OnPropertyChangedWithValue(value); } } }
+
+        [DataSourceProperty]
+        public string RootName { get => _rootName; set { if (_rootName != value) { _rootName = value; OnPropertyChangedWithValue(value); } } }
+
+        [DataSourceProperty]
+        public string RootSubtitle { get => _rootSubtitle; set { if (_rootSubtitle != value) { _rootSubtitle = value; OnPropertyChangedWithValue(value); } } }
 
         [DataSourceProperty]
         public string TitleText { get => _titleText; set { if (_titleText != value) { _titleText = value; OnPropertyChangedWithValue(value); } } }
@@ -64,24 +75,35 @@ namespace TakhtyaTaboot.UI
             BuildTree(item.Kingdom);
         }
 
-        // ── Tree construction ────────────────────────────────────────────────────────
+        // ── Board construction ───────────────────────────────────────────────────────
+        // The sovereign crowns the board; each of his DIRECT vassals heads a column, and the
+        // column stacks that lord's own subtree (indented with connector gutters).
         private void BuildTree(Kingdom kingdom)
         {
-            _nodes.Clear();
-            if (kingdom?.Leader == null) return;
+            _branches.Clear();
+            RootName = "";
+            RootSubtitle = "";
+            _rootLink = null;
+            if (kingdom?.Leader == null) { OnPropertyChanged(nameof(Branches)); return; }
             Hero ruler = kingdom.Leader;
 
+            RootName = ruler.Name?.ToString() ?? "—";
+            RootSubtitle = RulerSubtitle(kingdom, ruler);
+            _rootLink = ruler.EncyclopediaLink;
+
             var visited = new HashSet<string> { ruler.StringId };
-
-            // Root — the sovereign (no gutter).
-            _nodes.Add(new HierarchyNodeVM(ruler.Name?.ToString() ?? "—",
-                RulerSubtitle(kingdom, ruler), true, ruler.EncyclopediaLink,
-                new MBBindingList<TreeGuideCellVM>(), ActivateLink));
-
-            EmitChildren(ChildrenOf(ruler, kingdom, visited), kingdom, visited, new List<bool>());
+            foreach (Hero lord in ChildrenOf(ruler, kingdom, visited))
+            {
+                var members = new MBBindingList<HierarchyNodeVM>();
+                EmitMembers(members, ChildrenOf(lord, kingdom, visited), kingdom, visited, new List<bool>());
+                _branches.Add(new HierarchyBranchVM(lord.Name?.ToString() ?? "—",
+                    NodeSubtitle(lord), true, lord.EncyclopediaLink, members, ActivateLink));
+            }
+            OnPropertyChanged(nameof(Branches));
         }
 
-        private void EmitChildren(List<Hero> kids, Kingdom kingdom, HashSet<string> visited, List<bool> path)
+        private void EmitMembers(MBBindingList<HierarchyNodeVM> members, List<Hero> kids,
+            Kingdom kingdom, HashSet<string> visited, List<bool> path)
         {
             for (int i = 0; i < kids.Count; i++)
             {
@@ -89,11 +111,16 @@ namespace TakhtyaTaboot.UI
                 bool hasNext = i < kids.Count - 1;
                 var myPath = new List<bool>(path) { hasNext };
 
-                _nodes.Add(new HierarchyNodeVM(kid.Name?.ToString() ?? "—",
+                members.Add(new HierarchyNodeVM(kid.Name?.ToString() ?? "—",
                     NodeSubtitle(kid), true, kid.EncyclopediaLink, BuildGuides(myPath), ActivateLink));
 
-                EmitChildren(ChildrenOf(kid, kingdom, visited), kingdom, visited, myPath);
+                EmitMembers(members, ChildrenOf(kid, kingdom, visited), kingdom, visited, myPath);
             }
+        }
+
+        public void ExecuteOpenRoot()
+        {
+            if (!string.IsNullOrEmpty(_rootLink)) ActivateLink(_rootLink);
         }
 
         // A holder's feudal children: the lords who answer to him, then the zamindars of

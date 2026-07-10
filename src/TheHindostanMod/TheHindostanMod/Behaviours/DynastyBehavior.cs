@@ -33,6 +33,7 @@ namespace TakhtyaTaboot
         private Dictionary<string, string> _dynastyName = new Dictionary<string, string>();   // dynastyId -> display name
         private Dictionary<string, string> _cadetParent = new Dictionary<string, string>();   // childClanId -> parentClanId
         private Dictionary<string, string> _pastSovereigns = new Dictionary<string, string>(); // kingdomId -> csv heroIds
+        private Dictionary<string, string> _accessionDay = new Dictionary<string, string>();   // kingdomId -> day the CURRENT ruler acceded
         private int _cadetCount;
         private int _lastAiFoundDay = -1;
 
@@ -49,6 +50,7 @@ namespace TakhtyaTaboot
             SyncDict(dataStore, "hind_dyn_names", ref _dynastyName);
             SyncDict(dataStore, "hind_dyn_cadets", ref _cadetParent);
             SyncDict(dataStore, "hind_dyn_sovs", ref _pastSovereigns);
+            SyncDict(dataStore, "hind_dyn_accday", ref _accessionDay);
             dataStore.SyncData("hind_dyn_cadetCount", ref _cadetCount);
             dataStore.SyncData("hind_dyn_lastAiFound", ref _lastAiFoundDay);
         }
@@ -217,9 +219,27 @@ namespace TakhtyaTaboot
             var ids = Csv(csv);
             if (!ids.Contains(k.Leader.StringId))
             {
+                // A roll that already has entries means this is a real accession happening in
+                // play — date it today. A FIRST entry is the campaign-start ruler, who has
+                // plainly reigned a while already: seed a standing tenure so buying out an
+                // established king costs what it should (Alamgir's 49 years are the point of
+                // the whole exercise — see SuccessionLawMath.IncumbentPrice).
+                int today = (int)CampaignTime.Now.ToDays;
+                int seedYears = k.Leader.StringId == "tyt_aurangzeb" ? 49 : ids.Count == 0 ? 15 : 0;
+                _accessionDay[k.StringId] = (today - seedYears * CampaignTime.DaysInYear).ToString();
+
                 ids.Add(k.Leader.StringId);
                 _pastSovereigns[k.StringId] = string.Join(",", ids);
             }
+        }
+
+        // Years the CURRENT ruler has sat this throne (0 if unknown). Read by the succession
+        // crisis economy: an incumbent's abdication price grows with his tenure.
+        public float GetReignYears(Kingdom k)
+        {
+            if (k?.StringId == null || !_accessionDay.TryGetValue(k.StringId, out string s)
+                || !int.TryParse(s, out int day)) return 0f;
+            return Math.Max(0f, ((float)CampaignTime.Now.ToDays - day) / CampaignTime.DaysInYear);
         }
 
         private static List<string> Csv(string s)

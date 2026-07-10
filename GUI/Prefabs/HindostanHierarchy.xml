@@ -64,46 +64,98 @@
                       </Children>
                     </ListPanel>
 
-                    <!-- RIGHT: hierarchy tree -->
+                    <!-- RIGHT: the hierarchy BOARD (troop-tree style): the sovereign's card top
+                         centre, a stub line down, then one COLUMN per direct vassal, each column
+                         stacking that lord's subtree. Scrolls on both axes. -->
                     <ListPanel WidthSizePolicy="StretchToParent" HeightSizePolicy="CoverChildren" VerticalAlignment="Top" MarginLeft="20" StackLayout.LayoutMethod="VerticalTopToBottom">
                       <Children>
                         <TextWidget WidthSizePolicy="StretchToParent" HeightSizePolicy="Fixed" SuggestedHeight="34" Brush="Popup.Title.Text" Brush.FontSize="28" Text="@SelectedKingdomName" />
                         <Widget WidthSizePolicy="StretchToParent" HeightSizePolicy="Fixed" SuggestedHeight="592" MarginTop="4" Sprite="scrollable_field_9">
                           <Children>
-                            <ScrollablePanel WidthSizePolicy="StretchToParent" HeightSizePolicy="StretchToParent" MarginTop="10" MarginBottom="10" MarginLeft="8" MarginRight="8" AutoHideScrollBars="true" ClipRect="RightClip" InnerPanel="RightClip\RightList" VerticalScrollbar="..\RightScrollbar">
+                            <ScrollablePanel WidthSizePolicy="StretchToParent" HeightSizePolicy="StretchToParent" MarginTop="10" MarginBottom="14" MarginLeft="8" MarginRight="8" AutoHideScrollBars="true" ClipRect="RightClip" InnerPanel="RightClip\Board" VerticalScrollbar="..\RightScrollbar" HorizontalScrollbar="..\BoardHScrollbar">
                               <Children>
                                 <Widget Id="RightClip" WidthSizePolicy="StretchToParent" HeightSizePolicy="StretchToParent" ClipContents="true">
                                   <Children>
-                                    <ListPanel Id="RightList" DataSource="{Nodes}" WidthSizePolicy="StretchToParent" HeightSizePolicy="CoverChildren" StackLayout.LayoutMethod="VerticalTopToBottom">
-                                      <ItemTemplate>
-                                        <ListPanel WidthSizePolicy="StretchToParent" HeightSizePolicy="Fixed" SuggestedHeight="60" StackLayout.LayoutMethod="HorizontalLeftToRight">
+                                    <ListPanel Id="Board" WidthSizePolicy="CoverChildren" HeightSizePolicy="CoverChildren" StackLayout.LayoutMethod="VerticalTopToBottom">
+                                      <Children>
+
+                                        <!-- The sovereign's card, crowning the board -->
+                                        <ButtonWidget DoNotPassEventsToChildren="true" WidthSizePolicy="Fixed" HeightSizePolicy="Fixed" SuggestedWidth="340" SuggestedHeight="66" HorizontalAlignment="Center" Brush="Popup.SelectionElement.Tuple" Command.Click="ExecuteOpenRoot" UpdateChildrenStates="true">
                                           <Children>
-                                            <!-- Connector-line gutter: one cell per tree depth -->
-                                            <ListPanel WidthSizePolicy="CoverChildren" HeightSizePolicy="StretchToParent" DataSource="{Guides}" StackLayout.LayoutMethod="HorizontalLeftToRight" IsDisabled="true">
-                                              <ItemTemplate>
-                                                <Widget WidthSizePolicy="Fixed" SuggestedWidth="26" HeightSizePolicy="StretchToParent">
-                                                  <Children>
-                                                    <Widget WidthSizePolicy="Fixed" SuggestedWidth="2" HeightSizePolicy="Fixed" SuggestedHeight="30" HorizontalAlignment="Left" MarginLeft="12" VerticalAlignment="Top" Sprite="BlankWhiteSquare_9" Color="#A98948FF" IsVisible="@TopVert" />
-                                                    <Widget WidthSizePolicy="Fixed" SuggestedWidth="2" HeightSizePolicy="Fixed" SuggestedHeight="30" HorizontalAlignment="Left" MarginLeft="12" VerticalAlignment="Bottom" Sprite="BlankWhiteSquare_9" Color="#A98948FF" IsVisible="@BottomVert" />
-                                                    <Widget WidthSizePolicy="Fixed" SuggestedWidth="13" HeightSizePolicy="Fixed" SuggestedHeight="2" HorizontalAlignment="Right" VerticalAlignment="Center" Sprite="BlankWhiteSquare_9" Color="#A98948FF" IsVisible="@Horiz" />
-                                                  </Children>
-                                                </Widget>
-                                              </ItemTemplate>
-                                            </ListPanel>
-                                            <!-- The noble -->
-                                            <ButtonWidget DoNotPassEventsToChildren="true" WidthSizePolicy="StretchToParent" HeightSizePolicy="StretchToParent" MarginLeft="2" MarginTop="3" MarginBottom="3" Brush="Popup.SelectionElement.Tuple" IsEnabled="@IsClickable" Command.Click="ExecuteOpenEncyclopedia" UpdateChildrenStates="true">
+                                            <Widget WidthSizePolicy="StretchToParent" HeightSizePolicy="StretchToParent" Sprite="frame_9" IsEnabled="false" />
+                                            <ListPanel WidthSizePolicy="StretchToParent" HeightSizePolicy="CoverChildren" VerticalAlignment="Center" MarginLeft="12" MarginRight="8" StackLayout.LayoutMethod="VerticalTopToBottom" IsDisabled="true">
                                               <Children>
-                                                <ListPanel WidthSizePolicy="StretchToParent" HeightSizePolicy="CoverChildren" VerticalAlignment="Center" MarginLeft="12" StackLayout.LayoutMethod="VerticalTopToBottom" IsDisabled="true">
-                                                  <Children>
-                                                    <TextWidget WidthSizePolicy="StretchToParent" HeightSizePolicy="Fixed" SuggestedHeight="28" Brush="Popup.Tuple.Text" Brush.FontSize="23" Text="@Name" IsDisabled="true" />
-                                                    <TextWidget WidthSizePolicy="StretchToParent" HeightSizePolicy="Fixed" SuggestedHeight="22" Brush="Popup.Description.Text" Brush.FontSize="16" Text="@Subtitle" IsDisabled="true" />
-                                                  </Children>
-                                                </ListPanel>
+                                                <TextWidget WidthSizePolicy="StretchToParent" HeightSizePolicy="Fixed" SuggestedHeight="28" Brush="Popup.Title.Text" Brush.FontSize="24" Text="@RootName" IsDisabled="true" />
+                                                <TextWidget WidthSizePolicy="StretchToParent" HeightSizePolicy="Fixed" SuggestedHeight="20" Brush="Popup.Description.Text" Brush.FontSize="14" ClipContents="true" Text="@RootSubtitle" IsDisabled="true" />
                                               </Children>
-                                            </ButtonWidget>
+                                            </ListPanel>
                                           </Children>
+                                        </ButtonWidget>
+
+                                        <!-- Stub from the sovereign down to the row of columns -->
+                                        <Widget WidthSizePolicy="Fixed" HeightSizePolicy="Fixed" SuggestedWidth="2" SuggestedHeight="22" HorizontalAlignment="Center" Sprite="BlankWhiteSquare_9" Color="#A98948FF" IsEnabled="false" />
+
+                                        <!-- One column per direct vassal -->
+                                        <ListPanel DataSource="{Branches}" WidthSizePolicy="CoverChildren" HeightSizePolicy="CoverChildren" HorizontalAlignment="Center" StackLayout.LayoutMethod="HorizontalLeftToRight">
+                                          <ItemTemplate>
+                                            <ListPanel WidthSizePolicy="Fixed" HeightSizePolicy="CoverChildren" SuggestedWidth="278" VerticalAlignment="Top" MarginLeft="6" MarginRight="6" StackLayout.LayoutMethod="VerticalTopToBottom">
+                                              <Children>
+
+                                                <!-- Stub from the rail down to this lord's card -->
+                                                <Widget WidthSizePolicy="Fixed" HeightSizePolicy="Fixed" SuggestedWidth="2" SuggestedHeight="18" HorizontalAlignment="Center" Sprite="BlankWhiteSquare_9" Color="#A98948FF" IsEnabled="false" />
+
+                                                <!-- The lord heading this column -->
+                                                <ButtonWidget DoNotPassEventsToChildren="true" WidthSizePolicy="StretchToParent" HeightSizePolicy="Fixed" SuggestedHeight="62" Brush="Popup.SelectionElement.Tuple" IsEnabled="@IsClickable" Command.Click="ExecuteOpenEncyclopedia" UpdateChildrenStates="true">
+                                                  <Children>
+                                                    <Widget WidthSizePolicy="StretchToParent" HeightSizePolicy="StretchToParent" Sprite="frame_9" IsEnabled="false" />
+                                                    <ListPanel WidthSizePolicy="StretchToParent" HeightSizePolicy="CoverChildren" VerticalAlignment="Center" MarginLeft="10" MarginRight="6" StackLayout.LayoutMethod="VerticalTopToBottom" IsDisabled="true">
+                                                      <Children>
+                                                        <TextWidget WidthSizePolicy="StretchToParent" HeightSizePolicy="Fixed" SuggestedHeight="26" Brush="Popup.Tuple.Text" Brush.FontSize="21" ClipContents="true" Text="@Name" IsDisabled="true" />
+                                                        <TextWidget WidthSizePolicy="StretchToParent" HeightSizePolicy="Fixed" SuggestedHeight="20" Brush="Popup.Description.Text" Brush.FontSize="13" ClipContents="true" Text="@Subtitle" IsDisabled="true" />
+                                                      </Children>
+                                                    </ListPanel>
+                                                  </Children>
+                                                </ButtonWidget>
+
+                                                <!-- His subtree: sub-vassals, then his villages' zamindars -->
+                                                <ListPanel DataSource="{Members}" WidthSizePolicy="StretchToParent" HeightSizePolicy="CoverChildren" StackLayout.LayoutMethod="VerticalTopToBottom">
+                                                  <ItemTemplate>
+                                                    <ListPanel WidthSizePolicy="StretchToParent" HeightSizePolicy="Fixed" SuggestedHeight="52" StackLayout.LayoutMethod="HorizontalLeftToRight">
+                                                      <Children>
+                                                        <!-- Connector-line gutter: one cell per depth below the column head -->
+                                                        <ListPanel WidthSizePolicy="CoverChildren" HeightSizePolicy="StretchToParent" DataSource="{Guides}" StackLayout.LayoutMethod="HorizontalLeftToRight" IsDisabled="true">
+                                                          <ItemTemplate>
+                                                            <Widget WidthSizePolicy="Fixed" SuggestedWidth="22" HeightSizePolicy="StretchToParent">
+                                                              <Children>
+                                                                <Widget WidthSizePolicy="Fixed" SuggestedWidth="2" HeightSizePolicy="Fixed" SuggestedHeight="26" HorizontalAlignment="Left" MarginLeft="10" VerticalAlignment="Top" Sprite="BlankWhiteSquare_9" Color="#A98948FF" IsVisible="@TopVert" />
+                                                                <Widget WidthSizePolicy="Fixed" SuggestedWidth="2" HeightSizePolicy="Fixed" SuggestedHeight="26" HorizontalAlignment="Left" MarginLeft="10" VerticalAlignment="Bottom" Sprite="BlankWhiteSquare_9" Color="#A98948FF" IsVisible="@BottomVert" />
+                                                                <Widget WidthSizePolicy="Fixed" SuggestedWidth="10" HeightSizePolicy="Fixed" SuggestedHeight="2" HorizontalAlignment="Right" VerticalAlignment="Center" Sprite="BlankWhiteSquare_9" Color="#A98948FF" IsVisible="@Horiz" />
+                                                              </Children>
+                                                            </Widget>
+                                                          </ItemTemplate>
+                                                        </ListPanel>
+                                                        <!-- The noble -->
+                                                        <ButtonWidget DoNotPassEventsToChildren="true" WidthSizePolicy="StretchToParent" HeightSizePolicy="StretchToParent" MarginLeft="2" MarginTop="2" MarginBottom="2" Brush="Popup.SelectionElement.Tuple" IsEnabled="@IsClickable" Command.Click="ExecuteOpenEncyclopedia" UpdateChildrenStates="true">
+                                                          <Children>
+                                                            <ListPanel WidthSizePolicy="StretchToParent" HeightSizePolicy="CoverChildren" VerticalAlignment="Center" MarginLeft="8" MarginRight="4" StackLayout.LayoutMethod="VerticalTopToBottom" IsDisabled="true">
+                                                              <Children>
+                                                                <TextWidget WidthSizePolicy="StretchToParent" HeightSizePolicy="Fixed" SuggestedHeight="24" Brush="Popup.Tuple.Text" Brush.FontSize="18" ClipContents="true" Text="@Name" IsDisabled="true" />
+                                                                <TextWidget WidthSizePolicy="StretchToParent" HeightSizePolicy="Fixed" SuggestedHeight="18" Brush="Popup.Description.Text" Brush.FontSize="12" ClipContents="true" Text="@Subtitle" IsDisabled="true" />
+                                                              </Children>
+                                                            </ListPanel>
+                                                          </Children>
+                                                        </ButtonWidget>
+                                                      </Children>
+                                                    </ListPanel>
+                                                  </ItemTemplate>
+                                                </ListPanel>
+
+                                              </Children>
+                                            </ListPanel>
+                                          </ItemTemplate>
                                         </ListPanel>
-                                      </ItemTemplate>
+
+                                      </Children>
                                     </ListPanel>
                                   </Children>
                                 </Widget>
@@ -113,6 +165,12 @@
                               <Children>
                                 <Widget WidthSizePolicy="Fixed" HeightSizePolicy="StretchToParent" SuggestedWidth="4" HorizontalAlignment="Center" Sprite="BlankWhiteSquare_9" Color="#5A4033FF" AlphaFactor="0.5" />
                                 <ImageWidget Id="RightScrollbarHandle" WidthSizePolicy="Fixed" HeightSizePolicy="Fixed" SuggestedHeight="10" SuggestedWidth="10" HorizontalAlignment="Center" Brush="FaceGen.Scrollbar.Handle" />
+                              </Children>
+                            </ScrollbarWidget>
+                            <ScrollbarWidget Id="BoardHScrollbar" WidthSizePolicy="StretchToParent" HeightSizePolicy="Fixed" SuggestedHeight="8" HorizontalAlignment="Left" VerticalAlignment="Bottom" MarginBottom="2" MarginLeft="12" MarginRight="12" AlignmentAxis="Horizontal" Handle="BoardHScrollbarHandle" MaxValue="100" MinValue="0">
+                              <Children>
+                                <Widget WidthSizePolicy="StretchToParent" HeightSizePolicy="Fixed" SuggestedHeight="4" VerticalAlignment="Center" Sprite="BlankWhiteSquare_9" Color="#5A4033FF" AlphaFactor="0.5" />
+                                <ImageWidget Id="BoardHScrollbarHandle" WidthSizePolicy="Fixed" HeightSizePolicy="Fixed" SuggestedHeight="10" SuggestedWidth="10" VerticalAlignment="Center" Brush="FaceGen.Scrollbar.Handle" />
                               </Children>
                             </ScrollbarWidget>
                           </Children>

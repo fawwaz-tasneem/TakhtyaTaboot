@@ -228,6 +228,54 @@ namespace TakhtyaTaboot.Util
             return chance < 0.05f ? 0.05f : (chance > 0.95f ? 0.95f : chance);
         }
 
+        // ── The crisis economy: pressing the SITTING king (roadmap A.1 rework) ──────────
+        // An incumbent is dearer than any pretender — he sells the throne he SITS on, and every
+        // year of habit and dignity raises the price. A 49-year Alamgir costs ~6x a fresh
+        // usurper: with a large realm's going rate that is millions, as it should be.
+        public const float ReignYearPriceFactor = 0.10f;
+
+        public static float IncumbentPrice(float baseGold, float supportFraction, float yearsReigned)
+            => RivalPrice(baseGold, supportFraction) * (1f + ReignYearPriceFactor * Math.Max(0f, yearsReigned));
+
+        // Pressing a SECURE king to abdicate is lèse-majesté. Below the gate (his loyal strength
+        // under 3x yours) he hears you out like any rival; past it, a refusal may be answered
+        // with a TREACHERY declaration — likelier the safer he sits.
+        public const float TreacheryStrengthGate = 3f;
+
+        public static float TreacheryChance(float kingToPlayerStrengthRatio)
+        {
+            if (kingToPlayerStrengthRatio < TreacheryStrengthGate) return 0f;
+            float over = kingToPlayerStrengthRatio - TreacheryStrengthGate;
+            float chance = 0.25f + over * 0.10f;
+            return chance > 0.60f ? 0.60f : chance;
+        }
+
+        // The king's ransom for a captured traitor: always in the hundreds of thousands,
+        // scaled by the realm's going rate and clamped so it is never trivial nor absurd.
+        public static int RansomDemand(float baseGold)
+        {
+            float raw = Math.Max(0f, baseGold) * 0.6f;
+            return (int)Math.Max(200000f, Math.Min(1000000f, raw));
+        }
+
+        // The victorious king's justice for the captured traitor, from a 0..1 roll: the worse
+        // he regards the prisoner, the readier the sword; the fine is for kings who prefer
+        // treasure to blood; the fort is the default — let the traitor rot until he is bought out.
+        public enum TraitorFate { Execute, HeavyFine, Imprison }
+
+        public static TraitorFate ChooseFate(int relation, float roll)
+        {
+            float execute = relation <= -60 ? 0.35f : relation <= -20 ? 0.20f : 0.10f;
+            const float fine = 0.35f;
+            if (roll < execute) return TraitorFate.Execute;
+            if (roll < execute + fine) return TraitorFate.HeavyFine;
+            return TraitorFate.Imprison;
+        }
+
+        // Death stalks an unransomed prisoner: each month in the fort carries this chance the
+        // damp or the daggers end him.
+        public const float PrisonDeathChancePerMonth = 0.05f;
+
         // ── AI law adoption (by dynasty size, design doc cross-cutting) ──────────────────
         // A broad dynasty trusts primogeniture (or, if the realm is fractured, election among its princes);
         // a thin line names an heir; a dynasty with no son falls to the magnates.

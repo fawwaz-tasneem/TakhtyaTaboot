@@ -48,6 +48,23 @@ namespace TakhtyaTaboot.Util
             return returning[0];
         }
 
+        // Colour records for the unified window: each folded clan's own Color/Color2 packed as
+        // "clanId:color:color2" triples, so the breakaway can dress the returning houses in
+        // their ancestral colours again.
+        public static string PackColour(string clanId, uint color, uint color2)
+            => $"{clanId}:{color}:{color2}";
+
+        public static bool TryUnpackColour(string entry, out string clanId, out uint color, out uint color2)
+        {
+            clanId = null; color = 0; color2 = 0;
+            if (string.IsNullOrEmpty(entry)) return false;
+            string[] parts = entry.Split(':');
+            if (parts.Length != 3 || parts[0].Length == 0) return false;
+            if (!uint.TryParse(parts[1], out color) || !uint.TryParse(parts[2], out color2)) return false;
+            clanId = parts[0];
+            return true;
+        }
+
         // CSV pack/unpack for SyncData (strings only — the save-safe primitive convention).
         public static string Pack(IEnumerable<string> ids)
             => ids == null ? "" : string.Join(",", ids);

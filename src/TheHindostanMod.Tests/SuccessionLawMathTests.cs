@@ -223,5 +223,52 @@ namespace TakhtyaTaboot.Tests
             Assert.True(SuccessionLawMath.PersuasionAcceptChance(100000f, price, 60)
                       > SuccessionLawMath.PersuasionAcceptChance(100000f, price, -60));
         }
+
+        // ── The crisis economy rework: the sitting king's price and the treachery arc ────
+        [Fact]
+        public void A_long_seated_king_costs_millions()
+        {
+            // A 49-year Alamgir over a 20-fief realm (going rate 1,000,000) at 40% support:
+            // RivalPrice 900k x (1 + 4.9) = ~5.3 million. A fresh usurper of the same standing
+            // costs the plain rival price.
+            float alamgir = SuccessionLawMath.IncumbentPrice(1000000f, 0.4f, 49f);
+            float freshKing = SuccessionLawMath.IncumbentPrice(1000000f, 0.4f, 0f);
+            Assert.True(alamgir > 5000000f);
+            Assert.Equal(SuccessionLawMath.RivalPrice(1000000f, 0.4f), freshKing, 1);
+        }
+
+        [Fact]
+        public void Incumbent_price_never_shrinks_with_tenure()
+            => Assert.True(SuccessionLawMath.IncumbentPrice(500000f, 0.5f, 10f)
+                         > SuccessionLawMath.IncumbentPrice(500000f, 0.5f, 2f));
+
+        [Theory]
+        [InlineData(1.0f, 0f)]     // an even match: no king calls that treachery
+        [InlineData(2.9f, 0f)]     // just under the gate
+        [InlineData(3.0f, 0.25f)]  // at the gate the risk opens at a quarter
+        [InlineData(5.0f, 0.45f)]  // and grows with his security
+        [InlineData(99f, 0.60f)]   // capped — even a colossus is not certain to bother
+        public void Treachery_risk_opens_at_three_to_one(float ratio, float expected)
+            => Assert.Equal(expected, SuccessionLawMath.TreacheryChance(ratio), 2);
+
+        [Fact]
+        public void The_ransom_is_always_in_the_hundreds_of_thousands()
+        {
+            Assert.Equal(200000, SuccessionLawMath.RansomDemand(0f));           // floor
+            Assert.Equal(600000, SuccessionLawMath.RansomDemand(1000000f));     // 60% of the rate
+            Assert.Equal(1000000, SuccessionLawMath.RansomDemand(99999999f));   // ceiling
+        }
+
+        [Fact]
+        public void The_kings_justice_spans_all_three_fates()
+        {
+            // A hated traitor faces the sword more readily; the fort is the common fate.
+            Assert.Equal(SuccessionLawMath.TraitorFate.Execute, SuccessionLawMath.ChooseFate(-80, 0.30f));
+            Assert.Equal(SuccessionLawMath.TraitorFate.HeavyFine, SuccessionLawMath.ChooseFate(0, 0.30f));
+            Assert.Equal(SuccessionLawMath.TraitorFate.Imprison, SuccessionLawMath.ChooseFate(0, 0.90f));
+            // The same roll that beheads the hated spares the merely disliked.
+            Assert.Equal(SuccessionLawMath.TraitorFate.Execute, SuccessionLawMath.ChooseFate(-60, 0.25f));
+            Assert.NotEqual(SuccessionLawMath.TraitorFate.Execute, SuccessionLawMath.ChooseFate(50, 0.25f));
+        }
     }
 }

@@ -64,6 +64,12 @@ namespace TakhtyaTaboot
         private List<string> _prisonKingdomIds = new List<string>(); // kingdomId -> days ruler imprisoned
         private List<float>  _prisonDays       = new List<float>();
 
+        // ── Treachery (a secure king answered a demand to abdicate) ──
+        private string _treacheryKingdomId = "";      // the wronged throne ("" = no live treachery)
+        private int _treacheryRansom;                 // the king's price for the traitor's chains
+        private bool _treacheryImprisoned;            // the fate was IMPRISON and the player rots
+        private int _treacheryPrisonRollDay = -1;     // last month-in-chains tick
+
         // ── Public API ────────────────────────────────────────────────────────────
 
         public CrisisState GetCrisisState(Kingdom k)
@@ -127,6 +133,9 @@ namespace TakhtyaTaboot
             CampaignEvents.WeeklyTickEvent.AddNonSerializedListener(this, () => Util.TYTLog.Guard("Succession.WeeklyTick", OnWeeklyTick));
             CampaignEvents.HeroKilledEvent.AddNonSerializedListener(this, OnHeroKilled);
             CampaignEvents.MakePeace.AddNonSerializedListener(this, OnMakePeace);
+            // The king's justice: a traitor (treachery declaration) delivered into the realm's hands.
+            CampaignEvents.HeroPrisonerTaken.AddNonSerializedListener(this,
+                (capturer, prisoner) => Util.TYTLog.Guard("Succession.TreacheryCapture", () => OnTreacheryCapture(capturer, prisoner)));
         }
 
         public override void SyncData(IDataStore dataStore)
@@ -146,6 +155,10 @@ namespace TakhtyaTaboot
             dataStore.SyncData("suc_rulerHIds",    ref _rulerHeroIds);
             dataStore.SyncData("suc_prisonKIds",   ref _prisonKingdomIds);
             dataStore.SyncData("suc_prisonDays",   ref _prisonDays);
+            dataStore.SyncData("suc_treachKingdom", ref _treacheryKingdomId);
+            dataStore.SyncData("suc_treachRansom",  ref _treacheryRansom);
+            dataStore.SyncData("suc_treachJailed",  ref _treacheryImprisoned);
+            dataStore.SyncData("suc_treachRollDay", ref _treacheryPrisonRollDay);
 
             // ClaimantClan's hero->origin-clan map lives in a static helper; persist it here so
             // that a temp cadet clan surviving a save/load can still be dissolved back correctly.
@@ -250,6 +263,8 @@ namespace TakhtyaTaboot
 
         private void OnDailyTick()
         {
+            TreacheryTick();
+
             // Prisoner-ruler trigger: a captive emperor with weak authority invites a crisis.
             foreach (Kingdom k in Kingdom.All.Where(x => !x.IsEliminated && x.Leader != null))
             {
@@ -1517,6 +1532,8 @@ namespace TakhtyaTaboot
         }
 
         // Step 3 — weigh the whole offer against the rival's price and show the odds before he is asked.
+        // The SITTING king is a different animal (crisis economy rework): his price grows with every
+        // year he has reigned, and pressing a SECURE king risks a treachery declaration on refusal.
         private void ConfirmOffer(Offer o)
         {
             if (o.Gold <= 0 && o.Influence <= 0 && o.Troops <= 0 && o.Fief == null)
@@ -1524,9 +1541,14 @@ namespace TakhtyaTaboot
 
             float fiefGold = o.Fief == null ? 0f : (o.Fief.IsTown ? o.BaseGold : o.BaseGold * 0.5f);
             float offerValue = SuccessionLawMath.OfferValue(o.Gold, o.Influence, o.Troops, fiefGold);
-            float price = SuccessionLawMath.RivalPrice(o.BaseGold, SupportFraction(o.K, o.Rival));
+            bool incumbent = o.Rival == o.K?.Leader;
+            float years = incumbent ? (DynastyBehavior.Instance?.GetReignYears(o.K) ?? 0f) : 0f;
+            float price = incumbent
+                ? SuccessionLawMath.IncumbentPrice(o.BaseGold, SupportFraction(o.K, o.Rival), years)
+                : SuccessionLawMath.RivalPrice(o.BaseGold, SupportFraction(o.K, o.Rival));
             int rel = CharacterRelationManager.GetHeroRelation(Hero.MainHero, o.Rival);
             float chance = SuccessionLawMath.PersuasionAcceptChance(offerValue, price, rel);
+            float treachery = incumbent ? SuccessionLawMath.TreacheryChance(PlayerStrengthRatioAgainst(o.K)) : 0f;
 
             var sb = new StringBuilder();
             if (o.Gold > 0) sb.Append($"{o.Gold:n0} dinars, ");
@@ -1536,23 +1558,33 @@ namespace TakhtyaTaboot
             string parts = sb.ToString().TrimEnd(' ', ',');
             string mood = chance >= 0.66f ? "a tempting" : (chance >= 0.4f ? "a fair" : "a poor");
 
+            string body = $"You offer {parts}.\n\n{o.Rival.Name} judges this {mood} bargain — roughly a {chance * 100f:0}% chance he stands down. " +
+                "Refuse, and your treasury is untouched, but he takes the affront and presses his claim the harder.";
+            if (incumbent && years >= 1f)
+                body += $"\n\nHe has sat this throne for {years:0} years, and every year of it is priced into his dignity.";
+            if (treachery > 0f)
+                body += "\n\nBEWARE — the king sits secure, with thrice your strength and more. Pressed and refused, " +
+                        "he may name this offer TREACHERY: banishment from the realm, and war.";
+            body += "\n\nPress the offer?";
+
             InformationManager.ShowInquiry(new InquiryData(
-                $"Offer to {o.Rival.Name}",
-                $"You offer {parts}.\n\n{o.Rival.Name} judges this {mood} bargain — roughly a {chance * 100f:0}% chance he stands down. " +
-                "Refuse, and your treasury is untouched, but he takes the affront and presses his claim the harder.\n\nPress the offer?",
+                $"Offer to {o.Rival.Name}", body,
                 true, true, "Make the offer", "Withdraw",
-                () => Util.TYTLog.Guard("Succession.Persuade", () => ResolveOffer(o, chance)),
+                () => Util.TYTLog.Guard("Succession.Persuade", () => ResolveOffer(o, chance, treachery)),
                 () => { }), false);
         }
 
         // Step 4 — the rival decides. On acceptance the goods change hands and he joins your candidate; on
-        // refusal nothing is paid, his standing hardens, and relations sour.
-        private void ResolveOffer(Offer o, float chance)
+        // refusal nothing is paid, his standing hardens, and relations sour — and a refused SECURE king
+        // may answer with a treachery declaration instead of mere affront.
+        private void ResolveOffer(Offer o, float chance, float treacheryChance = 0f)
         {
             if (MBRandom.RandomFloat >= chance)
             {
                 ChangeRelationAction.ApplyRelationChangeBetweenHeroes(Hero.MainHero, o.Rival, -5);
                 AddSupport(o.Rival, 3f);
+                if (treacheryChance > 0f && o.K?.Leader != null && MBRandom.RandomFloat < treacheryChance)
+                { DeclareTreachery(o.K, o.K.Leader); return; }
                 Notify($"{o.Rival.Name} spurns your terms and presses his claim the harder.", true);
                 return;
             }
@@ -1574,6 +1606,179 @@ namespace TakhtyaTaboot
             var remaining = GetClaimants(o.K);
             if (remaining.Count == 1)
                 ResolveCrisis(o.K, remaining[0], "his rivals bought off and reconciled");
+        }
+
+        // ── Treachery: the price of pressing a secure king (crisis economy rework) ────────
+        // Declared when the SITTING king, holding three times the player's strength or more,
+        // refuses a demand to abdicate and chooses to make an example instead: the player's
+        // house is cast out of the realm (fiefs kept — banishment, not confiscation) and war
+        // follows. If the king's men then take the player, the king pronounces one of three
+        // fates: the sword, a crushing fine, or the fort — where the clan head sits INACTIVE
+        // until a six-figure ransom is paid, or the damp ends him.
+
+        private Kingdom TreacheryKingdom
+            => string.IsNullOrEmpty(_treacheryKingdomId) ? null
+             : Kingdom.All.FirstOrDefault(k => k.StringId == _treacheryKingdomId);
+
+        private static float PlayerStrengthRatioAgainst(Kingdom k)
+        {
+            float loyal = k?.Clans.Where(c => c != null && !c.IsEliminated && c != Clan.PlayerClan)
+                            .Sum(c => c.CurrentTotalStrength) ?? 0f;
+            float mine = Math.Max(1f, Clan.PlayerClan?.CurrentTotalStrength ?? 1f);
+            return loyal / mine;
+        }
+
+        private void DeclareTreachery(Kingdom k, Hero king)
+        {
+            _treacheryKingdomId = k.StringId;
+            _treacheryRansom = SuccessionLawMath.RansomDemand(Math.Max(1, KingdomFiefCount(k)) * 50000f);
+            _treacheryImprisoned = false;
+            _treacheryPrisonRollDay = -1;
+
+            ChangeRelationAction.ApplyRelationChangeBetweenHeroes(Hero.MainHero, king, -30);
+            OpinionBehavior.Instance?.AddOpinion(king, Hero.MainHero, OpinionMath.OpinionType.Grudge, -25f);
+
+            if (Clan.PlayerClan?.Kingdom == k)
+                try { ChangeKingdomAction.ApplyByLeaveWithRebellionAgainstKingdom(Clan.PlayerClan, false); }
+                catch (Exception e) { Util.TYTLog.Error("Treachery banishment failed", e); }
+            if (Clan.PlayerClan != null && !Clan.PlayerClan.IsAtWarWith(k))
+                try { DeclareWarAction.ApplyByDefault(k, Clan.PlayerClan); }
+                catch (Exception e) { Util.TYTLog.Error("Treachery war declaration failed", e); }
+
+            RoyalFarmaan.FromRuler(k, "Treachery at the Foot of the Throne",
+                $"You dared to bid {king.Name} sell the throne he sits — and he is strong enough to answer as kings answer. " +
+                $"Your house is proclaimed traitor and cast out of {k.Name}. Your lands you keep, for now; his armies will " +
+                "speak to that. There is no court left to appeal to — only the field.",
+                "Then it is war");
+            Util.TYTLog.Info($"Treachery declared: {k.StringId} vs the player (ransom {_treacheryRansom}).");
+        }
+
+        private void OnTreacheryCapture(PartyBase capturer, Hero prisoner)
+        {
+            if (prisoner != Hero.MainHero || string.IsNullOrEmpty(_treacheryKingdomId)) return;
+            Kingdom k = TreacheryKingdom;
+            if (k == null || k.IsEliminated || k.Leader == null) { ClearTreachery(); return; }
+            if (capturer?.MapFaction != k || _treacheryImprisoned) return;
+            if (Clan.PlayerClan == null || !Clan.PlayerClan.IsAtWarWith(k)) return;
+
+            Hero king = k.Leader;
+            var fate = SuccessionLawMath.ChooseFate(
+                CharacterRelationManager.GetHeroRelation(king, Hero.MainHero), MBRandom.RandomFloat);
+
+            switch (fate)
+            {
+                case SuccessionLawMath.TraitorFate.Execute:
+                    RoyalFarmaan.FromRuler(k, "The King's Justice: the Sword",
+                        $"Dragged before {king.Name}, you hear the sentence no gold commutes: for treachery against " +
+                        "the throne, death. The realm is made to watch what becomes of those who bid for a living king's seat.",
+                        "So ends my tale",
+                        onPrimary: () => Util.TYTLog.Guard("Treachery.Execute", () =>
+                        {
+                            ClearTreachery();
+                            KillCharacterAction.ApplyByExecution(Hero.MainHero, king, true, true);
+                        }));
+                    break;
+
+                case SuccessionLawMath.TraitorFate.HeavyFine:
+                    int fine = Math.Min(Hero.MainHero.Gold, _treacheryRansom);
+                    RoyalFarmaan.FromRuler(k, "The King's Justice: the Fine",
+                        $"{king.Name} prefers treasure to blood. Your ambition is priced at {fine:n0} dinars, paid to the " +
+                        "last copper before the gates open. The war ends; the shame is yours to keep.",
+                        "Pay, and go free",
+                        onPrimary: () => Util.TYTLog.Guard("Treachery.Fine", () =>
+                        {
+                            if (fine > 0) GiveGoldAction.ApplyBetweenCharacters(Hero.MainHero, king, fine, true);
+                            if (Hero.MainHero.IsPrisoner) EndCaptivityAction.ApplyByRansom(Hero.MainHero, king);
+                            if (Clan.PlayerClan.IsAtWarWith(k)) MakePeaceAction.Apply(Clan.PlayerClan, k);
+                            ClearTreachery();
+                        }));
+                    break;
+
+                default: // Imprison — the fort, until the ransom is paid or the damp decides
+                    _treacheryImprisoned = true;
+                    _treacheryPrisonRollDay = (int)CampaignTime.Now.ToDays;
+                    RoyalFarmaan.FromRuler(k, "The King's Justice: the Fort",
+                        $"{king.Name} neither kills you nor frees you. You are consigned to a fort, and your house must " +
+                        $"rule itself while its head rots. The king names his price: {_treacheryRansom:n0} dinars for your " +
+                        "chains — or the fort keeps what the fort takes.",
+                        "The fort, then");
+                    break;
+            }
+        }
+
+        // The monthly turn of the treachery arc, called from OnDailyTick: closed wars clear it,
+        // and an unransomed prisoner faces each month the offer of his price — and the damp.
+        private void TreacheryTick()
+        {
+            if (string.IsNullOrEmpty(_treacheryKingdomId)) return;
+            Kingdom k = TreacheryKingdom;
+            if (k == null || k.IsEliminated || Clan.PlayerClan == null) { ClearTreachery(); return; }
+
+            if (!_treacheryImprisoned)
+            {
+                // The declaration phase ends when the war does (peace bartered, throne fallen, ...).
+                if (!Clan.PlayerClan.IsAtWarWith(k)) ClearTreachery();
+                return;
+            }
+
+            if (!Hero.MainHero.IsPrisoner)
+            {
+                // Escaped, rescued or released by other hands: the fort no longer holds you, the war stands.
+                _treacheryImprisoned = false;
+                return;
+            }
+
+            int today = (int)CampaignTime.Now.ToDays;
+            if (_treacheryPrisonRollDay < 0) { _treacheryPrisonRollDay = today; return; }
+            if (today - _treacheryPrisonRollDay < 30) return;
+            _treacheryPrisonRollDay = today;
+
+            // First the damp rolls its dice; then, if you live, the jailer names the price again.
+            if (MBRandom.RandomFloat < SuccessionLawMath.PrisonDeathChancePerMonth)
+            {
+                RoyalFarmaan.Issue("Death in the Fort", "From a cell without a window",
+                    "Fever, or a draught in the night, or a quiet blade — the fort does not say. The head of the house " +
+                    "dies in the king's keeping, the ransom unpaid.",
+                    seal: "No seal — none was thought needed",
+                    onPrimary: () => Util.TYTLog.Guard("Treachery.PrisonDeath", () =>
+                    {
+                        ClearTreachery();
+                        KillCharacterAction.ApplyByMurder(Hero.MainHero, TreacheryKingdom?.Leader, true);
+                    }));
+                return;
+            }
+
+            if (Hero.MainHero.Gold >= _treacheryRansom)
+                RoyalFarmaan.Issue("A Price for Your Chains", "From the fort of your captivity",
+                    $"The jailer brings the same words each month: {_treacheryRansom:n0} dinars, and the gates open — " +
+                    "peace with the throne included in the price. Your treasury can bear it. Can your pride?",
+                    seal: "The king's standing offer",
+                    primary: "Pay the ransom",
+                    onPrimary: () => Util.TYTLog.Guard("Treachery.Ransom", PayTreacheryRansom),
+                    secondary: "Endure the fort",
+                    dedupeKey: "tyt_treachery_ransom", cooldownDays: 25);
+            else
+                Notify($"The jailer names the price again: {_treacheryRansom:n0} dinars. You cannot pay it.", true);
+        }
+
+        private void PayTreacheryRansom()
+        {
+            Kingdom k = TreacheryKingdom;
+            Hero king = k?.Leader;
+            if (king == null || Hero.MainHero.Gold < _treacheryRansom) return;
+            GiveGoldAction.ApplyBetweenCharacters(Hero.MainHero, king, _treacheryRansom, true);
+            if (Hero.MainHero.IsPrisoner) EndCaptivityAction.ApplyByRansom(Hero.MainHero, king);
+            if (Clan.PlayerClan.IsAtWarWith(k)) MakePeaceAction.Apply(Clan.PlayerClan, k);
+            ClearTreachery();
+            Notify("The ransom is paid; the gates open. You ride out poorer, wiser, and alive.", false);
+        }
+
+        private void ClearTreachery()
+        {
+            _treacheryKingdomId = "";
+            _treacheryRansom = 0;
+            _treacheryImprisoned = false;
+            _treacheryPrisonRollDay = -1;
         }
 
         // The rival's share of the contest's total claim-support (0..1) — drives how dear he holds out.

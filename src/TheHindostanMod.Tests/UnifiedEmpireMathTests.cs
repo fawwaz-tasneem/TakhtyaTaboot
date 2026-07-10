@@ -62,6 +62,27 @@ namespace TakhtyaTaboot.Tests
             Assert.Null(UnifiedEmpireMath.ChooseRuler("nawab", null));
         }
 
+        // ── Colour records: ancestral colours survive the unified window ─────────────
+        [Fact]
+        public void Colour_records_round_trip()
+        {
+            string entry = UnifiedEmpireMath.PackColour("clan_a", 0xFF1A3A7Au, 0xFFD4AF37u);
+            Assert.True(UnifiedEmpireMath.TryUnpackColour(entry, out string id, out uint c1, out uint c2));
+            Assert.Equal("clan_a", id);
+            Assert.Equal(0xFF1A3A7Au, c1);
+            Assert.Equal(0xFFD4AF37u, c2);
+        }
+
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        [InlineData("no_colons")]
+        [InlineData("id:123")]                 // missing a colour
+        [InlineData(":123:456")]               // blank id
+        [InlineData("id:notanumber:456")]      // junk colour
+        public void Malformed_colour_records_are_rejected(string entry)
+            => Assert.False(UnifiedEmpireMath.TryUnpackColour(entry, out _, out _, out _));
+
         // ── Pack/Unpack: the SyncData round-trip ─────────────────────────────────────
         [Fact]
         public void Pack_unpack_round_trips()

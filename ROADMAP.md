@@ -6,32 +6,16 @@ Update this file when an item ships (move it to "Shipped") or when priorities ch
 
 ## A. Near-term (from playtest rounds 1–2, July 2026)
 
-0. **Imperial colours while unified (quick win).** During the unified window the folded
-   Bengal/Hyderabad clans keep their own clan colours, so the day-one map reads as three
-   realms even though it is one (playtest round 2 confusion). At the fold, record each
-   clan's colours and dress it in the empire's; restore the originals at the breakaway
-   (extends the existing `UnifiedEmpireBehavior` per-realm records).
-1. **Succession-crisis economy rework.** Abdication difficulty scales with years reigned
-   (a long-seated Aurangzeb costs millions); offers combine gold + troops + fief +
-   influence in one package; pressing a secure king (≥3:1 strength against you) risks a
-   treachery declaration → banishment from the realm + war; if the king wins that war he
-   chooses: execute / heavy fine / imprison (clan head inactive in prison until a ransom
-   in the hundreds of thousands is paid — or he dies there). *Partially shipped:* a ruler
-   who concedes peacefully now abdicates with honour (no fate decree).
-2. **Hierarchy screen as a tree.** Replace the flat list with a troop-tree-style branching
-   layout (sovereign → lords → zamindars). Match the user's reference screenshot.
-3. **Village construction UI.** A proper Gauntlet screen in the style of town construction
-   (project queue, progress bars, coffer, tax estimate) replacing the text menu.
-4. **Akhbaar scouts.** Pay to dispatch a scout after a named lord; on locating him an
+1. **Akhbaar scouts.** Pay to dispatch a scout after a named lord; on locating him an
    *akhbaar* report arrives in the farmaan-style layer: location, troop count, rough
    composition. Seed of a wider akhbarat espionage layer (wiki ch.17).
-5. **Culture-keyed dialogue register + Calradia purge.** Persianate Urdu honorifics for
+2. **Culture-keyed dialogue register + Calradia purge.** Persianate Urdu honorifics for
    Muslim courts (Zill-e-Ilahi, Jahanpanah, bismillah invocations), distinct registers for
    Rajput/Maratha/Sikh courts; sweep remaining vanilla Calradia prose through the
    LocalizationOverride pipeline.
-6. **Slave labour in villages.** Capped workforce per village fed from battle captives:
+3. **Slave labour in villages.** Capped workforce per village fed from battle captives:
    +productivity/tax, +threat. (User-requested upcoming feature.)
-7. **Clan-screen fiefs visibility.** The engine cannot give a village an owner separate
+4. **Clan-screen fiefs visibility.** The engine cannot give a village an owner separate
    from its bound town, so zamindari villages never appear in the vanilla Fiefs tab —
    inject a "Zamindari" block into the clan screen via UIExtenderEx instead.
 
@@ -98,6 +82,15 @@ waqai-nawis LLM news layer (ch.18).
 
 ## Shipped (for orientation)
 
+- Wave of 2026-07-10 (was A.0–A.3): imperial colours while unified (folded clans dress in
+  empire colours, ancestral colours restored at the breakaway); succession-crisis economy
+  rework (incumbent price scales with reign years via the dynasty accession roll — a
+  49-year Alamgir costs millions; pressing a secure king ≥3:1 risks a TREACHERY
+  declaration → banishment + war; captured traitor faces execute / heavy fine / imprison
+  with a 200k–1M ransom or monthly death-in-the-fort risk); hierarchy screen rebuilt as a
+  troop-tree board (sovereign card → one column per direct vassal, both-axis scroll);
+  village works ledger as a Gauntlet screen (progress bar, coffer + collect, tax estimate,
+  queue) replacing the text construction menu.
 - Playtest round 2 fixes & features — July 2026. `ClanSafetyNetBehavior`: no noble house
   stands masterless (claim-kingdom scatter vetoed, scattered houses fold home, orphans
   re-home by faith/relations/nearness — `ClanRehomeMath`). Sovereign levers: grand darbar

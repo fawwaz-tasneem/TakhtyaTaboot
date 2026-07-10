@@ -6,31 +6,27 @@ Update this file when an item ships (move it to "Shipped") or when priorities ch
 
 ## A. Near-term (from playtest round 1, July 2026)
 
-1. **Unified Empire until Aurangzeb dies.** Bengal (`empire_w`) and Hyderabad (`empire_s`)
-   start as vassal realms *inside* the Mughal Empire; the scripted accession cascade on
-   Aurangzeb's death triggers their breakaway as it does today. Changes campaign start +
-   the succession cascade — land this before layering more content on either.
-2. **Succession-crisis economy rework.** Abdication difficulty scales with years reigned
+1. **Succession-crisis economy rework.** Abdication difficulty scales with years reigned
    (a long-seated Aurangzeb costs millions); offers combine gold + troops + fief +
    influence in one package; pressing a secure king (≥3:1 strength against you) risks a
    treachery declaration → banishment from the realm + war; if the king wins that war he
    chooses: execute / heavy fine / imprison (clan head inactive in prison until a ransom
    in the hundreds of thousands is paid — or he dies there). *Partially shipped:* a ruler
    who concedes peacefully now abdicates with honour (no fate decree).
-3. **Hierarchy screen as a tree.** Replace the flat list with a troop-tree-style branching
+2. **Hierarchy screen as a tree.** Replace the flat list with a troop-tree-style branching
    layout (sovereign → lords → zamindars). Match the user's reference screenshot.
-4. **Village construction UI.** A proper Gauntlet screen in the style of town construction
+3. **Village construction UI.** A proper Gauntlet screen in the style of town construction
    (project queue, progress bars, coffer, tax estimate) replacing the text menu.
-5. **Akhbaar scouts.** Pay to dispatch a scout after a named lord; on locating him an
+4. **Akhbaar scouts.** Pay to dispatch a scout after a named lord; on locating him an
    *akhbaar* report arrives in the farmaan-style layer: location, troop count, rough
    composition. Seed of a wider akhbarat espionage layer (wiki ch.17).
-6. **Culture-keyed dialogue register + Calradia purge.** Persianate Urdu honorifics for
+5. **Culture-keyed dialogue register + Calradia purge.** Persianate Urdu honorifics for
    Muslim courts (Zill-e-Ilahi, Jahanpanah, bismillah invocations), distinct registers for
    Rajput/Maratha/Sikh courts; sweep remaining vanilla Calradia prose through the
    LocalizationOverride pipeline.
-7. **Slave labour in villages.** Capped workforce per village fed from battle captives:
+6. **Slave labour in villages.** Capped workforce per village fed from battle captives:
    +productivity/tax, +threat. (User-requested upcoming feature.)
-8. **Clan-screen fiefs visibility.** The engine cannot give a village an owner separate
+7. **Clan-screen fiefs visibility.** The engine cannot give a village an owner separate
    from its bound town, so zamindari villages never appear in the vanilla Fiefs tab —
    inject a "Zamindari" block into the clan screen via UIExtenderEx instead.
 
@@ -97,6 +93,18 @@ waqai-nawis LLM news layer (ch.18).
 
 ## Shipped (for orientation)
 
+- Playtest round 2 fixes & features — July 2026. `ClanSafetyNetBehavior`: no noble house
+  stands masterless (claim-kingdom scatter vetoed, scattered houses fold home, orphans
+  re-home by faith/relations/nearness — `ClanRehomeMath`). Sovereign levers: grand darbar
+  (+authority) and charitable endowments (+legitimacy) in the empire-survey menu, with a
+  "how to raise it" guide. `SiegeParleyBehavior`: the attacker's envoy at the walls —
+  bribe the qiladar or offer terms, then honour or defy them (`SiegeParleyMath`).
+  White claim-kingdom banner fixed (shell clans now carry real colors).
+- Unified Empire until Aurangzeb dies (was A.1) — July 2026. `UnifiedEmpireBehavior` folds
+  Bengal (`empire_w`) and Hyderabad (`empire_s`) into the empire on a fresh campaign
+  (dormant kingdom shells keep their ids); the accession cascade's first death sunders the
+  fold — clans return, the Nawab/Nizam are re-seated, recorded wars resume, farmaans
+  announce both beats. Pure logic in `UnifiedEmpireMath` (tested); ground truth in ch.28.
 - Stability pass, zamindari unification, village fiefs + projects, core wave (nazrana,
   civil war, tolerance, court factions, monsoon) — July 2026.
 - Foundations pass: farmaan director (pause/dedupe/digest), personal opinion ledger,

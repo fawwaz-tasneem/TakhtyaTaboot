@@ -150,7 +150,7 @@ namespace TakhtyaTaboot
         {
             // Idempotent seed: every ruling clan is a dynasty; every reigning sovereign
             // goes on the roll; legacy claimant/exile clans link to their origin dynasty.
-            foreach (Kingdom k in Kingdom.All.Where(x => !x.IsEliminated))
+            foreach (Kingdom k in Kingdom.All.Where(x => !x.IsEliminated && !UnifiedEmpireBehavior.IsDormant(x)))
             {
                 if (k.RulingClan != null) EnsureDynasty(k.RulingClan);
                 RecordSovereign(k);
@@ -171,7 +171,9 @@ namespace TakhtyaTaboot
         private void OnWeeklyTick()
         {
             // Keep the roll of sovereigns current (a new ruler joins it the week he accedes).
-            foreach (Kingdom k in Kingdom.All.Where(x => !x.IsEliminated && x.Leader != null))
+            // A dormant shell's nominal leader is an empire vassal, not a reigning sovereign.
+            foreach (Kingdom k in Kingdom.All.Where(x => !x.IsEliminated && x.Leader != null
+                                                         && !UnifiedEmpireBehavior.IsDormant(x)))
             {
                 if (k.RulingClan != null) EnsureDynasty(k.RulingClan);
                 RecordSovereign(k);

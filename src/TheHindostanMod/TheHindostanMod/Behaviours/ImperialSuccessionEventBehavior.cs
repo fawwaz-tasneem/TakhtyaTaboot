@@ -59,7 +59,12 @@ namespace TakhtyaTaboot
 
             double now = CampaignTime.Now.ToDays - _startDays;
             foreach (int idx in ImperialSuccessionPlan.AccessionsDue(_lastDays, now))
+            {
                 Accede(idx);
+                // Aurangzeb's passing is the hinge of the era: the unified premise sunders here
+                // (fires on his death even if the crowning itself was skipped — see Accede).
+                if (idx == 1) UnifiedEmpireBehavior.Instance?.OnAurangzebPassing();
+            }
             _lastDays = now;
         }
 

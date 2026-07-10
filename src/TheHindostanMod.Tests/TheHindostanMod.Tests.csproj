@@ -44,6 +44,9 @@
     <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\SeasonMath.cs" Link="Linked\SeasonMath.cs" />
     <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\FarmaanFlow.cs" Link="Linked\FarmaanFlow.cs" />
     <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\OpinionMath.cs" Link="Linked\OpinionMath.cs" />
+    <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\UnifiedEmpireMath.cs" Link="Linked\UnifiedEmpireMath.cs" />
+    <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\ClanRehomeMath.cs" Link="Linked\ClanRehomeMath.cs" />
+    <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\SiegeParleyMath.cs" Link="Linked\SiegeParleyMath.cs" />
   </ItemGroup>
 
 </Project>

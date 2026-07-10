@@ -244,7 +244,12 @@ namespace TakhtyaTaboot
                 Kingdom k = Kingdom.CreateKingdom("hind_rebel_" + origin.StringId + "_" + (int)CampaignTime.Now.ToDays);
                 TextObject n = new TextObject(name);
                 Banner banner = rebelClan.Banner ?? Banner.CreateRandomClanBanner(MBRandom.RandomInt());
-                k.InitializeKingdom(n, n, rebelClan.Culture, banner, rebelClan.Color, rebelClan.Color2, origin,
+                // A shell clan built before the CadetHouse color fix carries Color == 0, which
+                // renders the kingdom's banner as a plain white shield — fall back to the banner's
+                // own palette so a claim kingdom always flies real colors.
+                uint c1 = rebelClan.Color != 0 ? rebelClan.Color : banner.GetPrimaryColor();
+                uint c2 = rebelClan.Color2 != 0 ? rebelClan.Color2 : banner.GetFirstIconColor();
+                k.InitializeKingdom(n, n, rebelClan.Culture, banner, c1, c2, origin,
                     new TextObject($"{name} — a state forged in rebellion against the empire."), n,
                     new TextObject("Rebel Lord"));
                 ChangeKingdomAction.ApplyByCreateKingdom(rebelClan, k, true);

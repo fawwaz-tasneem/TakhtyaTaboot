@@ -32,7 +32,18 @@ namespace TakhtyaTaboot.Util
             AccessTools.PropertySetter(typeof(Clan), "Name")?.Invoke(clan, new object[] { name });
             AccessTools.PropertySetter(typeof(Clan), "InformalName")?.Invoke(clan, new object[] { name });
             clan.Culture = culture ?? head.Culture ?? head.Clan?.Culture;
-            clan.Banner = Banner.CreateRandomClanBanner(MBRandom.RandomInt());
+            Banner banner = Banner.CreateRandomClanBanner(MBRandom.RandomInt());
+            clan.Banner = banner;
+            // Color/Color2 default to 0 on a CreateClan shell, and everything downstream copies
+            // them (CreateRebelKingdom passes them to InitializeKingdom) — a zero color renders
+            // as the plain WHITE banner seen in the kingdom diplomacy list. Derive the full
+            // color set from the banner, exactly as the engine does when it loads a clan
+            // (Clan.Deserialize) or builds a settlement-rebel clan.
+            clan.Color = banner.GetPrimaryColor();
+            clan.Color2 = banner.GetFirstIconColor();
+            AccessTools.PropertySetter(typeof(Clan), "BannerBackgroundColorPrimary")?.Invoke(clan, new object[] { banner.GetPrimaryColor() });
+            AccessTools.PropertySetter(typeof(Clan), "BannerBackgroundColorSecondary")?.Invoke(clan, new object[] { banner.GetSecondaryColor() });
+            AccessTools.PropertySetter(typeof(Clan), "BannerIconColor")?.Invoke(clan, new object[] { banner.GetFirstIconColor() });
 
             Settlement home = head.HomeSettlement ?? head.Clan?.HomeSettlement ?? head.Clan?.InitialHomeSettlement;
             if (home != null) clan.SetInitialHomeSettlement(home);

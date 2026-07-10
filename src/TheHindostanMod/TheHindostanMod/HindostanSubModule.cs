@@ -140,6 +140,11 @@ namespace TakhtyaTaboot
 
             starter.AddBehavior(new Util.SaveGuardBehavior());
             starter.AddBehavior(new FarmaanDirectorBehavior()); // decree dedup/cooldowns + Court Circular digest
+            // Early, before every political session-launch pass (dynasty sovereign roll, faction
+            // stance, court seeding): on a new campaign this folds Bengal/Hyderabad into the
+            // empire FIRST, so those passes see the shells dormant rather than as live realms.
+            starter.AddBehavior(new UnifiedEmpireBehavior());
+            starter.AddBehavior(new ClanSafetyNetBehavior()); // no noble house stands masterless
             starter.AddBehavior(new CourtMenuBehavior());       // the ONE court submenu — must precede every behavior that adds options to it
             starter.AddBehavior(new OpinionBehavior());         // personal opinion ledger (individuals, not clans)
             starter.AddBehavior(new DynastyBehavior());         // dynasty registry, royal styles, cadet houses
@@ -166,6 +171,7 @@ namespace TakhtyaTaboot
             starter.AddBehavior(new ImperialAuthorityBehavior());
             starter.AddBehavior(new RoyalDecisionsBehavior());
             starter.AddBehavior(new WarfareBehavior());
+            starter.AddBehavior(new SiegeParleyBehavior()); // the attacker's envoy at the walls
             starter.AddBehavior(new Util.WarAimsBehavior()); // trait-driven affronts -> casus belli -> judgement
 
             // Phase 3 — Economy

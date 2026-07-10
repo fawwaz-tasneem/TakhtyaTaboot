@@ -134,10 +134,93 @@ namespace TakhtyaTaboot
 
             starter.AddGameMenu("hindostan_empire_state", "{=!}{HINDOSTAN_EMPIRE_TEXT}", EmpireMenuInit);
 
+            // The sovereign's two clear levers (playtest round 2: raising authority and
+            // legitimacy "should be clear and possible"). Costs and cooldowns shown up front;
+            // disabled options explain themselves via tooltip.
+            starter.AddGameMenuOption("hindostan_empire_state", "hindostan_empire_darbar",
+                "{=!}Hold a grand darbar (" + GrandDarbarCost + " dinars)",
+                DarbarCondition, args => Util.TYTLog.Guard("ImperialAuthority.Darbar", HoldGrandDarbar), false, 1);
+            starter.AddGameMenuOption("hindostan_empire_state", "hindostan_empire_charity",
+                "{=!}Endow charitable works (" + CharityCost + " dinars)",
+                CharityCondition, args => Util.TYTLog.Guard("ImperialAuthority.Charity", EndowCharity), false, 2);
+
             starter.AddGameMenuOption("hindostan_empire_state", "hindostan_empire_leave", "{=!}Back",
                 args => { args.optionLeaveType = GameMenuOption.LeaveType.Leave; return true; },
                 args => GameMenu.SwitchToMenu(CourtMenuBehavior.MenuId),
                 true);
+        }
+
+        // ── The sovereign's levers ────────────────────────────────────────────────
+        private const int GrandDarbarCost = 20000;
+        private const int CharityCost = 15000;
+        private const int LeverCooldownDays = 60;
+        private int _lastDarbarDay = -10000;
+        private int _lastCharityDay = -10000;
+
+        private static bool IsSovereign
+            => Hero.MainHero?.Clan?.Kingdom != null && Hero.MainHero.Clan.Kingdom.Leader == Hero.MainHero;
+
+        private bool LeverCondition(MenuCallbackArgs args, int lastDay, int cost, string act)
+        {
+            args.optionLeaveType = GameMenuOption.LeaveType.Continue;
+            if (!IsSovereign)
+            { args.IsEnabled = false; args.Tooltip = new TextObject("{=!}Only a reigning sovereign may " + act + "."); return true; }
+            int wait = LeverCooldownDays - ((int)CampaignTime.Now.ToDays - lastDay);
+            if (wait > 0)
+            { args.IsEnabled = false; args.Tooltip = new TextObject($"{{=!}}The court still speaks of the last occasion — wait {wait} more day(s)."); return true; }
+            if (Hero.MainHero.Gold < cost)
+            { args.IsEnabled = false; args.Tooltip = new TextObject($"{{=!}}This demands {cost} dinars (you have {Hero.MainHero.Gold})."); return true; }
+            return true;
+        }
+
+        private bool DarbarCondition(MenuCallbackArgs args)
+            => LeverCondition(args, _lastDarbarDay, GrandDarbarCost, "hold a darbar");
+        private bool CharityCondition(MenuCallbackArgs args)
+            => LeverCondition(args, _lastCharityDay, CharityCost, "endow charitable works");
+
+        // A grand darbar: the realm's great men are summoned, gifts pass both ways, and the
+        // emperor is SEEN to reign. Authority first, a touch of legitimacy, warmer lords.
+        private void HoldGrandDarbar()
+        {
+            Kingdom k = Hero.MainHero?.Clan?.Kingdom;
+            if (k == null || !IsSovereign || Hero.MainHero.Gold < GrandDarbarCost) return;
+            Hero.MainHero.ChangeHeroGold(-GrandDarbarCost);
+            _lastDarbarDay = (int)CampaignTime.Now.ToDays;
+
+            ModifyAuthority(k, +5f, "a grand darbar");
+            LegitimacyBehavior.Instance?.ModifyLegitimacy(Hero.MainHero, +2f, "the realm saw its sovereign enthroned");
+            foreach (Clan c in k.Clans.Where(c => !c.IsEliminated && c.Leader != null && c.Leader != Hero.MainHero)
+                                      .OrderByDescending(c => c.Influence).Take(8))
+                ChangeRelationAction.ApplyRelationChangeBetweenHeroes(Hero.MainHero, c.Leader, +2, false);
+
+            UI.RoyalFarmaan.FromRuler(k, "A Grand Darbar Is Held",
+                "The great amirs and mansabdars are summoned to court; nazrana is presented, robes of honour " +
+                "are bestowed, and every man leaves reminded of where the sun of Hindostan rises. " +
+                "The emperor's writ runs a little firmer.", "So it was seen");
+            GameMenu.SwitchToMenu("hindostan_empire_state"); // redraw the survey with new numbers
+        }
+
+        // Charity in the ruler's own faith: legitimacy first, a touch of authority.
+        private void EndowCharity()
+        {
+            Kingdom k = Hero.MainHero?.Clan?.Kingdom;
+            if (k == null || !IsSovereign || Hero.MainHero.Gold < CharityCost) return;
+            Hero.MainHero.ChangeHeroGold(-CharityCost);
+            _lastCharityDay = (int)CampaignTime.Now.ToDays;
+
+            Religion faith = ReligionBehavior.Instance?.GetReligion(Hero.MainHero) ?? Religion.None;
+            string works = faith == Religion.Islam ? "waqf endowments for mosques, wells and travellers' serais"
+                         : faith == Religion.Hindu ? "annadana at the temples and ghats for pilgrims and the poor"
+                         : faith == Religion.Sikh ? "langar kitchens that turn no soul away"
+                         : "alms-houses and wells for the poor";
+
+            LegitimacyBehavior.Instance?.ModifyLegitimacy(Hero.MainHero, +5f, "charitable works in the ruler's name");
+            ModifyAuthority(k, +1f, "charitable works");
+
+            UI.RoyalFarmaan.FromRuler(k, "Charitable Works Are Endowed",
+                $"From the sovereign's own purse, {works} are endowed across the realm. The qazis and pandits " +
+                "alike speak the ruler's name with warmth; who feeds the people is fit to rule them.", "It is done");
+            GameMenu.SwitchToMenu("hindostan_empire_state");
         }
 
         private void EmpireMenuInit(MenuCallbackArgs args)
@@ -171,6 +254,14 @@ namespace TakhtyaTaboot
                 sb.AppendLine($"   Simultaneous wars: {wars}" + (wars >= 2 ? "   (draining authority)" : ""));
                 sb.AppendLine($"   Disloyal lords: {disloyal}" + (disloyal > 0 ? "   (draining authority)" : ""));
                 sb.AppendLine(wars == 0 && legit > 60f ? "   At peace under a legitimate ruler (recovering)" : "   ");
+                sb.AppendLine(" ");
+                sb.AppendLine("— Raising authority & legitimacy —");
+                sb.AppendLine("   Peace under a legitimate ruler recovers authority weekly");
+                sb.AppendLine("   Hold a grand darbar (below): authority +5, legitimacy +2");
+                sb.AppendLine("   Endow charitable works (below): legitimacy +5, authority +1");
+                sb.AppendLine("   Crush a pretender or rebel: authority +8");
+                sb.AppendLine("   Take a besieged city on honoured terms: legitimacy +4 (defying them costs dearly)");
+                sb.AppendLine("   Mend quarrels with disloyal lords: each lord below -30 relation drains authority");
             }
 
             MBTextManager.SetTextVariable("HINDOSTAN_EMPIRE_TEXT", sb.ToString().Replace("\r\n", "\n"), false);
@@ -182,6 +273,8 @@ namespace TakhtyaTaboot
             var vals = _authority.Values.ToList();
             dataStore.SyncData("hind_authority_ids", ref ids);
             dataStore.SyncData("hind_authority_vals", ref vals);
+            dataStore.SyncData("hind_authority_darbar_day", ref _lastDarbarDay);
+            dataStore.SyncData("hind_authority_charity_day", ref _lastCharityDay);
             if (!dataStore.IsSaving)
             {
                 _authority.Clear();

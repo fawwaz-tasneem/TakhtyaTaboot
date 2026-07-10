@@ -31,7 +31,7 @@ namespace TakhtyaTaboot.UI
             _hintText = "Select a realm. The tree branches from the sovereign down through his lords to the village zamindars. Click any noble for their encyclopedia entry.";
             _selectedKingdomName = "";
 
-            foreach (Kingdom k in Kingdom.All.Where(k => !k.IsEliminated)
+            foreach (Kingdom k in Kingdom.All.Where(k => !k.IsEliminated && !UnifiedEmpireBehavior.IsDormant(k))
                                           .OrderByDescending(k => k.CurrentTotalStrength))
                 _kingdoms.Add(new KingdomItemVM(k, OnKingdomSelected));
 

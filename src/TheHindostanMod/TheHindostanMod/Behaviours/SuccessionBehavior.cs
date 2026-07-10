@@ -85,6 +85,23 @@ namespace TakhtyaTaboot
             return result;
         }
 
+        // The realm whose throne this claim kingdom fights for, or null if it is not one of ours.
+        // Read by ClanSafetyNetBehavior so a house scattered by a claim kingdom's destruction is
+        // folded straight home instead of drifting masterless.
+        public Kingdom OriginRealmOf(string rebelKingdomId)
+        {
+            if (string.IsNullOrEmpty(rebelKingdomId)) return null;
+            for (int i = 0; i < _crisisKingdomIds.Count && i < _warBreakaways.Count; i++)
+            {
+                string raw = _warBreakaways[i];
+                if (string.IsNullOrEmpty(raw)) continue;
+                foreach (string pair in raw.Split(','))
+                    if (pair.StartsWith(rebelKingdomId + "="))
+                        return Kingdom.All.FirstOrDefault(k => k.StringId == _crisisKingdomIds[i]);
+            }
+            return null;
+        }
+
         public float GetSupport(Hero claimant)
         {
             int i = _supportHeroIds.IndexOf(claimant?.StringId ?? "");

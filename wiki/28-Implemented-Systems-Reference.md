@@ -38,6 +38,9 @@
 | Legitimacy / authority | `LegitimacyBehavior`, `ImperialAuthorityBehavior` | — | `hind_legit_*`, `hind_authority_*` | — |
 | Warfare (aims, score, terms, tributaries) | `WarfareBehavior`, `WarAimsBehavior` | `WarAimMath` | `hind_war_*` | `war_status` |
 | Succession (crisis, laws, scripted 1707 cascade) | `SuccessionBehavior`, `SuccessionLawBehavior`, `ImperialSuccessionEventBehavior` | `SuccessionLawMath`, `ImperialSuccessionPlan` | `suc_*`, `tyt_imp_succ_*` | `accession_status` |
+| Unified empire until Aurangzeb dies (fold + breakaway) | `UnifiedEmpireBehavior` | `UnifiedEmpireMath` | `tyt_unified_*` | `unified_status` |
+| Clan safety net (no masterless houses) | `ClanSafetyNetBehavior` | `ClanRehomeMath` | `tyt_orphan_*` | — |
+| Siege parley (bribe / terms / honour-or-defy) | `SiegeParleyBehavior` | `SiegeParleyMath` | — | — |
 | Accession war (player) / AI civil war | `AccessionWarBehavior`, `CivilWarBehavior` | `CivilWarMath` | `hind_acc_*`, `hind_cw_*` | `force_accession_win`, `force_ai_civil_war`, `civil_war_status` |
 | Revolts | `RevoltCascadeBehavior` | — | — | — |
 | Nazrana gift cycle | `NazranaBehavior` | `NazranaMath` | `hind_naz_*` | — |
@@ -107,6 +110,17 @@ home/`IsInitialized`/`SetLeader`/`MoveHero` — every field the encyclopedia der
 or the clan page native-crashes). `ClaimantClan` (temp claimant clans, exile houses)
 delegates to it. `ClaimantClan._origin` is persisted through `SuccessionBehavior.SyncData`.
 
+**Dormant shells are real kingdoms.** On a fresh campaign `UnifiedEmpireBehavior` folds
+Bengal (`empire_w`) and Hyderabad (`empire_s`) into the empire; the emptied kingdom objects
+stay alive (never `IsEliminated`) so the breakaway on Aurangzeb's death can repopulate them
+with their StringIds — and every id-keyed system (`SuccessionLawBehavior` seeds,
+`FactionRelationsBehavior.MughalIds`, `NoMughalCivilWarPatch`) — intact. Rules: a shell is
+detected by `UnifiedEmpireBehavior.IsDormant(k)` (alive kingdom, zero living clans), and any
+pass that enumerates kingdoms for *political* content (relations, sovereign rolls, hierarchy
+UI) must skip dormant realms; the engine's own cull (`FactionDiscontinuationCampaignBehavior`)
+is vetoed via `CanKingdomBeDiscontinuedEvent` only while the Unified phase lasts. Never
+declare war on / make peace with a shell — `UnifiedEmpireBehavior` keeps them quiet weekly.
+
 ## 4. Extension recipes
 
 - **New farmaan**: pick a priority; give recurring ones a `dedupeKey` + cooldown; never
@@ -133,8 +147,11 @@ delegates to it. `ClaimantClan._origin` is persisted through `SuccessionBehavior
 2. `SaveGuardBehavior` — save-flag + farmaan `Pump()` driver.
 3. `FarmaanDirectorBehavior` — before anything that issues farmaans.
 4. `CourtMenuBehavior` — before every behavior that adds options to `hindostan_court`.
-5. `OpinionBehavior`, `DynastyBehavior`, `HindostanDialogsBehavior` — before their consumers.
-6. Everything else in the existing phase order.
+5. `UnifiedEmpireBehavior` — right after the farmaan director and before every political
+   session-launch pass (dynasty sovereign roll, faction stance): on a new campaign the fold
+   (Bengal/Hyderabad into the empire) must happen before those passes see the world.
+6. `OpinionBehavior`, `DynastyBehavior`, `HindostanDialogsBehavior` — before their consumers.
+7. Everything else in the existing phase order.
 
 ## 6. Known gaps & deferred work
 

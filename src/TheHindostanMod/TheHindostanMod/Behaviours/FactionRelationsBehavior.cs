@@ -55,10 +55,21 @@ namespace TakhtyaTaboot
             }
         }
 
-        // Kingdom-level stance: intra-Mughal peace, the standing Maratha war. Run once.
+        // Re-assert the full stance on demand — used by UnifiedEmpireBehavior when the
+        // unified premise sunders and Bengal/Hyderabad re-enter the world as live realms.
+        public void ReassertStance()
+        {
+            EnsureWarsAndPeace();
+            ApplyLeaderRelations();
+        }
+
+        // Kingdom-level stance: intra-Mughal peace, the standing Maratha war. Run once at
+        // session launch, again via ReassertStance. Dormant shells (a realm folded into the
+        // empire, holding no clans) are left out of the stance entirely.
         private void EnsureWarsAndPeace()
         {
-            var mughals = MughalIds.Select(Find).Where(k => k != null).ToList();
+            var mughals = MughalIds.Select(Find)
+                .Where(k => k != null && !k.IsEliminated && !UnifiedEmpireBehavior.IsDormant(k)).ToList();
             Kingdom maratha = Find(MarathaId);
             if (mughals.Count == 0) return;
 
@@ -75,7 +86,8 @@ namespace TakhtyaTaboot
         // always binds the CURRENT leaders rather than whoever ruled when the map was made.
         public void ApplyLeaderRelations()
         {
-            var mughals = MughalIds.Select(Find).Where(k => k != null && !k.IsEliminated).ToList();
+            var mughals = MughalIds.Select(Find)
+                .Where(k => k != null && !k.IsEliminated && !UnifiedEmpireBehavior.IsDormant(k)).ToList();
             Kingdom maratha = Find(MarathaId);
             Kingdom sikh = Find(SikhId);
             if (mughals.Count == 0) return;
@@ -101,7 +113,8 @@ namespace TakhtyaTaboot
             // War between them is blocked at the source (NoMughalCivilWarPatch); this is a
             // belt-and-braces sweep for any war that predates the patch (e.g. an old save),
             // and it keeps the rulers' relations from drifting below the kinship floor.
-            var mughals = MughalIds.Select(Find).Where(k => k != null && !k.IsEliminated).ToList();
+            var mughals = MughalIds.Select(Find)
+                .Where(k => k != null && !k.IsEliminated && !UnifiedEmpireBehavior.IsDormant(k)).ToList();
             for (int i = 0; i < mughals.Count; i++)
                 for (int j = i + 1; j < mughals.Count; j++)
                 {

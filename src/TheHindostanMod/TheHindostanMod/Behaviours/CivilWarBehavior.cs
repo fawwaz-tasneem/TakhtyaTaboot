@@ -35,6 +35,12 @@ namespace TakhtyaTaboot
 
         public bool IsActive => _active;
 
+        // The realm this rebel kingdom challenges, or null if it is not this behavior's war.
+        // Read by ClanSafetyNetBehavior (scattered houses fold straight home).
+        public Kingdom OriginRealmOf(string rebelKingdomId)
+            => _active && !string.IsNullOrEmpty(rebelKingdomId) && rebelKingdomId == _rebelKingdomId
+                ? TheKingdom : null;
+
         public override void RegisterEvents()
         {
             Instance = this;

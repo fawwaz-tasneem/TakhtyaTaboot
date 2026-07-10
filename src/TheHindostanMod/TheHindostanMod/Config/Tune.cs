@@ -16,6 +16,8 @@ namespace TakhtyaTaboot.Config
         public static float ValourSiegeMultiplier => S?.ValourSiegeMultiplier ?? 2f;
         public static float ValourKingCapture => S?.ValourKingCapture ?? 80f;
         public static float ValourPerKill => S?.ValourPerKill ?? 0.5f;
+        public static float ValourTournamentWin => S?.ValourTournamentWin ?? 3f;
+        public static float ValourOutnumberedMultiplier => S?.ValourOutnumberedMultiplier ?? 2f;
         public static float ValourPerRankStep => S?.ValourPerRankStep ?? 30f;
         public static float RenownPerRankStep => S?.RenownPerRankStep ?? 60f;
         public static int MinRelationForElevation => S?.MinRelationForElevation ?? 0;

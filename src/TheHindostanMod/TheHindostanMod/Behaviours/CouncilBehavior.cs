@@ -155,6 +155,9 @@ namespace TakhtyaTaboot
                 foreach (Post p in AllPosts)
                 {
                     Hero current = GetCouncillor(holder, p);
+                    // Migration + period rule: official posts are held by men. Vacate any
+                    // seated woman (pre-rule saves put e.g. Nur Jahan in the diwan's chair).
+                    if (current != null && current.IsFemale) { Set(holder, p, null); current = null; }
                     if (current != null) continue;
                     if (playerHolder) continue; // the player fills his own council
                     Hero pick = ChooseBest(holder, p);
@@ -204,7 +207,10 @@ namespace TakhtyaTaboot
                     }
 
             // Exclude those already seated on this holder's council.
-            return set.Where(h => !HoldsOtherPost(holder, p, h)).ToList();
+            // Period rule: the official posts of the darbar — wazir, diwan, sipah-salar,
+            // daroga — were held by men. Influential women (a Nur Jahan) shaped the court
+            // from BEHIND the offices; that belongs to the intrigue layer, not the seat list.
+            return set.Where(h => !h.IsFemale && !HoldsOtherPost(holder, p, h)).ToList();
         }
 
         private Hero ChooseBest(Hero holder, Post p)

@@ -65,16 +65,32 @@ namespace TakhtyaTaboot.Util
         public static Clan CreateExileHouse(Hero head)
         {
             if (head == null) return null;
+            if (head.IsFactionLeader)
+            { TYTLog.Error($"CreateExileHouse REFUSED: {head.Name} still leads a faction — depose him first."); return null; }
             try
             {
+                // Never yank a hero the realm still hangs on. If the head somehow still leads his
+                // old clan, hand its leadership to an heir first; a clan whose Leader is not among
+                // its members (or a kingdom whose ruling line just left) is a native-crash state.
+                Clan old = head.Clan;
+                if (old != null && old.Leader == head && old.Heroes.Any(h => h != null && h != head && h.IsAlive && !h.IsChild))
+                    try { ChangeClanLeaderAction.ApplyWithoutSelectedNewLeader(old); }
+                    catch (Exception e) { TYTLog.Error("CreateExileHouse: leadership handoff failed", e); }
+
                 Clan exile = BuildShell("tyt_exile_", head, head.Culture);
                 if (exile == null) { TYTLog.Error("CreateExileHouse: shell build returned null"); return null; }
 
-                // The family that follows him out: spouse and children currently of his house.
+                // The family that follows him out: spouse and children currently of his house —
+                // EXCEPT anyone the realm cannot spare. The deposed emperor's son may be the very
+                // man just crowned (Aurangzeb → Bahadur Shah): exiling a sitting clan leader or a
+                // faction leader detaches a kingdom's ruling line from its clan and crashes the
+                // engine within minutes.
+                bool Movable(Hero h) => h != null && h.IsAlive && h.Clan == old
+                                        && h.Clan?.Leader != h && !h.IsFactionLeader;
                 var family = new List<Hero> { head };
-                if (head.Spouse != null && head.Spouse.IsAlive && head.Spouse.Clan == head.Clan) family.Add(head.Spouse);
+                if (Movable(head.Spouse)) family.Add(head.Spouse);
                 foreach (Hero ch in head.Children)
-                    if (ch != null && ch.IsAlive && ch.Clan == head.Clan && ch != head.Spouse) family.Add(ch);
+                    if (Movable(ch) && ch != head.Spouse) family.Add(ch);
 
                 foreach (Hero h in family) MoveHero(h, exile);
                 exile.SetLeader(head);

@@ -37,8 +37,18 @@ namespace TakhtyaTaboot.Config
         public float ValourPerKill { get; set; } = 0.5f;
 
         [SettingPropertyGroup("Career & Mansab")]
+        [SettingPropertyFloatingInteger("Valour for a tournament victory", 0f, 20f, "0.0", RequireRestart = false,
+            HintText = "Valour earned for winning a town tournament — glory in the akhara counts at court too.", Order = 4)]
+        public float ValourTournamentWin { get; set; } = 3f;
+
+        [SettingPropertyGroup("Career & Mansab")]
+        [SettingPropertyFloatingInteger("Outnumbered-victory valour multiplier", 1f, 5f, "0.0", RequireRestart = false,
+            HintText = "Winning a battle in which the foe fielded at least half again your numbers multiplies the battle's valour by this.", Order = 5)]
+        public float ValourOutnumberedMultiplier { get; set; } = 2f;
+
+        [SettingPropertyGroup("Career & Mansab")]
         [SettingPropertyFloatingInteger("Valour needed per rank step", 5f, 200f, "0", RequireRestart = false,
-            HintText = "Valour required to be eligible for the next mansab = this x the next rank index. Higher = harder.", Order = 3)]
+            HintText = "Valour required to be eligible for the next mansab = this x the next rank index. Higher = harder.", Order = 6)]
         public float ValourPerRankStep { get; set; } = 30f;
 
         [SettingPropertyGroup("Career & Mansab")]

@@ -601,26 +601,9 @@ namespace TakhtyaTaboot
         // ── Menus ────────────────────────────────────────────────────────────────────
         private void OnSessionLaunched(CampaignGameStarter starter)
         {
-            // Re-expose the vanilla village market. The economy itself is untouched —
-            // this just guarantees a way to reach the buy/sell screen from the village.
-            starter.AddGameMenuOption("village", "hindostan_village_trade", "{=!}Buy and sell goods",
-                args =>
-                {
-                    args.optionLeaveType = GameMenuOption.LeaveType.Trade;
-                    Settlement s = Settlement.CurrentSettlement;
-                    if (s == null || !s.IsVillage) return false;
-                    bool hostile = s.OwnerClan != null && Hero.MainHero?.MapFaction != null
-                                   && s.OwnerClan.MapFaction != null
-                                   && Hero.MainHero.MapFaction.IsAtWarWith(s.OwnerClan.MapFaction);
-                    args.IsEnabled = !hostile;
-                    if (hostile) args.Tooltip = new TextObject("{=!}You are at war with this village's lord.");
-                    return true;
-                },
-                args =>
-                {
-                    if (!UI.TradeScreenHelper.OpenTradeWith(Settlement.CurrentSettlement))
-                        Notify("The villagers have nothing to trade just now.", true);
-                }, false, 1);
+            // NOTE: no mod trade option here. The current game version's village menu already has
+            // the vanilla "Buy products" entry; the old "Buy and sell goods" re-exposure duplicated
+            // it and its reflection opener no longer matched the engine's InventoryManager.
 
             starter.AddGameMenuOption("village", "hindostan_village_oversee", "{=!}Oversee your fief",
                 args => { args.optionLeaveType = GameMenuOption.LeaveType.Manage;

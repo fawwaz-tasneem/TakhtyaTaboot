@@ -598,12 +598,12 @@ namespace TakhtyaTaboot
             if (MBRandom.RandomFloat < 0.10f)
             {
                 Notify($"{loser.Name} is captured in battle. The war of princes in {k.Name} is decided.", false);
-                ResolveCrisis(k, winner, "victory in the field");
+                ResolveCrisis(k, winner, "victory in the field", hostile: true);
                 return;
             }
 
             if (GetSupportPercent(k, loser) <= 10f || GetSupportPercent(k, winner) >= 70f)
-                ResolveCrisis(k, winner, "the collapse of all opposition");
+                ResolveCrisis(k, winner, "the collapse of all opposition", hostile: true);
         }
 
         // ── Real civil war: rival claimants raise their OWN banners as breakaway kingdoms ──────
@@ -859,7 +859,7 @@ namespace TakhtyaTaboot
                     if (rel >= -20) FoldBack(p.Item1, k);   // placated — bends the knee
                 }
 
-                ResolveCrisis(k, winnerClaimant, how);      // crowns winner on k, deposed fate, clears crisis
+                ResolveCrisis(k, winnerClaimant, how, hostile: true); // won by war: crowns winner, deposed fate, clears crisis
 
                 foreach (var p in breakaways)
                     if (p.Item1 != null && !p.Item1.IsEliminated && p.Item1 != k && p.Item2 != winnerClaimant)
@@ -963,7 +963,12 @@ namespace TakhtyaTaboot
 
         private float ThroneStrength(Kingdom k) => KingdomStrength(k);
 
-        private void ResolveCrisis(Kingdom k, Hero winner, string how)
+        // hostile: the incumbent fought to the end and lost by force. Only then does the victor
+        // pronounce a fate (kill/banish/pardon). An incumbent who conceded — persuaded, bought
+        // off, out-voted, brokered — abdicates with honour and keeps his place at court; putting
+        // HIM to the decree was both senseless (he backed the winner) and, worse, the banish
+        // branch could exile the newly crowned winner along with him (see CreateExileHouse).
+        private void ResolveCrisis(Kingdom k, Hero winner, string how, bool hostile = false)
         {
             int i = CrisisIndex(k);
             if (i < 0 || winner == null || !winner.IsAlive) { if (i >= 0) RemoveCrisis(i); return; }
@@ -1022,11 +1027,22 @@ namespace TakhtyaTaboot
             ClearCrisisData(i, claimants);
             SnapshotRulers();
 
-            // The victor decides the fate of the deposed emperor.
+            // The victor decides the fate of the deposed emperor — but only over one who fought
+            // to the end. A ruler who stood down keeps his honour, his house and a seat at court.
             if (deposed != null && deposed.IsAlive && deposed != winner && deposed.Clan != null)
             {
-                if (winner == Hero.MainHero) PromptDeposedFate(k, winner, deposed);
-                else AiDecideDeposedFate(k, winner, deposed);
+                if (hostile)
+                {
+                    if (winner == Hero.MainHero) PromptDeposedFate(k, winner, deposed);
+                    else AiDecideDeposedFate(k, winner, deposed);
+                }
+                else
+                {
+                    ChangeRelationAction.ApplyRelationChangeBetweenHeroes(winner, deposed, 5);
+                    OpinionBehavior.Instance?.AddOpinion(winner, deposed, Util.OpinionMath.OpinionType.Favor);
+                    if (Hero.MainHero?.Clan?.Kingdom == k)
+                        Notify($"{deposed.Name}, having stood down with grace, keeps his honour and a place at the court of {winner.Name}.", false);
+                }
             }
         }
 

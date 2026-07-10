@@ -50,6 +50,7 @@ namespace TakhtyaTaboot
             CampaignEvents.WarDeclared.AddNonSerializedListener(this, OnWarDeclared);
             CampaignEvents.MakePeace.AddNonSerializedListener(this, OnMakePeace);
             CampaignEvents.OnPlayerBattleEndEvent.AddNonSerializedListener(this, OnPlayerBattleEnd);
+            CampaignEvents.TournamentFinished.AddNonSerializedListener(this, OnTournamentFinished);
             CampaignEvents.OnSettlementOwnerChangedEvent.AddNonSerializedListener(this, OnOwnerChanged);
             CampaignEvents.HeroPrisonerTaken.AddNonSerializedListener(this, OnPrisonerTaken);
             CampaignEvents.HeroKilledEvent.AddNonSerializedListener(this, OnHeroKilled);
@@ -155,10 +156,25 @@ namespace TakhtyaTaboot
             }
 
             // Battlefield valour toward the next mansab — earned against real foes, not brigands.
-            // Capturing or routing the enemy sovereign on the field is worth a great deal.
+            // Capturing or routing the enemy sovereign on the field is worth a great deal, and a
+            // victory won against the odds is sung of louder than one won with them.
             if (win && pk != null && opp is Kingdom enemy)
             {
                 float gain = Config.Tune.ValourPerWin * (siege ? Config.Tune.ValourSiegeMultiplier : 1f);
+
+                try
+                {
+                    int ours = mapEvent.GetNumberOfInvolvedMen(mapEvent.PlayerSide);
+                    int theirs = mapEvent.GetNumberOfInvolvedMen(
+                        mapEvent.PlayerSide == BattleSideEnum.Attacker ? BattleSideEnum.Defender : BattleSideEnum.Attacker);
+                    if (ours > 0 && theirs >= ours * 1.5f)
+                    {
+                        gain *= Config.Tune.ValourOutnumberedMultiplier;
+                        Notify($"Victory against the odds — {theirs} of the foe against your {ours}. The court will hear of it.", false);
+                    }
+                }
+                catch (Exception e) { Util.TYTLog.Error("Outnumbered-valour check failed", e); }
+
                 if (RoutedOrCapturedKing(mapEvent, enemy))
                 {
                     gain += Config.Tune.ValourKingCapture;
@@ -180,6 +196,18 @@ namespace TakhtyaTaboot
                 }
             }
         }
+
+        // Glory in the akhara counts at court too: a tournament victory earns a small
+        // measure of valour toward the next mansab.
+        private void OnTournamentFinished(CharacterObject winner, MBReadOnlyList<CharacterObject> participants, Town town, ItemObject prize)
+            => Util.TYTLog.Guard("Warfare.TournamentFinished", () =>
+            {
+                if (winner == null || winner != Hero.MainHero?.CharacterObject) return;
+                float gain = Config.Tune.ValourTournamentWin;
+                if (gain <= 0f) return;
+                MansabdariBehavior.Instance?.AddValour(Clan.PlayerClan, gain);
+                Notify($"Your triumph in the tournament at {town?.Name} rings through the court — {gain:0.#} valour earned.", false);
+            });
 
         // True if the enemy realm's sovereign was on the losing side of this battle
         // (captured or routed), used to award the great valour bonus.

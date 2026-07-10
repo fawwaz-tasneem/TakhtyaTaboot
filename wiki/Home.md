@@ -34,6 +34,7 @@ A complete guide to writing C# code for Bannerlord, with all examples drawn from
 | [22 — Systems Overhaul, MCM Tuning & Crash Logging](22-Systems-Overhaul-and-Tuning.md) | **v1.x overhaul** — MCM tuning layer, mansab troop stability, valour/elevation/demotion/stipend, capital + 4-office culture-named council + convening/votes/cadence, liege & village placement, real player zamindari, mercenary land rule, conquest notable fates, village defence & call-for-help, `TYTLog` crash log, console commands |
 | [23 — Creating the Campaign Map](23-Creating-the-Campaign-Map.md) | **Map-making guide** — heightmap fix for jaggy mountains & pixelated plains (8-bit→16-bit + erosion + scale), terrain materials, sea/rivers/lakes, flora, **navmesh** (why parties can't move without it), settlement placement (scene entity ↔ `settlements.xml` posX/posY), atmosphere, registering `Main_map`, pitfalls table |
 | [28 — Implemented Systems Reference](28-Implemented-Systems-Reference.md) | **As-built reference — read FIRST when coding.** The July 2026 passes: architecture ground rules, full system→file→SyncData map, load-bearing invariants (one liege chain, CanHold vs GetTier, farmaan flow, opinions, dynasty registry, the clan factory), extension recipes, registration-order constraints, known gaps. Chapters 13–27 are *designs*; this is what the code actually does |
+| [29 — Crash Forensics](29-Crash-Forensics-Debugging-Guide.md) | **Read when the game crashes and logs say nothing.** Crash-folder artifact map, WinDbg+SOS scripted dump analysis (command cookbook), ilspycmd decompile workflow, red herrings (BUTR duplicate modules, launcher process name), and the worked TypeInitializationException case — "date the fossil" |
 
 ---
 
@@ -42,11 +43,11 @@ A complete guide to writing C# code for Bannerlord, with all examples drawn from
 | Item | Value |
 |------|-------|
 | Mod ID | `TakhtyaTaboot` (SubModule `Id`; assembly/DLL `TakhtyaTaboot.dll`) |
-| Desktop source | `C:\Users\tasne\Desktop\TakhtyaTaboot\` |
-| Installed copy | `D:\SteamLibrary\steamapps\common\Mount & Blade II Bannerlord\Modules\The Hindostan Mod\` |
-| Game version | v1.4.6 |
+| Source repo | the git repo root doubles as the module folder (copy it to Modules to install) |
+| Installed copy | `D:\SteamLibrary\steamapps\common\Mount & Blade II Bannerlord\Modules\The Hindostan Mod\` (this machine; see `BannerlordDir.local.props`) |
+| Game version | v1.3.11.105254 (naval-update line; NavalDLC installed but not in the load order), launched via BLSE |
 | .NET target | Framework 4.8.1 |
-| Harmony version | 2.2.2 |
+| Harmony | Bannerlord.Harmony module v2.4.2 |
 
 **CRITICAL:** The Bannerlord install at `D:\SteamLibrary\...\Mount & Blade II Bannerlord` is **READ ONLY**. Never modify any file there. All authoring happens in `C:\Users\tasne\Desktop\TakhtyaTaboot`.
 

@@ -45,7 +45,11 @@ invariants) and `wiki/Modding-Findings-Reference.md` (verified engine facts and 
   types (use `System.Math`, NOT `TaleWorlds.Library.MathF`), linked into the test project,
   with xUnit tests.
 - **Harmony patches**: one class per target, they're applied per-class so a bad target
-  only disables itself; check the startup log line `Harmony: N patch classes applied`.
+  only disables itself; check the startup log line `Harmony (load phase): ...`.
+  **A patch on a `GameComponents.*` model goes in `HindostanSubModule.GameStartPatches`**
+  (applied at `OnGameStart`, log line `Harmony (game phase): ...`) — patching those at
+  submodule-load time runs their static initializers before `GameTexts` exists and
+  poisons the type for the whole process (Findings §17).
 - **UX charter** — pick the surface before writing the feature:
   dialogue for person-to-person acts · the `hindostan_court` submenu for place-bound acts
   (never the raw `town`/`castle` menus) · Gauntlet screens for realm overviews · farmaans

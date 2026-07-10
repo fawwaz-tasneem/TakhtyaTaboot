@@ -34,27 +34,58 @@ namespace TakhtyaTaboot
             // Patch each [HarmonyPatch] class individually: a single bad target (e.g. a
             // method signature that changed between game versions) must not disable every
             // other patch, which is what a lone PatchAll inside try/catch did.
-            var harmony = new Harmony("com.hindostanmod");
-            int patchedOk = 0, patchedFailed = 0;
+            //
+            // Patches on campaign GameComponents models are NOT applied here. Preparing a
+            // target method runs its class's static initializer, and TaleWorlds' model
+            // classes initialize static TextObjects via GameTexts.FindText — which throws
+            // before any Game exists. A cctor that throws poisons the type for the whole
+            // process (TypeInitializationException at first use, e.g. the first party-speed
+            // calculation when the map spawns), while Harmony still reports the patch as
+            // applied. Those classes are patched in OnGameStart, after GameTexts.Initialize.
+            _harmony = new Harmony("com.hindostanmod");
+            int okNow = ApplyPatchClasses(deferred: false, out int failedNow);
+            var patched = new System.Collections.Generic.List<string>();
+            foreach (var m in _harmony.GetPatchedMethods())
+                patched.Add((m.DeclaringType?.Name ?? "?") + "." + m.Name);
+            TYTLog.Info($"Harmony (load phase): {okNow} patch class(es) applied, {failedNow} failed — {patched.Count} method(s) patched:\n  "
+                        + string.Join("\n  ", patched));
+        }
+
+        private static Harmony _harmony;
+        private static bool _gameStartPatchesApplied;
+
+        // Patch classes whose TARGET types need a live Game to initialize (see comment in
+        // OnSubModuleLoad). Any new patch on a TaleWorlds.CampaignSystem.GameComponents.*
+        // model belongs in this set.
+        private static readonly System.Collections.Generic.HashSet<System.Type> GameStartPatches =
+            new System.Collections.Generic.HashSet<System.Type>
+            {
+                typeof(MonsoonSpeedPatch),      // DefaultPartySpeedCalculatingModel: static GameTexts.FindText
+                typeof(AuthorityCohesionPatch), // DefaultArmyManagementCalculationModel: static GameTexts.FindText
+                typeof(AuthorityTaxPatch),      // DefaultClanFinanceModel (statics safe today; policy)
+                typeof(ToleranceTaxPatch),      // DefaultClanFinanceModel (statics safe today; policy)
+                typeof(PartySizeMansabPatch),   // DefaultPartySizeLimitModel (statics safe today; policy)
+            };
+
+        private static int ApplyPatchClasses(bool deferred, out int failed)
+        {
+            int ok = 0; failed = 0;
             foreach (var type in typeof(HindostanSubModule).Assembly.GetTypes())
             {
                 if (type.GetCustomAttributes(typeof(HarmonyPatch), true).Length == 0) continue;
+                if (GameStartPatches.Contains(type) != deferred) continue;
                 try
                 {
-                    harmony.CreateClassProcessor(type).Patch();
-                    patchedOk++;
+                    _harmony.CreateClassProcessor(type).Patch();
+                    ok++;
                 }
                 catch (System.Exception e)
                 {
-                    patchedFailed++;
+                    failed++;
                     TYTLog.Error($"Harmony patch FAILED for {type.FullName} — this patch is disabled, others continue", e);
                 }
             }
-            var patched = new System.Collections.Generic.List<string>();
-            foreach (var m in harmony.GetPatchedMethods())
-                patched.Add((m.DeclaringType?.Name ?? "?") + "." + m.Name);
-            TYTLog.Info($"Harmony: {patchedOk} patch class(es) applied, {patchedFailed} failed — {patched.Count} method(s) patched:\n  "
-                        + string.Join("\n  ", patched));
+            return ok;
         }
 
         public override void OnMissionBehaviorInitialize(Mission mission)
@@ -86,6 +117,17 @@ namespace TakhtyaTaboot
         protected override void OnGameStart(Game game, IGameStarter gameStarter)
         {
             base.OnGameStart(game, gameStarter);
+
+            // Model patches: applied here because Game.Initialize (which runs GameTexts.Initialize)
+            // has completed by the time submodules get OnGameStart — the target classes' static
+            // initializers can now run safely. Once per process; targets live in the game assembly.
+            if (!_gameStartPatchesApplied && _harmony != null)
+            {
+                _gameStartPatchesApplied = true;
+                int ok = ApplyPatchClasses(deferred: true, out int failed);
+                TYTLog.Info($"Harmony (game phase): {ok} model patch class(es) applied, {failed} failed.");
+            }
+
             if (!(game.GameType is Campaign)) return;
             TYTLog.Info("OnGameStart: registering Takht ya Taboot campaign behaviours.");
 

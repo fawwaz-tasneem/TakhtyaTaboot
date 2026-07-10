@@ -16,8 +16,11 @@ namespace TakhtyaTaboot
     // own resolution code is NOT the caller (Util.ThroneWar.AllowInternalPeace) — so folding a beaten
     // rebel realm back into the throne still settles cleanly. The breakaway therefore has exactly two
     // exits: take the crown, or be destroyed.
-    [HarmonyPatch(typeof(MakePeaceAction), "Apply",
-        new[] { typeof(IFaction), typeof(IFaction), typeof(int), typeof(MakePeaceAction.MakePeaceDetail) })]
+    //
+    // v1.3.11 removed the 4-arg Apply overload; every public entry (Apply, ApplyByKingdomDecision)
+    // now funnels through the private ApplyInternal, so that is the single choke point to block.
+    [HarmonyPatch(typeof(MakePeaceAction), "ApplyInternal",
+        new[] { typeof(IFaction), typeof(IFaction), typeof(int), typeof(int), typeof(MakePeaceAction.MakePeaceDetail) })]
     internal static class NoThroneWarPeacePatch
     {
         private static bool Prefix(IFaction faction1, IFaction faction2)

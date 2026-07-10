@@ -1,8 +1,16 @@
-# Playtest Plan — Stability Pass + Foundations Pass
+# Playtest Plan — Stability Pass + Foundations Pass + July Waves
 
-Covers every component built across the two passes. Work through in order; sections A–D
+Covers every component built across the passes. Work through in order; sections A–D
 are the first pass (stability, zamindari, village fiefs, core wave), E–I the foundations
-pass (farmaans, opinions, dynasties, dialogue, court menu).
+pass (farmaans, opinions, dynasties, dialogue, court menu), **J–N the July 2026 waves**
+(unified empire, clan safety net, succession economy + treachery, siege parley, the two
+Gauntlet screens) — J–N are the CURRENT focus; A–I were exercised in playtest rounds 1–3.
+
+**Status ledger (2026-07-10, commits `6bad71f` → `46bbe68`):** A–I built + playtested
+(rounds 1–3); J–N built, unit-tested (266 green) and statically verified against the
+v1.3.11 decompile, but **not yet proven in a live campaign end-to-end** except: J1 fold
+confirmed by log + player, hierarchy board seen once (was upside down — fixed, needs a
+second look).
 
 ## Setup
 
@@ -93,4 +101,76 @@ For the report: for each numbered check mark PASS / FAIL / SKIPPED, and for FAIL
 
 ---
 
-**When you report back**, the ideal format per finding: section-number, PASS/FAIL, repro steps, log excerpt, screenshot if UI. The single most valuable data points are G2 (does the warband spawn?), E1 (pause edge cases), and anything that throws in `tyt_log.txt`.
+## J. Unified Empire (A.1 + A.0, ships in `UnifiedEmpireBehavior`)
+
+- **J1.** New campaign → instant gold message "The empire stands whole…", Bengal/Hyderabad
+  towns fly imperial banner AND imperial clan colours (shields/trims — the A.0 colour fix),
+  encyclopedia Kingdoms page does NOT list Bengal/Hyderabad, `hindostan.unified_status`
+  says `Phase: Unified`, empire ~30 clans. *(Fold itself confirmed in round 2/3; colours +
+  encyclopedia hiding are new.)*
+- **J2.** First daily tick → "One Throne, One Hindostan" farmaan.
+- **J3.** **THE BREAKAWAY (never seen live):** play/cheat past month 2 (Aurangzeb's death).
+  Expect in order: death farmaan, Bahadur Shah accession farmaan, "Bengal Stands Apart" +
+  "The Deccan Raises Its Own Banner" farmaans; both realms reappear on map/encyclopedia in
+  their ANCESTRAL colours; Nawab (Nasiri) and Nizam (Asaf Jahi) are the rulers;
+  `unified_status` says `Sundered`; Mysore↔Hyderabad war resumes; intra-Mughal peace holds.
+- **J4.** While unified, Mysore must NOT be at war with the empire (round-3 change).
+- **J5.** Save during the unified window → load → breakaway still fires on schedule.
+- **J6.** Old save (pre-feature): loads, nothing unifies, no farmaans, `Phase: NotArmed`.
+
+## K. Clan safety net (`ClanSafetyNetBehavior`)
+
+- **K1.** In the round-2 save with kingdomless ex-claim clans: within ~3 days each masterless
+  house swears to a realm (gold message "The masterless house of X swears to Y") — check
+  faith/nearness look sane.
+- **K2.** `hindostan.force_ai_civil_war`, let the rebel side LOSE all its fiefs mid-war →
+  the claim kingdom must NOT be scattered by the engine (vanilla cull vetoed); on resolution
+  its clans are back in the realm — nobody kingdomless a week later.
+- **K3.** No noble clan sits at Kingdom == null for more than ~4 days at any point (spot-check
+  encyclopedia after big wars).
+
+## L. Succession economy + treachery (persuade menu, `hindostan_succession`)
+
+- **L1.** Force a crisis with the incumbent among the claimants; open "Persuade a rival
+  claimant to stand down" targeting the SITTING king → offer text mentions his years reigned;
+  price should be millions for Aurangzeb (49y seeded) vs ~1/6 for a fresh cascade emperor.
+- **L2.** With the king ≥3:1 against you, the offer dialog shows the BEWARE treachery warning.
+  Refusal → either the wrathful "The Throne Is Not For Sale" farmaan (warnings/demands) or
+  the full treachery decree (banished + war). Both texts should read furious.
+- **L3.** After treachery: you are out of the realm (fiefs kept), at war; get captured by that
+  kingdom → one of three fates fires (execute farmaan → death; fine → gold gone, released,
+  peace; the fort → monthly ransom farmaan "A Price for Your Chains", pay → free + peace).
+  The fort's monthly 5% death roll: leave a save parked to confirm it can fire.
+- **L4.** Old save: no treachery state, everything else as before.
+
+## M. Siege parley (`menu_siege_strategies` → "Send an envoy to the qiladar")
+
+- **M1.** Besiege with <2:1 odds → parley text says resolve firm, both options disabled with
+  explanatory tooltips (no dice-rolling gold sink).
+- **M2.** At ~2:1+ → bribe enabled with a concrete price; pay → gates open, settlement YOURS
+  bloodlessly, garrison gone, siege UI unwinds cleanly back to map (**the risky engine path —
+  watch for stuck encounter/menus**), no errors in tyt_log.
+- **M3.** At ~3:1 + low food → terms enabled; accept → honour/defy farmaan. HONOUR: legitimacy
+  +4, authority +2, old owner relation +3. DEFY: garrison lands in your prisoner roster,
+  legitimacy −8, authority −3, relations/grudges written, town loyalty −10.
+- **M4.** In an army you don't lead → option disabled ("Only the commander of the siege…").
+
+## N. The two Gauntlet screens (round-3 layout fix applied — verify orientation FIRST)
+
+- **N1.** Hierarchy board: title on TOP now; sovereign's card (with FACE) top-centre, stub
+  line down, one column per direct vassal (faces on every card), horizontal + vertical
+  scrollbars work, clicking cards opens the encyclopedia.
+- **N2.** "Show the zamindars" toggle: off by default; on → zamindars appear on the LOWEST
+  rung of each branch with connector elbows; toggle back off.
+- **N3.** Castle lords hang under the NEAREST town lord column (round-3 liege change), and
+  `hindostan.tax_now` / `hindostan.summon` come from that same town lord (B2 invariant).
+- **N4.** Village works ledger ("Open the works ledger" in your village): header numbers
+  match the old menu, progress BAR fills as days pass, Collect button works + refreshes,
+  Begin/Queue per project with correct disabled reasons; ESC and the X both close it.
+- **N5.** Council + Farmaan screens were ALWAYS rendered upside-down (see wiki findings
+  ch.18) and were left untouched — if their reversed layout bothers you now that you know,
+  ask for the flip (one-line change each, needs a visual check after).
+
+---
+
+**When you report back**, the ideal format per finding: section-number, PASS/FAIL, repro steps, log excerpt, screenshot if UI. The single most valuable data points now are **J3 (the breakaway, never seen live)**, **M2 (siege unwind — the riskiest engine path)**, **N1/N2 (the fixed board)**, L3's fates, and anything that throws in `tyt_log.txt`.

@@ -58,12 +58,14 @@
 
 ## 3. Load-bearing invariants (break these and "it feels buggy" comes back)
 
-**One liege chain.** `FeudalTitlesBehavior.GetFeudalLiege` is the ONLY liege resolution
-(stored zamindar layer + explicit `_liegeOverride` bonds + sovereign fallback).
+**One liege chain.** `FeudalTitlesBehavior.GetFeudalLiege` is the ONLY liege resolution.
+The rungs, top to bottom (playtest round 3): explicit `_liegeOverride` bond → village
+zamindar answers the bound town/castle's lord → a CASTLE-only lord answers the NEAREST
+town lord of his realm → town lords and unlanded nobles answer the sovereign.
 `FiefHierarchyBehavior.GetLiege` — which drives tribute and the call-to-arms — *delegates*
-to it. Before this, the hierarchy screen showed one liege while taxes were paid to another.
-If you need "who does X answer to", call `GetFeudalLiege`; never re-derive it from engine
-ownership.
+to it, and the hierarchy board draws it. Before this, the hierarchy screen showed one
+liege while taxes were paid to another. If you need "who does X answer to", call
+`GetFeudalLiege`; never re-derive it from engine ownership.
 
 **All zamindar writes go through `SetZamindarEntry`/`RemoveZamindarEntry`** (they maintain
 the reverse hero→villages index). A weekly `Reconcile()` scrubs dead heroes, cross-realm

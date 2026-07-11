@@ -4,15 +4,15 @@ Covers every component built across the passes. Work through in order; sections 
 are the first pass (stability, zamindari, village fiefs, core wave), E–I the foundations
 pass (farmaans, opinions, dynasties, dialogue, court menu), **J–N the July 2026 waves**
 (unified empire, clan safety net, succession economy + treachery, siege parley, the two
-Gauntlet screens), **O the akhbaar scouts, P bonded labour, Q coronation ceremonies** — J–Q
-are the CURRENT focus; A–I were exercised in playtest rounds 1–3.
+Gauntlet screens), **O the akhbaar scouts, P bonded labour, Q coronation ceremonies, R monsoon
+harvest+famine** — J–R are the CURRENT focus; A–I were exercised in playtest rounds 1–3.
 
 **Status ledger (2026-07-11, commits `6bad71f` → HEAD):** A–I built + playtested
-(rounds 1–3); J–Q built, unit-tested (314 green) and statically verified against the
+(rounds 1–3); J–R built, unit-tested (324 green) and statically verified against the
 v1.3.11 decompile, but **not yet proven in a live campaign end-to-end** except: J1 fold
 confirmed by log + player, hierarchy board seen once (was upside down — fixed, needs a
-second look). O (akhbaar scouts), P (bonded labour), Q (coronations) are the newest and wholly
-unverified live.
+second look). O–R (akhbaar scouts, bonded labour, coronations, monsoon harvest) are the newest
+and wholly unverified live.
 
 ## Setup
 
@@ -260,6 +260,33 @@ run live. Reuses the existing opinion records, Ceremonial farmaan, and grievance
   fires — no coronation spam. During the scripted 1707 cascade specifically, no darbar per beat.
 - **Q6.** **Save/load:** the ruler snapshot persists (no phantom coronation on load). Old save
   (pre-feature): loads clean; the next real accession in your realm stages the darbar.
+
+## R. Monsoon harvest + famine (`MonsoonBehavior`; `hindostan.monsoon_status / set_monsoon`)
+
+*New this wave (2026-07-11) — built, unit-tested (11 new `SeasonMath` harvest/famine cases,
+324 green), never run live. Extends the monsoon (previously speed-only). MCM "Monsoon drives
+the harvest" under Seasons (on by default).*
+
+- **R1.** Play across a monsoon (summer) → in a notably good or bad year, a farmaan ("A
+  Bountiful Monsoon" / "The Rains Have Failed") announces it; a middling year is a quiet log
+  line only. `hindostan.monsoon_status` shows the year's quality and the current harvest tax
+  multiplier.
+- **R2.** **Harvest swing:** hold a village; compare its coffer "~/day" and accrual across
+  seasons. In **autumn (post-monsoon)** after a **good** year it accrues clearly faster than
+  base; after a **bad** year, clearly slower. Hot season and the monsoon itself carry no swing
+  (×1.0). Force it: `hindostan.set_monsoon 1.0` vs `hindostan.set_monsoon 0.1`, watch autumn.
+- **R3.** **Famine:** `hindostan.set_monsoon 0.05`, then enter a village you hold in autumn/
+  winter with a thinnish hearth and some threat → within a few days a "Famine in the District"
+  plea. **Open the granaries** (pay) → people fed, threat down ~10, notable relation up, small
+  hearth cost. On a separate save, **let them fend** → hearth drops hard (~30), threat up ~12,
+  relation down. One famine per village per year (no repeat spam).
+- **R4.** Famine never fires in a fair/good year (`set_monsoon 0.6` → no pleas), and never in
+  hot season / monsoon (only the autumn–winter harvest window).
+- **R5.** **Save/load:** the year's quality and famine-fired record persist; no double famine
+  after load. Old save (pre-feature): loads clean, quality defaults to a neutral year.
+- **R6.** MCM "Monsoon drives the harvest" off → no harvest swing, no famine, no monsoon
+  farmaan (the speed effect, governed by the separate "Monsoon slows parties" toggle, is
+  unaffected).
 
 ---
 

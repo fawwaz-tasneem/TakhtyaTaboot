@@ -71,6 +71,7 @@ namespace TakhtyaTaboot.Config
 
         // Seasons
         public static bool MonsoonEnabled => S?.MonsoonEnabled ?? true;
+        public static bool MonsoonHarvestEnabled => S?.MonsoonHarvestEnabled ?? true;
 
         // Farmaans (royal decrees)
         public static bool FarmaanPausesTime => S?.FarmaanPausesTime ?? true;

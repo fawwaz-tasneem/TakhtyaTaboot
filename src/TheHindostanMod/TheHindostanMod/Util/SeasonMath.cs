@@ -29,5 +29,50 @@ namespace TakhtyaTaboot.Util
             => season == Monsoon ? "Monsoon mud"
              : season == PostMonsoon ? "Dry roads of the marching season"
              : null;
+
+        // ── The harvest (wiki Ch.17 §4 — monsoon beyond speed) ───────────────────────
+        // The year's rains decide the harvest. Village tax accrues all year, but the fat
+        // collection comes in after the rains: a bountiful monsoon (quality→1) swells the
+        // post-monsoon harvest, a failed one (quality→0) thins it, with a milder echo into
+        // the cool season. The hot season and the monsoon itself carry no harvest bonus —
+        // the grain is still in the ground.
+        //   quality: 0 (rains failed) .. 1 (bountiful), the year's monsoon.
+        public static float HarvestTaxMultiplier(int season, float monsoonQuality)
+        {
+            float q = monsoonQuality < 0f ? 0f : monsoonQuality > 1f ? 1f : monsoonQuality;
+            switch (season)
+            {
+                case PostMonsoon: return 0.5f + 0.9f * q;   // 0.50 .. 1.40
+                case CoolSeason:  return 0.8f + 0.35f * q;  // 0.80 .. 1.15
+                default:          return 1.0f;
+            }
+        }
+
+        public const float FailedMonsoonThreshold = 0.35f;
+        public const float BountifulMonsoonThreshold = 0.75f;
+
+        public static bool IsFailedMonsoon(float quality) => quality < FailedMonsoonThreshold;
+        public static bool IsBountifulMonsoon(float quality) => quality > BountifulMonsoonThreshold;
+
+        // How the year's rains read, for the monsoon farmaan.
+        public static string MonsoonVerdict(float quality)
+            => IsBountifulMonsoon(quality) ? "The rains came full and timely — a bountiful year is promised."
+             : IsFailedMonsoon(quality) ? "The rains failed. The land will hunger before the next monsoon."
+             : "The rains were middling — neither feast nor famine, the common lot of years.";
+
+        // Daily chance (0..1) that a village tips into famine during a failed-rains harvest
+        // window. Only bites when the monsoon actually failed; then it rises as the granary
+        // (hearth) thins and disorder (threat) keeps the grain from the people. Zero in a
+        // fair or good year — famine is the failure of the rains, not mere banditry.
+        public static float FamineDailyChance(float monsoonQuality, float hearth, float threat)
+        {
+            if (!IsFailedMonsoon(monsoonQuality)) return 0f;
+            float shortfall = (FailedMonsoonThreshold - monsoonQuality) / FailedMonsoonThreshold; // 0..1
+            float hunger = hearth <= 0f ? 1f : Clamp(1f - hearth / 600f, 0f, 1f);                 // thin hearth = hungrier
+            float disorder = Clamp(threat, 0f, 100f) / 100f;
+            return Clamp(0.010f * shortfall * (0.4f + hunger) * (0.5f + disorder), 0f, 0.05f);
+        }
+
+        private static float Clamp(float v, float lo, float hi) => v < lo ? lo : v > hi ? hi : v;
     }
 }

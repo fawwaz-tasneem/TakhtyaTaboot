@@ -201,6 +201,7 @@ namespace TakhtyaTaboot
 
             // Phase 8 — QoL systems
             starter.AddBehavior(new AkhbaarScoutBehavior()); // pay a harkara to trail a named lord; akhbaar report via farmaan
+            starter.AddBehavior(new MonsoonBehavior()); // the rains beyond speed: harvest swing + famine chain
             // starter.AddBehavior(new TradeRouteBehavior());
             // starter.AddBehavior(new FoodSecurityBehavior());
             // starter.AddBehavior(new EpidemicBehavior());

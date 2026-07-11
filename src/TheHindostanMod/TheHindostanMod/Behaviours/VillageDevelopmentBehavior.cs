@@ -261,9 +261,11 @@ namespace TakhtyaTaboot
             float authorityRate = 1f;
             if (s.MapFaction is Kingdom k && ImperialAuthorityBehavior.Instance != null)
                 authorityRate = ImperialAuthorityBehavior.Instance.GetTaxCollectionRate(k);
-            _treasury[s.StringId] = GetTreasury(s) + VillageFiefMath.DailyTax(
+            float dailyTax = VillageFiefMath.DailyTax(
                 s.Village.Hearth, TotalTaxBonusPct(s), GetThreat(s),
                 authorityRate, z?.GetSkillValue(DefaultSkills.Steward) ?? 0, rate);
+            dailyTax *= MonsoonBehavior.Instance?.HarvestMultiplier() ?? 1f; // fat after good rains, thin after bad
+            _treasury[s.StringId] = GetTreasury(s) + dailyTax;
         }
 
         private void CollectTaxes(Settlement s)

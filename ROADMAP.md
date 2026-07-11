@@ -42,10 +42,7 @@ Update this file when an item ships (move it to "Shipped") or when priorities ch
    seasonal Ceremonial farmaan, a court gathering that batches nazrana presentation and
    opinion gains; natural stage for petitions and betrothals. Builds on SeasonMath + the
    court menu.
-4. **Monsoon beyond speed.** Harvest modifier on village tax accrual (good rains = fat
-   autumn collection); famine event chain when threat + failed rains coincide — reuses the
-   plea-farmaan and relief-detachment machinery.
-5. **Women's court influence.** Official darbar posts are men-only (period rule, shipped);
+4. **Women's court influence.** Official darbar posts are men-only (period rule, shipped);
    model the Nur Jahan pattern properly: influential women act through the intrigue layer —
    whispers that shift the holder's decisions, opinion records, faction ties.
 
@@ -71,6 +68,14 @@ waqai-nawis LLM news layer (ch.18).
 
 ## Shipped (for orientation)
 
+- Monsoon beyond speed (was C.4) — 2026-07-11. `MonsoonBehavior`: once a year the rains draw
+  a good/bad quality roll (announced by farmaan only when notably bountiful or failed). Post-
+  monsoon village tax scales with it (fat after good rains, thin after bad), read into
+  `VillageDevelopmentBehavior`'s accrual via `HarvestMultiplier()`. A failed monsoon can tip a
+  hard-pressed player village into FAMINE — a plea farmaan: open the granaries at a price
+  (hearth steadies, threat falls, gentry warm) or let them starve (hearth and loyalty bleed,
+  threat climbs). Pure math in `SeasonMath` (harvest multiplier, famine odds, verdict; 11 new
+  tests). MCM "Monsoon drives the harvest"; console `hindostan.monsoon_status / set_monsoon`.
 - Coronation ceremonies (was B.1) — 2026-07-11. `CoronationBehavior`: on any accession, a
   darbar. If the PLAYER accedes, AI house heads attend or leave an empty place by their
   `EffectiveOpinion` of him (attendees → `SworeFealty` + relation & legitimacy; absentees →

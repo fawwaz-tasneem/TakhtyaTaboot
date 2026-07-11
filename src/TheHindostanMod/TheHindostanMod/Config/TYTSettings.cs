@@ -229,6 +229,11 @@ namespace TakhtyaTaboot.Config
             HintText = "The rains of the monsoon season mire armies on the march; the dry season quickens them.", Order = 0)]
         public bool MonsoonEnabled { get; set; } = true;
 
+        [SettingPropertyGroup("Seasons")]
+        [SettingPropertyBool("Monsoon drives the harvest", RequireRestart = false,
+            HintText = "A yearly good/bad rains roll swells or thins the post-monsoon village tax, and a failed monsoon can bring famine to hard-pressed villages. Turn off to keep the monsoon a speed effect only.", Order = 1)]
+        public bool MonsoonHarvestEnabled { get; set; } = true;
+
         // ── Farmaans ─────────────────────────────────────────────────────────────────
         [SettingPropertyGroup("Farmaans")]
         [SettingPropertyBool("Farmaans pause the game", RequireRestart = false,

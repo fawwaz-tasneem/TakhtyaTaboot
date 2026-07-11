@@ -16,14 +16,11 @@ Update this file when an item ships (move it to "Shipped") or when priorities ch
 
 ## C. Deepening what already ships
 
-1. **Zat/sawar split ranks.** Mansab as dual rank: zat (personal rank — gates fiefs and
-   stipend) and sawar (cavalry obligation — sets the muster target). Mostly re-labelling
-   numbers already tracked.
-2. **Festivals** (Eid, Diwali, Nauroz, Baisakhi — culture/faith-keyed like royal styles):
+1. **Festivals** (Eid, Diwali, Nauroz, Baisakhi — culture/faith-keyed like royal styles):
    seasonal Ceremonial farmaan, a court gathering that batches nazrana presentation and
    opinion gains; natural stage for petitions and betrothals. Builds on SeasonMath + the
    court menu.
-3. **Women's court influence.** Official darbar posts are men-only (period rule, shipped);
+2. **Women's court influence.** Official darbar posts are men-only (period rule, shipped);
    model the Nur Jahan pattern properly: influential women act through the intrigue layer —
    whispers that shift the holder's decisions, opinion records, faction ties.
 
@@ -49,6 +46,13 @@ waqai-nawis LLM news layer (ch.18).
 
 ## Shipped (for orientation)
 
+- Zat/sawar split ranks (was C.2) — 2026-07-11. The mansab is now presented as the historical
+  DUAL rank it always encoded: ZAT (the mansab number — personal rank/status, gates fiefs and
+  now sets the stipend) and SAWAR (the cavalry obligation — the muster target). Both numbers were
+  already tracked; this names them (`MansabdariBehavior.GetZat/GetSawar`, shown as "zat X / sawar
+  Y" in the mansab menu, encyclopedia, stipend farmaan) and re-bases the stipend on ZAT rather
+  than headcount (new `MansabRankMath.StipendForZat`, MCM "Stipend per point of zat"). Fief
+  eligibility and the muster target already keyed on these, so the rest was labelling. 4 tests.
 - Darbar petition court (was B.1) — 2026-07-11. `DarbarPetitionBehavior`: a "Hear a petition and
   render judgment" sitting in the sovereign's Darbar, drawing GROUNDED cases from the live realm
   — a boundary dispute between two village zamindars, a raided village pleading for justice, a

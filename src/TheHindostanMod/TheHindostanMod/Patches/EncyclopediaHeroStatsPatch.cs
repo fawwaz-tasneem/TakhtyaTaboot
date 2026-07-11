@@ -57,8 +57,9 @@ namespace TakhtyaTaboot
             if (!isSovereign && MansabdariBehavior.Instance != null)
             {
                 string title = MansabdariBehavior.Instance.GetTitle(hero.Clan);
-                int zat = MansabdariBehavior.Instance.GetMansab(hero.Clan);
-                if (!string.IsNullOrEmpty(title)) Row(vm, "Mansab", $"{title} (zat {zat})");
+                int zat = MansabdariBehavior.Instance.GetZat(hero.Clan);
+                int sawar = MansabdariBehavior.Instance.GetSawar(hero.Clan);
+                if (!string.IsNullOrEmpty(title)) Row(vm, "Mansab", $"{title} — {Util.MansabRankMath.DualRankLabel(zat, sawar)}");
             }
 
             Row(vm, "Council office", CouncilBehavior.Instance?.GetPostOf(hero));

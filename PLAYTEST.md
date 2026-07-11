@@ -5,15 +5,15 @@ are the first pass (stability, zamindari, village fiefs, core wave), E–I the f
 pass (farmaans, opinions, dynasties, dialogue, court menu), **J–N the July 2026 waves**
 (unified empire, clan safety net, succession economy + treachery, siege parley, the two
 Gauntlet screens), **O the akhbaar scouts, P bonded labour, Q coronation ceremonies, R monsoon
-harvest+famine, S village-jagir rotation, T fief petitions, U darbar petition court** — J–U are
-the CURRENT focus; A–I were exercised in playtest rounds 1–3.
+harvest+famine, S village-jagir rotation, T fief petitions, U darbar petition court, V zat/sawar
+split** — J–V are the CURRENT focus; A–I were exercised in playtest rounds 1–3.
 
 **Status ledger (2026-07-11, commits `6bad71f` → HEAD):** A–I built + playtested
-(rounds 1–3); J–U built, unit-tested (336 green) and statically verified against the
+(rounds 1–3); J–V built, unit-tested (340 green) and statically verified against the
 v1.3.11 decompile, but **not yet proven in a live campaign end-to-end** except: J1 fold
 confirmed by log + player, hierarchy board seen once (was upside down — fixed, needs a
-second look). O–U (akhbaar scouts, bonded labour, coronations, monsoon harvest, village-jagir
-rotation, fief petitions, darbar court) are the newest and wholly unverified live.
+second look). O–V (akhbaar scouts, bonded labour, coronations, monsoon harvest, village-jagir
+rotation, fief petitions, darbar court, zat/sawar) are the newest and wholly unverified live.
 
 ## Setup
 
@@ -368,6 +368,24 @@ never run live. Requires you to be a sovereign.*
 - **U5.** **Cooldown:** immediately after a sitting the option is greyed ("the docket is thin…")
   for 3 days. Save/load preserves the cooldown day. With no eligible parties (a tiny, vassal-less
   realm), "No petitioner brings a case worth the crown's time."
+
+## V. Zat/sawar split ranks (`MansabdariBehavior` display + stipend)
+
+*New this wave (2026-07-11) — mostly re-labelling numbers already tracked, plus the stipend now
+follows zat. 4 new `MansabRankMathTests` (340 green). Existing mansab progression is unchanged.*
+
+- **V1.** Mansab menu (town/castle → "Review your mansabdari rank"): the rank line now reads
+  "{Title} — zat X / sawar Y", with a note that ZAT gates fiefs+stipend and SAWAR is the muster
+  obligation, and a "Your muster: A of Y men required" line. The encyclopedia hero page's "Mansab"
+  row shows the same "zat X / sawar Y".
+- **V2.** **Stipend follows zat:** across a 30-day stipend cycle as a vassal, the "A Stipend from
+  the Treasury" note now cites your zat and pays MCM "Stipend per point of zat" × your zat
+  (default 0.4). A higher-zat noble draws a larger stipend than a low one regardless of how many
+  troops he currently fields. MCM "Stipend per point of zat" 0 disables it.
+- **V3.** Fief eligibility is unchanged (still zat-tier gated: village ≥ Mansabdar-e-Sad, castle ≥
+  Qiledar, town ≥ Subahdar), and the muster/retention floor still uses the sawar target — confirm
+  promotion/demotion behave exactly as before (no regression from the relabel).
+- **V4.** Old save: loads clean; ranks intact; the stipend simply switches basis to zat.
 
 ---
 

@@ -97,6 +97,15 @@ namespace TakhtyaTaboot
         public int GetMansab(Clan clan) => Ranks[GetRankIndex(clan)].Mansab;
         public string GetTitle(Clan clan) => Ranks[GetRankIndex(clan)].Title;
 
+        // ── The dual rank (zat / sawar) ─────────────────────────────────────────────
+        // A mansabdar holds TWO ranks: his ZAT (personal rank / status — the mansab number),
+        // which fixes standing, gates fiefs, and sets the stipend; and his SAWAR (cavalry
+        // obligation — the contingent he must keep mustered). Both were always tracked; these
+        // name them. GetSawar is the muster TARGET (the obligation), not the men actually fielded.
+        public int GetZat(Clan clan) => GetMansab(clan);
+        public int GetSawar(Clan clan) => GetRequiredTroops(clan);
+        public string GetDualRankLabel(Clan clan) => Util.MansabRankMath.DualRankLabel(GetZat(clan), GetSawar(clan));
+
         // ── Troop target of a rank ──────────────────────────────────────────────────
         // Each mansab carries an ABSOLUTE troop target. The party-size patch sets the
         // clan leader's cap to exactly this, so the rank can never demand more men than it
@@ -353,7 +362,8 @@ namespace TakhtyaTaboot
             if (idx < 1 || clan.Kingdom == null) return;
             Hero king = clan.Kingdom.Leader;
             if (king == null || king == Hero.MainHero) return; // the sovereign IS the treasury
-            int amount = (int)Math.Round(Config.Tune.StipendPerTroop * GetRequiredTroops(clan));
+            // The stipend follows ZAT (rank/status), not headcount (the zat/sawar split).
+            int amount = Util.MansabRankMath.StipendForZat(GetZat(clan), Config.Tune.StipendPerZat);
             if (amount <= 0) return;
 
             int pay = Math.Min(amount, Math.Max(0, king.Gold));
@@ -368,8 +378,8 @@ namespace TakhtyaTaboot
             GiveGoldAction.ApplyBetweenCharacters(king, Hero.MainHero, pay, true);
             // Routine, no cooldown: permanently a log line + Court Circular item, never a popup.
             RoyalFarmaan.FromRuler(clan.Kingdom, "A Stipend from the Treasury",
-                $"As is owed to your mansab of {Ranks[idx].Title}, the treasury disburses {pay} dinars toward the upkeep of " +
-                $"your {GetRequiredTroops(clan)}-man contingent.",
+                $"As is owed to your zat of {GetZat(clan)} ({Ranks[idx].Title}), the treasury disburses {pay} dinars. " +
+                $"Your sawar obligation is a contingent of {GetSawar(clan)} men.",
                 "I am grateful",
                 dedupeKey: "stipend", priority: Util.FarmaanPriority.Routine, cooldownDays: 0);
         }
@@ -571,14 +581,15 @@ namespace TakhtyaTaboot
             var sb = new StringBuilder();
             sb.AppendLine("The Mansabdari Court");
             sb.AppendLine(" ");
-            sb.AppendLine($"Your rank: {Ranks[idx].Title} (mansab {Ranks[idx].Mansab})");
-            sb.AppendLine($"Your sawar: {sawar} troops");
+            sb.AppendLine($"Your mansab: {Ranks[idx].Title} — {Util.MansabRankMath.DualRankLabel(Ranks[idx].Mansab, GetSawar(clan))}");
             if (idx >= 1)
             {
                 int target = GetRequiredTroops(clan);
                 int floor = GetRetentionFloor(clan);
-                sb.AppendLine($"Your mansab grants a contingent of {target} men (you must keep at least {floor}).");
+                sb.AppendLine($"   ZAT (rank/status) gates your fiefs and stipend; SAWAR is your muster obligation.");
+                sb.AppendLine($"Your muster: {sawar} of {target} men required (retention floor {floor}).");
             }
+            else sb.AppendLine($"Your muster: {sawar} troops.");
             if (idx < MaxIndex)
             {
                 int n = idx + 1;

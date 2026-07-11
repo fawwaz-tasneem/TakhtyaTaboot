@@ -79,8 +79,13 @@ namespace TakhtyaTaboot.Config
 
         [SettingPropertyGroup("Career & Mansab")]
         [SettingPropertyFloatingInteger("Stipend per required troop (per 30 days)", 0f, 20f, "0.0", RequireRestart = false,
-            HintText = "Every 30 days the treasury pays you this x your rank's troop target. 0 disables the stipend.", Order = 10)]
+            HintText = "Legacy: stipend basis before the zat/sawar split. Kept for reference; the stipend now follows zat (see below).", Order = 10)]
         public float StipendPerTroop { get; set; } = 2f;
+
+        [SettingPropertyGroup("Career & Mansab")]
+        [SettingPropertyFloatingInteger("Stipend per point of zat (per 30 days)", 0f, 5f, "0.00", RequireRestart = false,
+            HintText = "Every 30 days the treasury pays you this x your ZAT (rank/status number). A mansabdar is paid for his rank, not his headcount. 0 disables the stipend.", Order = 11)]
+        public float StipendPerZat { get; set; } = 0.4f;
 
         // ── Tenure edict (Feudal <-> Mansabdari) ─────────────────────────────────────
         [SettingPropertyGroup("Tenure & Rotation")]

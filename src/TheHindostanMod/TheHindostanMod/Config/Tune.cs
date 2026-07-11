@@ -27,6 +27,8 @@ namespace TakhtyaTaboot.Config
         public static float RetentionFraction => S?.RetentionFraction ?? 0.8f;
         public static int DemoteGraceDays => S?.DemoteGraceDays ?? 30;
         public static float StipendPerTroop => S?.StipendPerTroop ?? 2f;
+        // Dual rank: the stipend now follows ZAT (status), not headcount. Per point of zat, per 30 days.
+        public static float StipendPerZat => S?.StipendPerZat ?? 0.4f;
 
         // Tenure edict (Feudal <-> Mansabdari)
         public static float TenureLegitimacyFloor => S?.TenureLegitimacyFloor ?? 50f;

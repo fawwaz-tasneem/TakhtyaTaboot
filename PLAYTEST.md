@@ -4,14 +4,15 @@ Covers every component built across the passes. Work through in order; sections 
 are the first pass (stability, zamindari, village fiefs, core wave), E–I the foundations
 pass (farmaans, opinions, dynasties, dialogue, court menu), **J–N the July 2026 waves**
 (unified empire, clan safety net, succession economy + treachery, siege parley, the two
-Gauntlet screens), **O the akhbaar scouts, P bonded labour** — J–P are the CURRENT focus;
-A–I were exercised in playtest rounds 1–3.
+Gauntlet screens), **O the akhbaar scouts, P bonded labour, Q coronation ceremonies** — J–Q
+are the CURRENT focus; A–I were exercised in playtest rounds 1–3.
 
 **Status ledger (2026-07-11, commits `6bad71f` → HEAD):** A–I built + playtested
-(rounds 1–3); J–P built, unit-tested (301 green) and statically verified against the
+(rounds 1–3); J–Q built, unit-tested (314 green) and statically verified against the
 v1.3.11 decompile, but **not yet proven in a live campaign end-to-end** except: J1 fold
 confirmed by log + player, hierarchy board seen once (was upside down — fixed, needs a
-second look). O (akhbaar scouts) and P (bonded labour) are the newest and wholly unverified live.
+second look). O (akhbaar scouts), P (bonded labour), Q (coronations) are the newest and wholly
+unverified live.
 
 ## Setup
 
@@ -235,6 +236,30 @@ bonded labour in villages" under Village Fiefs (on by default).*
   the right count/cap; yields and attrition resume. Old save (pre-feature): loads clean, no gangs.
 - **P8.** Console: `hindostan.settle_labour <n>` adds a free gang (no captives spent) up to cap;
   `hindostan.labour_status` lists every village's gang with its tax/unrest.
+
+## Q. Coronation ceremonies (`CoronationBehavior`, fires on accession; `hindostan.coronation_test`)
+
+*New this wave (2026-07-11) — built, unit-tested (8 new `CoronationMathTests`, 314 green), never
+run live. Reuses the existing opinion records, Ceremonial farmaan, and grievance dialogue.*
+
+- **Q1.** **Player accedes as sovereign** (take a throne, or `hindostan.coronation_test` while you
+  lead a realm): a Ceremonial "Your Coronation Darbar" farmaan lists the verdict of the hall, who
+  bent the knee, and who left an empty place. Sanity: high-relation house heads should mostly
+  attend, resented ones mostly stay away. Legitimacy shifts with the balance of attend vs. absent.
+- **Q2.** With absentees, the farmaan offers "Demand a late oath" → a follow-up "The Late Oath"
+  farmaan reports who bent (warmer lords) and who defied (colder lords). Defiant lords get a
+  **grudge** you can then pursue in the grievance dialogue (playtest H3). "Let their absence stand"
+  instead → a message that the court remembers.
+- **Q3.** Check the opinion records afterward (encyclopedia "Disposition toward you" rows / grudge
+  dialogue availability): attendees carry "an oath sworn", absentees "an empty place at the ceremony".
+- **Q4.** **Player as vassal:** be a member (non-ruling) clan of a realm, then cause its ruler to
+  die/change → a "A Summons to the Coronation" farmaan from the new sovereign. "Travel and swear" →
+  relation up, the sovereign marks your loyalty. On a separate save, "Stay away" → relation down,
+  the sovereign holds the empty place against you.
+- **Q5.** **AI accessions are silent:** when a foreign realm's ruler changes (not yours), NO farmaan
+  fires — no coronation spam. During the scripted 1707 cascade specifically, no darbar per beat.
+- **Q6.** **Save/load:** the ruler snapshot persists (no phantom coronation on load). Old save
+  (pre-feature): loads clean; the next real accession in your realm stages the darbar.
 
 ---
 

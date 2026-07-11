@@ -39,6 +39,7 @@
 | Legitimacy / authority | `LegitimacyBehavior`, `ImperialAuthorityBehavior` | — | `hind_legit_*`, `hind_authority_*` | — |
 | Warfare (aims, score, terms, tributaries) | `WarfareBehavior`, `WarAimsBehavior` | `WarAimMath` | `hind_war_*` | `war_status` |
 | Succession (crisis, laws, scripted 1707 cascade, treachery arc) | `SuccessionBehavior`, `SuccessionLawBehavior`, `ImperialSuccessionEventBehavior` | `SuccessionLawMath` (incl. incumbent price / treachery / fates), `ImperialSuccessionPlan` | `suc_*` (incl. `suc_treach*`), `tyt_imp_succ_*` | `accession_status` |
+| Coronation darbar (accession summons: attend/snub, late oath) | `CoronationBehavior` (own ruler snapshot; player-sovereign & player-vassal beats; AI silent) | `CoronationMath` | `hind_coron_*` | `coronation_test` |
 | Unified empire until Aurangzeb dies (fold + breakaway) | `UnifiedEmpireBehavior` | `UnifiedEmpireMath` | `tyt_unified_*` | `unified_status` |
 | Clan safety net (no masterless houses) | `ClanSafetyNetBehavior` | `ClanRehomeMath` | `tyt_orphan_*` | — |
 | Siege parley (bribe / terms / honour-or-defy) | `SiegeParleyBehavior` | `SiegeParleyMath` | — | — |

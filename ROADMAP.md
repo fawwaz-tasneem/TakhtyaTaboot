@@ -16,19 +16,13 @@ Update this file when an item ships (move it to "Shipped") or when priorities ch
 
 ## B. Foundations-ready systems (the second wave the opinion/dynasty layer was built for)
 
-1. **Coronation ceremonies.** On accession, summon each house head; attendance decided by
-   `EffectiveOpinion`; absentees get `MissedCeremony` records and become targets of the
-   existing grievance dialogue; ruler may demand a late oath. Player-sovereign holds court
-   while the lords arrive; player-vassal travels to swear — or deliberately stays away.
-   (`SworeFealty`/`MissedCeremony` opinion types, Ceremonial farmaan priority, and the
-   fealty dialogue already exist.)
-2. **Darbar petition court.** Unify council/darbar convening into one sitting where
+1. **Darbar petition court.** Unify council/darbar convening into one sitting where
    notables, merchants and zamindars bring grounded cases (village land disputes, a robbed
    caravan, zamindar vs zamindar). Judgments write `CourtRuling` opinion records to both
    parties, cost/earn gold and influence, nudge traits. The village-fief layer supplies
    endless non-random petition material. (User confirmed current convening feels
    unchanged — this is the fix.)
-3. **Fief petitions replacing claim-fief.** "Claim your due" becomes a petition queue:
+2. **Fief petitions replacing claim-fief.** "Claim your due" becomes a petition queue:
    gold gift + influence stake filed with the sovereign; when a fief frees up the court
    weighs gift, influence, `EffectiveOpinion` and `CanHold` rank — and refuses outright
    below a relation threshold. The weekly court-grant tick becomes the queue engine.
@@ -77,6 +71,14 @@ waqai-nawis LLM news layer (ch.18).
 
 ## Shipped (for orientation)
 
+- Coronation ceremonies (was B.1) — 2026-07-11. `CoronationBehavior`: on any accession, a
+  darbar. If the PLAYER accedes, AI house heads attend or leave an empty place by their
+  `EffectiveOpinion` of him (attendees → `SworeFealty` + relation & legitimacy; absentees →
+  `MissedCeremony`, and he may DEMAND a late oath — harder to win, `CoronationMath`); if the
+  player is a VASSAL of the new sovereign he is summoned to travel and swear or deliberately
+  stay away. AI-only accessions resolve silently. Building blocks (opinion records, Ceremonial
+  farmaan, grievance dialogue) pre-existed; pure `CoronationMath` (8 tests). Console:
+  `hindostan.coronation_test`.
 - Slave labour in villages (was A.2, user-requested) — 2026-07-11. `SlaveLabourBehavior`:
   in a village you hold, bind common battle captives from your prison train to forced
   labour (begar). The gang (capped by hearth, ~5–60) raises the village's tax and the bound

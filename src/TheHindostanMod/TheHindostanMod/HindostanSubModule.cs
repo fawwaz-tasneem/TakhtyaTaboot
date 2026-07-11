@@ -185,6 +185,7 @@ namespace TakhtyaTaboot
             starter.AddBehavior(new SuccessionBehavior());
             starter.AddBehavior(new AccessionWarBehavior());
             starter.AddBehavior(new ImperialSuccessionEventBehavior()); // scripted 1707 emperor cascade
+            starter.AddBehavior(new CoronationBehavior()); // the accession darbar: summons, oaths, snubs
 
             // Phase 6 — Revolts and estates
             starter.AddBehavior(new RevoltCascadeBehavior());

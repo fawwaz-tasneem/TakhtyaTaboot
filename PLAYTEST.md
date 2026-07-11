@@ -4,13 +4,14 @@ Covers every component built across the passes. Work through in order; sections 
 are the first pass (stability, zamindari, village fiefs, core wave), E–I the foundations
 pass (farmaans, opinions, dynasties, dialogue, court menu), **J–N the July 2026 waves**
 (unified empire, clan safety net, succession economy + treachery, siege parley, the two
-Gauntlet screens) — J–N are the CURRENT focus; A–I were exercised in playtest rounds 1–3.
+Gauntlet screens), **O the akhbaar scouts** — J–O are the CURRENT focus; A–I were exercised
+in playtest rounds 1–3.
 
-**Status ledger (2026-07-10, commits `6bad71f` → `46bbe68`):** A–I built + playtested
-(rounds 1–3); J–N built, unit-tested (266 green) and statically verified against the
+**Status ledger (2026-07-11, commits `6bad71f` → HEAD):** A–I built + playtested
+(rounds 1–3); J–O built, unit-tested (289 green) and statically verified against the
 v1.3.11 decompile, but **not yet proven in a live campaign end-to-end** except: J1 fold
 confirmed by log + player, hierarchy board seen once (was upside down — fixed, needs a
-second look).
+second look). O (akhbaar scouts) is the newest and wholly unverified live.
 
 ## Setup
 
@@ -171,6 +172,37 @@ For the report: for each numbered check mark PASS / FAIL / SKIPPED, and for FAIL
   ch.18) and were left untouched — if their reversed layout bothers you now that you know,
   ask for the flip (one-line change each, needs a visual check after).
 
+## O. Akhbaar scouts (`AkhbaarScoutBehavior`, court menu → "Dispatch an akhbaar scout after a lord")
+
+*New this wave (2026-07-11) — built, unit-tested (23 new `AkhbaarMathTests`, 289 green), never
+run live. This is the seed of the wider akhbarat espionage layer (wiki ch.17).*
+
+- **O1.** In any town/castle court menu, the entry "Dispatch an akhbaar scout after a lord"
+  appears. Opening it lists scoutable lords (heads of houses + lords in the field, not your
+  own clan), **your realm's lords sorted first**, each with a fee. Cost sanity: a famous
+  (high-tier) house should be cheaper than an obscure low-tier one; a foreign-realm lord costs
+  ~1.5× a home lord of the same tier. Lords you can't afford / already track are greyed with a
+  reason in the hint.
+- **O2.** Dispatch one → gold deducted, message "Your harkara slips out after X … expect his
+  akhbaar in some N days." Re-open the menu → that lord now greyed ("a scout is already on his
+  trail"). The court entry's tooltip shows the count on the road.
+- **O3.** **The report (the payoff):** wait N days (or `hindostan.akhbaar_arrive` to force it).
+  A farmaan "Akhbaar: {lord}" arrives from your harkara. Verify the body reads as HEARSAY, not a
+  data dump: a rounded count ("some 75 men"), a worded strength tier, and a composition line
+  ("chiefly horse, with foot and bows") — never an exact roster. It should name what he's doing
+  (marching near a holding / besieging / quartered in a town / in a battle) and where.
+- **O4.** Scout a lord with **no war band** (a clan head sitting at court) → report says he keeps
+  to his town / has gone to ground, no host under his banner. Scout an **imprisoned** lord →
+  report says CAPTIVE and where he's held. Scout a lord, then let him **die** before the runner
+  returns (or `akhbaar_arrive` after killing him) → report says he's dead, business passes to
+  his heirs (no crash, no null lord).
+- **O5.** **Save/load:** dispatch a scout, save mid-road, load → `hindostan.akhbaar_status`
+  still lists it with the right days remaining; it still delivers on schedule. Deliver a report
+  while another screen is up (not the map) → farmaan queues and shows without re-entrancy issues.
+- **O6.** Console: `hindostan.akhbaar_send <name>` dispatches a free scout arriving next daily
+  tick; `hindostan.akhbaar_status` lists the road; `hindostan.akhbaar_arrive` forces delivery.
+- **O7.** Old save (pre-feature): loads clean, no scouts, court entry present and usable.
+
 ---
 
-**When you report back**, the ideal format per finding: section-number, PASS/FAIL, repro steps, log excerpt, screenshot if UI. The single most valuable data points now are **J3 (the breakaway, never seen live)**, **M2 (siege unwind — the riskiest engine path)**, **N1/N2 (the fixed board)**, L3's fates, and anything that throws in `tyt_log.txt`.
+**When you report back**, the ideal format per finding: section-number, PASS/FAIL, repro steps, log excerpt, screenshot if UI. The single most valuable data points now are **J3 (the breakaway, never seen live)**, **M2 (siege unwind — the riskiest engine path)**, **N1/N2 (the fixed board)**, L3's fates, **O3/O4 (the first akhbaar report and its dead/captive/no-party edge cases)**, and anything that throws in `tyt_log.txt`.

@@ -41,6 +41,7 @@
 | Unified empire until Aurangzeb dies (fold + breakaway) | `UnifiedEmpireBehavior` | `UnifiedEmpireMath` | `tyt_unified_*` | `unified_status` |
 | Clan safety net (no masterless houses) | `ClanSafetyNetBehavior` | `ClanRehomeMath` | `tyt_orphan_*` | — |
 | Siege parley (bribe / terms / honour-or-defy) | `SiegeParleyBehavior` | `SiegeParleyMath` | — | — |
+| Akhbaar scouts (dispatch → timed akhbaar report) | `AkhbaarScoutBehavior` | `AkhbaarMath` | `hind_akhbaar_*` | `akhbaar_status`, `akhbaar_arrive`, `akhbaar_send` |
 | Accession war (player) / AI civil war | `AccessionWarBehavior`, `CivilWarBehavior` | `CivilWarMath` | `hind_acc_*`, `hind_cw_*` | `force_accession_win`, `force_ai_civil_war`, `civil_war_status` |
 | Revolts | `RevoltCascadeBehavior` | — | — | — |
 | Nazrana gift cycle | `NazranaBehavior` | `NazranaMath` | `hind_naz_*` | — |

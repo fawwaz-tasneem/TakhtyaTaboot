@@ -6,16 +6,13 @@ Update this file when an item ships (move it to "Shipped") or when priorities ch
 
 ## A. Near-term (from playtest rounds 1–2, July 2026)
 
-1. **Akhbaar scouts.** Pay to dispatch a scout after a named lord; on locating him an
-   *akhbaar* report arrives in the farmaan-style layer: location, troop count, rough
-   composition. Seed of a wider akhbarat espionage layer (wiki ch.17).
-2. **Culture-keyed dialogue register + Calradia purge.** Persianate Urdu honorifics for
+1. **Culture-keyed dialogue register + Calradia purge.** Persianate Urdu honorifics for
    Muslim courts (Zill-e-Ilahi, Jahanpanah, bismillah invocations), distinct registers for
    Rajput/Maratha/Sikh courts; sweep remaining vanilla Calradia prose through the
    LocalizationOverride pipeline.
-3. **Slave labour in villages.** Capped workforce per village fed from battle captives:
+2. **Slave labour in villages.** Capped workforce per village fed from battle captives:
    +productivity/tax, +threat. (User-requested upcoming feature.)
-4. **Clan-screen fiefs visibility.** The engine cannot give a village an owner separate
+3. **Clan-screen fiefs visibility.** The engine cannot give a village an owner separate
    from its bound town, so zamindari villages never appear in the vanilla Fiefs tab —
    inject a "Zamindari" block into the clan screen via UIExtenderEx instead.
 
@@ -82,6 +79,12 @@ waqai-nawis LLM news layer (ch.18).
 
 ## Shipped (for orientation)
 
+- Akhbaar scouts (was A.1) — 2026-07-11. `AkhbaarScoutBehavior`: from any court, pay a
+  harkara to trail a named lord; his *akhbaar* (newsletter) arrives in the farmaan layer
+  N days later — location, what he's about, and strength in hearsay terms (rounded count +
+  worded composition, never an exact roster). Handles no-party / captive / died-on-the-road
+  lords. Pure fee/delay/prose logic in `AkhbaarMath` (tested, 23 cases). Seed of the wider
+  akhbarat espionage layer (wiki ch.17). Console: `hindostan.akhbaar_status / _arrive / _send`.
 - Wave of 2026-07-10 (was A.0–A.3): imperial colours while unified (folded clans dress in
   empire colours, ancestral colours restored at the breakaway); succession-crisis economy
   rework (incumbent price scales with reign years via the dynasty accession roll — a

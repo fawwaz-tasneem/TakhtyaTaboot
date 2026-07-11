@@ -198,6 +198,7 @@ namespace TakhtyaTaboot
             starter.AddBehavior(new ReligiousToleranceBehavior()); // realm faith policy + jizya (Ch.17)
 
             // Phase 8 — QoL systems
+            starter.AddBehavior(new AkhbaarScoutBehavior()); // pay a harkara to trail a named lord; akhbaar report via farmaan
             // starter.AddBehavior(new TradeRouteBehavior());
             // starter.AddBehavior(new FoodSecurityBehavior());
             // starter.AddBehavior(new EpidemicBehavior());

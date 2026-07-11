@@ -195,6 +195,7 @@ namespace TakhtyaTaboot
 
             // Phase 7 — Military/political depth
             starter.AddBehavior(new CouncilBehavior());
+            starter.AddBehavior(new DarbarPetitionBehavior()); // grounded petition court in the darbar (writes CourtRuling); must follow CouncilBehavior (darbar menu)
             starter.AddBehavior(new ImperialCourtBehavior());
             starter.AddBehavior(new PartyOrdersBehavior());
             starter.AddBehavior(new CivilWarBehavior());          // AI leadership challenges (Ch.16)

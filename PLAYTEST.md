@@ -5,15 +5,15 @@ are the first pass (stability, zamindari, village fiefs, core wave), E–I the f
 pass (farmaans, opinions, dynasties, dialogue, court menu), **J–N the July 2026 waves**
 (unified empire, clan safety net, succession economy + treachery, siege parley, the two
 Gauntlet screens), **O the akhbaar scouts, P bonded labour, Q coronation ceremonies, R monsoon
-harvest+famine, S village-jagir rotation, T fief petitions** — J–T are the CURRENT focus; A–I
-were exercised in playtest rounds 1–3.
+harvest+famine, S village-jagir rotation, T fief petitions, U darbar petition court** — J–U are
+the CURRENT focus; A–I were exercised in playtest rounds 1–3.
 
 **Status ledger (2026-07-11, commits `6bad71f` → HEAD):** A–I built + playtested
-(rounds 1–3); J–T built, unit-tested (330 green) and statically verified against the
+(rounds 1–3); J–U built, unit-tested (336 green) and statically verified against the
 v1.3.11 decompile, but **not yet proven in a live campaign end-to-end** except: J1 fold
 confirmed by log + player, hierarchy board seen once (was upside down — fixed, needs a
-second look). O–T (akhbaar scouts, bonded labour, coronations, monsoon harvest, village-jagir
-rotation, fief petitions) are the newest and wholly unverified live.
+second look). O–U (akhbaar scouts, bonded labour, coronations, monsoon harvest, village-jagir
+rotation, fief petitions, darbar court) are the newest and wholly unverified live.
 
 ## Setup
 
@@ -343,6 +343,31 @@ Kanpur/Lucknow were instantly claimable). Built, unit-tested (6 new `FiefPetitio
   petition stands closes it and refunds the influence (a sovereign grants, not petitions).
 - **T7.** Save/load: a standing petition persists (tier, stakes, filed day). Old save: no
   petition; the menu option now files rather than instant-grants.
+
+## U. Darbar petition court (`DarbarPetitionBehavior`; sovereign's Darbar → "Hear a petition")
+
+*New this wave (2026-07-11) — the first user of the `CourtRuling` opinion record (defined long
+ago, never written until now). Built, unit-tested (6 new `DarbarCourtMathTests`, 336 green),
+never run live. Requires you to be a sovereign.*
+
+- **U1.** As a sovereign, court menu → "Hold court and issue decrees" → "Hear a petition and
+  render judgment". A grounded case appears drawn from YOUR realm: a boundary dispute between two
+  village zamindars, OR a raided village's plea (needs a high-threat village — force via
+  `hindostan.set_village_threat 60`), OR a quarrel between two notables. `hindostan.darbar_petition`
+  forces a sitting (bypasses the 3-day cooldown).
+- **U2.** **Dispute case:** four rulings — for plaintiff / for defendant / compromise / dismiss.
+  Rule for one side → he warms to you (a "judgement at court" record, +relation), the other cools
+  (negative record, −relation); you gain influence, a little legitimacy. Compromise → both warm
+  slightly but you SPEND influence. Dismiss → both cool and you LOSE legitimacy.
+- **U3.** **Plea case:** grant relief (deep gratitude + legitimacy), refer to the local lord
+  (mild), or turn away (the petitioner sours, legitimacy drops). Verify the plaintiff's disposition
+  toward you moves accordingly.
+- **U4.** **The CourtRuling record:** after a ruling, check the parties' encyclopedia "Disposition
+  toward you" — a favoured party shows "a judgement at court" (positive); a party ruled against
+  shows it negative, making him a grievance-dialogue target (playtest H3).
+- **U5.** **Cooldown:** immediately after a sitting the option is greyed ("the docket is thin…")
+  for 3 days. Save/load preserves the cooldown day. With no eligible parties (a tiny, vassal-less
+  realm), "No petitioner brings a case worth the crown's time."
 
 ---
 

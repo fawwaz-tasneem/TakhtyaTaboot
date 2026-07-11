@@ -51,6 +51,7 @@
 | Religious tolerance / jizya | `ReligiousToleranceBehavior` + `Patches/ToleranceTaxPatch` | `ToleranceMath` | `hind_tol_*` | — |
 | Court factions | `CourtFactionsBehavior` | `CourtFactionMath` | `hind_cf_*` | — |
 | Councils & Darbar | `CouncilBehavior`, `ImperialCourtBehavior` | — | — | — |
+| Darbar petition court (grounded cases → CourtRuling records) | `DarbarPetitionBehavior` (in the darbar menu; parties from live realm) | `DarbarCourtMath` | `hind_darbar_*` | `darbar_petition` |
 | Monsoon (party speed) | `Patches/MonsoonSpeedPatch` | `SeasonMath` | — | — |
 | Monsoon harvest + famine (yearly rains → autumn tax swing, famine plea) | `MonsoonBehavior` (`VillageDevelopmentBehavior` reads `HarvestMultiplier()`) | `SeasonMath` (harvest mult, famine odds, verdict) | `hind_monsoon_*` | `monsoon_status`, `set_monsoon` |
 | Farmaan director | `FarmaanDirectorBehavior` + `UI/FarmaanScreen` | `FarmaanFlow` | `hind_far_*` | `farmaan_test` |

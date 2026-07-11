@@ -51,6 +51,7 @@
     <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\SlaveLabourMath.cs" Link="Linked\SlaveLabourMath.cs" />
     <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\CoronationMath.cs" Link="Linked\CoronationMath.cs" />
     <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\FiefPetitionMath.cs" Link="Linked\FiefPetitionMath.cs" />
+    <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\DarbarCourtMath.cs" Link="Linked\DarbarCourtMath.cs" />
   </ItemGroup>
 
 </Project>

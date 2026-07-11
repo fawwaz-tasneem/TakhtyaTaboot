@@ -14,15 +14,6 @@ Update this file when an item ships (move it to "Shipped") or when priorities ch
    from its bound town, so zamindari villages never appear in the vanilla Fiefs tab —
    inject a "Zamindari" block into the clan screen via UIExtenderEx instead.
 
-## B. Foundations-ready systems (the second wave the opinion/dynasty layer was built for)
-
-1. **Darbar petition court.** Unify council/darbar convening into one sitting where
-   notables, merchants and zamindars bring grounded cases (village land disputes, a robbed
-   caravan, zamindar vs zamindar). Judgments write `CourtRuling` opinion records to both
-   parties, cost/earn gold and influence, nudge traits. The village-fief layer supplies
-   endless non-random petition material. (User confirmed current convening feels
-   unchanged — this is the fix.)
-
 ## C. Deepening what already ships
 
 1. **Zat/sawar split ranks.** Mansab as dual rank: zat (personal rank — gates fiefs and
@@ -58,6 +49,14 @@ waqai-nawis LLM news layer (ch.18).
 
 ## Shipped (for orientation)
 
+- Darbar petition court (was B.1) — 2026-07-11. `DarbarPetitionBehavior`: a "Hear a petition and
+  render judgment" sitting in the sovereign's Darbar, drawing GROUNDED cases from the live realm
+  — a boundary dispute between two village zamindars, a raided village pleading for justice, a
+  quarrel between two notables. The ruling (for plaintiff / for defendant / compromise / dismiss)
+  writes a signed `CourtRuling` opinion record into each party's regard for the sovereign (the
+  ledger hook that was defined but unused), and moves the crown's influence and legitimacy per the
+  tested `DarbarCourtMath`. 3-day docket cooldown so it's a periodic act, not a grind. (Traits are
+  read-only in this codebase, so trait nudges were left out.) Console: `hindostan.darbar_petition`.
 - Fief petitions replacing instant claim (was B.2) — 2026-07-11. `FiefPetitionBehavior`: the
   mansab menu's "claim your due" is no longer an instant grant for a flat fee. The player FILES
   a petition staking a gold gift (nazrana, non-refundable) and influence (refunded on

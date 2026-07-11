@@ -22,11 +22,6 @@ Update this file when an item ships (move it to "Shipped") or when priorities ch
    parties, cost/earn gold and influence, nudge traits. The village-fief layer supplies
    endless non-random petition material. (User confirmed current convening feels
    unchanged — this is the fix.)
-2. **Fief petitions replacing claim-fief.** "Claim your due" becomes a petition queue:
-   gold gift + influence stake filed with the sovereign; when a fief frees up the court
-   weighs gift, influence, `EffectiveOpinion` and `CanHold` rank — and refuses outright
-   below a relation threshold. The weekly court-grant tick becomes the queue engine.
-   (Playtest: Kanpur/Lucknow were instantly claimable — this replaces that.)
 
 ## C. Deepening what already ships
 
@@ -63,6 +58,15 @@ waqai-nawis LLM news layer (ch.18).
 
 ## Shipped (for orientation)
 
+- Fief petitions replacing instant claim (was B.2) — 2026-07-11. `FiefPetitionBehavior`: the
+  mansab menu's "claim your due" is no longer an instant grant for a flat fee. The player FILES
+  a petition staking a gold gift (nazrana, non-refundable) and influence (refunded on
+  withdrawal), choosing modest/handsome/lavish. The weekly court is the queue engine: while a
+  qualifying fief is free it rolls the court's approval (rising with gift, stake, and the
+  sovereign's regard — `FiefPetitionMath`), and BELOW a floor of regard it refuses outright and
+  keeps the stake. Eligibility + the grant reuse `CareerProgressionBehavior` (no logic
+  duplicated). Fixes the "Kanpur/Lucknow instantly claimable" playtest complaint. 6 tests.
+  Console: `hindostan.petition_status / petition_resolve`.
 - Village-jagir tenure rotation + opinion records (was C.1) — 2026-07-11. Under Mansabdari
   law, `MansabdariTenureBehavior` now rotates VILLAGE jagirs too (through the zamindari feudal
   layer, not engine ownership): one town/castle and one village review per realm per week on

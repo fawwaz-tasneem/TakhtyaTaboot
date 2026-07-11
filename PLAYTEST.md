@@ -5,15 +5,15 @@ are the first pass (stability, zamindari, village fiefs, core wave), E–I the f
 pass (farmaans, opinions, dynasties, dialogue, court menu), **J–N the July 2026 waves**
 (unified empire, clan safety net, succession economy + treachery, siege parley, the two
 Gauntlet screens), **O the akhbaar scouts, P bonded labour, Q coronation ceremonies, R monsoon
-harvest+famine, S village-jagir rotation** — J–S are the CURRENT focus; A–I were exercised in
-playtest rounds 1–3.
+harvest+famine, S village-jagir rotation, T fief petitions** — J–T are the CURRENT focus; A–I
+were exercised in playtest rounds 1–3.
 
 **Status ledger (2026-07-11, commits `6bad71f` → HEAD):** A–I built + playtested
-(rounds 1–3); J–S built, unit-tested (324 green) and statically verified against the
+(rounds 1–3); J–T built, unit-tested (330 green) and statically verified against the
 v1.3.11 decompile, but **not yet proven in a live campaign end-to-end** except: J1 fold
 confirmed by log + player, hierarchy board seen once (was upside down — fixed, needs a
-second look). O–S (akhbaar scouts, bonded labour, coronations, monsoon harvest, village-jagir
-rotation) are the newest and wholly unverified live.
+second look). O–T (akhbaar scouts, bonded labour, coronations, monsoon harvest, village-jagir
+rotation, fief petitions) are the newest and wholly unverified live.
 
 ## Setup
 
@@ -313,6 +313,36 @@ green. Requires a realm under Mansabdari tenure (`hindostan.tenure_mansabdari`).
 - **S5.** Local **notable** zamindars (non-lords) are never rotated — only lord-held village jagirs.
 - **S6.** Save/load: the rotation clock persists for villages (the `_appointed` map is shared);
   no double-rotation after load. Under feudal (non-Mansabdari) law, nothing rotates.
+
+## T. Fief petitions replacing instant claim (`FiefPetitionBehavior`, mansab menu)
+
+*New this wave (2026-07-11) — replaces the old instant "claim your due" (playtest complaint:
+Kanpur/Lucknow were instantly claimable). Built, unit-tested (6 new `FiefPetitionMathTests`,
+330 green), never run live.*
+
+- **T1.** As a vassal eligible for a fief (rank ≥1, none held at your rank height), open the
+  mansab menu (town/castle → "Review your mansabdari rank") → "Petition the court for a fief
+  befitting your rank". It should NO LONGER instantly grant a fief. Instead an inquiry offers
+  modest/handsome/lavish stakes (gold gift + influence), each showing a weekly grant chance;
+  unaffordable tiers are greyed.
+- **T2.** File a petition → the gold gift and influence are deducted now; the mansab menu shows a
+  "Fief petition standing" line. `hindostan.petition_status` shows tier, stakes, sovereign regard,
+  whether a fief is available, and the weekly chance.
+- **T3.** **The queue engine:** with a qualifying fief available, advance weeks (or
+  `hindostan.petition_resolve` to force a pass). The court grants it probabilistically — a
+  "Your Petition Is Granted" farmaan, the fief/zamindari seated. A **lavish** stake with good
+  relations should resolve in far fewer passes than a **modest** one with poor relations.
+- **T4.** **Refusal below the floor:** drop your relation with the sovereign below −10 (e.g. via
+  a grudge), file/keep a petition, resolve with a fief available → "Your Petition Is Refused",
+  petition closed, **stake forfeit** (gift AND influence kept by the court). The filing inquiry
+  should warn you when you're below the floor.
+- **T5.** **Withdraw:** open the menu with a standing petition → "Review your standing fief
+  petition" → withdraw → influence refunded, the gift stays spent.
+- **T6.** **No fief available:** file when no qualifying fief is currently free (all held) → the
+  petition waits (no grant, no refusal) until one frees up. Becoming **sovereign** while a
+  petition stands closes it and refunds the influence (a sovereign grants, not petitions).
+- **T7.** Save/load: a standing petition persists (tier, stakes, filed day). Old save: no
+  petition; the menu option now files rather than instant-grants.
 
 ---
 

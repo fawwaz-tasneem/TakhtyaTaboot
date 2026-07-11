@@ -164,6 +164,7 @@ namespace TakhtyaTaboot
             // Phase 2 — Lord ranks
             starter.AddBehavior(new MansabdariBehavior());
             starter.AddBehavior(new CareerProgressionBehavior());
+            starter.AddBehavior(new FiefPetitionBehavior()); // "claim your due" -> a staked petition the weekly court weighs
             starter.AddBehavior(new RusukhBehavior()); // local entrenchment of fief-holders
             starter.AddBehavior(new MansabdariTenureBehavior()); // Feudal <-> Mansabdari tenure edict
 

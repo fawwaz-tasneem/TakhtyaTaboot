@@ -35,6 +35,7 @@
 | Village fiefs (projects, coffer, threat) | `VillageDevelopmentBehavior` + `UI/VillageWorksScreen` (works ledger) | `VillageFiefMath` | `hind_vil_*` | `village_status`, `set_village_threat` |
 | Bonded labour (captives → begar gang: +tax/+prosperity/+unrest, attrition) | `SlaveLabourBehavior` (owns gang; `VillageDevelopmentBehavior` reads yields) | `SlaveLabourMath` (+ `VillageFiefMath.ThreatStep` `unrest` term) | `hind_labour_*` | `labour_status`, `settle_labour` |
 | Mansabdari ladder | `MansabdariBehavior`, `CareerProgressionBehavior` | `MansabTenureMath` | `hind_mansab_*` etc. | `set_rank`, `mansab_status`, `add_valour` |
+| Fief petitions (staked petition weighed weekly; replaces instant claim) | `FiefPetitionBehavior` (grant/eligibility reuse `CareerProgressionBehavior`) | `FiefPetitionMath` | `hind_fpet_*` | `petition_status`, `petition_resolve` |
 | Tenure law + rotation (town/castle AND village jagirs; Favor/Grudge on rotation) | `MansabdariTenureBehavior` | `MansabTenureMath` | `tyt_tenure_*` | `tenure`, `tenure_mansabdari`, `tenure_feudal`, `tenure_rotate`, `tenure_rotate_village` |
 | Legitimacy / authority | `LegitimacyBehavior`, `ImperialAuthorityBehavior` | — | `hind_legit_*`, `hind_authority_*` | — |
 | Warfare (aims, score, terms, tributaries) | `WarfareBehavior`, `WarAimsBehavior` | `WarAimMath` | `hind_war_*` | `war_status` |

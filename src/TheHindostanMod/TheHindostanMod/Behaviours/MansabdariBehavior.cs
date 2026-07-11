@@ -479,10 +479,10 @@ namespace TakhtyaTaboot
                 args => { PlayerPetition(); MansabMenuInit(args); });
 
             starter.AddGameMenuOption("hindostan_mansab", "hindostan_mansab_claim",
-                "{=!}Claim a fief befitting your rank",
+                "{=!}Petition the court for a fief befitting your rank",
                 args => { args.optionLeaveType = GameMenuOption.LeaveType.Manage;
-                          return CareerProgressionBehavior.Instance?.CanClaim(out _) ?? false; },
-                args => { CareerProgressionBehavior.Instance?.ClaimFief(); MansabMenuInit(args); });
+                          return FiefPetitionBehavior.Instance?.CanOpenPetitionMenu(out _) ?? false; },
+                args => { FiefPetitionBehavior.Instance?.OpenPetitionFlow(); MansabMenuInit(args); });
 
             starter.AddGameMenuOption("hindostan_mansab", "hindostan_mansab_challenge",
                 "{=!}Challenge the Emperor for the throne",
@@ -593,6 +593,8 @@ namespace TakhtyaTaboot
             else sb.AppendLine("You hold the highest mansab in the empire.");
             sb.AppendLine(" ");
             sb.AppendLine("You may hold: " + EligibilityLine(idx));
+            string petition = FiefPetitionBehavior.Instance?.StandingLine();
+            if (!string.IsNullOrEmpty(petition)) { sb.AppendLine(" "); sb.AppendLine(petition); }
             sb.AppendLine(" ");
             sb.AppendLine("— The Ladder of Rank —");
             for (int i = MaxIndex; i >= 1; i--)

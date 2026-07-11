@@ -168,6 +168,41 @@ namespace TakhtyaTaboot
             }
         }
 
+        // ── Petition hooks (FiefPetitionBehavior) ────────────────────────────────────
+        // The fief-petition system replaces the instant claim: it reuses this class's proven
+        // eligibility rules and grant action, handling the gift/influence stakes itself.
+
+        // Public view of the claim finder: is there a fief the player qualifies for and can be
+        // granted right now, and of what kind? tier: 0 village, 1 castle, 2 town.
+        public bool TryFindClaimTarget(out Settlement target, out int tier, out string reason)
+        {
+            tier = 0;
+            if (!TryFindClaim(out target, out bool villageZamindari, out reason)) return false;
+            tier = villageZamindari || target.IsVillage ? 0 : target.IsCastle ? 1 : 2;
+            return true;
+        }
+
+        // Grant the player the fief his rank entitles him to RIGHT NOW, without charging influence
+        // (the petition handles its own stakes). Returns false with a reason if none is available.
+        // desc is a short phrase for the granting farmaan ("the zamindari of X" / "X").
+        public bool GrantEligibleFief(out string desc, out string reason)
+        {
+            desc = ""; reason = "";
+            if (!TryFindClaim(out Settlement target, out bool villageZamindari, out reason)) return false;
+            if (villageZamindari)
+            {
+                if (FeudalTitlesBehavior.Instance?.AssignZamindar(target, Hero.MainHero) != true)
+                { reason = "The court finds you ineligible to hold land."; return false; }
+                desc = $"the zamindari of {target.Name}";
+            }
+            else
+            {
+                ChangeOwnerOfSettlementAction.ApplyByGift(target, Hero.MainHero);
+                desc = target.Name.ToString();
+            }
+            return true;
+        }
+
         // Find the lowest fief tier the player qualifies for but does not yet hold, and a
         // settlement to grant from.
         private bool TryFindClaim(out Settlement target, out bool villageZamindari, out string reason)

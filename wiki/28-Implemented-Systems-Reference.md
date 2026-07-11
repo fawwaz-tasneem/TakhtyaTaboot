@@ -35,7 +35,7 @@
 | Village fiefs (projects, coffer, threat) | `VillageDevelopmentBehavior` + `UI/VillageWorksScreen` (works ledger) | `VillageFiefMath` | `hind_vil_*` | `village_status`, `set_village_threat` |
 | Bonded labour (captives → begar gang: +tax/+prosperity/+unrest, attrition) | `SlaveLabourBehavior` (owns gang; `VillageDevelopmentBehavior` reads yields) | `SlaveLabourMath` (+ `VillageFiefMath.ThreatStep` `unrest` term) | `hind_labour_*` | `labour_status`, `settle_labour` |
 | Mansabdari ladder | `MansabdariBehavior`, `CareerProgressionBehavior` | `MansabTenureMath` | `hind_mansab_*` etc. | `set_rank`, `mansab_status`, `add_valour` |
-| Tenure law | `MansabdariTenureBehavior` | `MansabTenureMath` | — | — |
+| Tenure law + rotation (town/castle AND village jagirs; Favor/Grudge on rotation) | `MansabdariTenureBehavior` | `MansabTenureMath` | `tyt_tenure_*` | `tenure`, `tenure_mansabdari`, `tenure_feudal`, `tenure_rotate`, `tenure_rotate_village` |
 | Legitimacy / authority | `LegitimacyBehavior`, `ImperialAuthorityBehavior` | — | `hind_legit_*`, `hind_authority_*` | — |
 | Warfare (aims, score, terms, tributaries) | `WarfareBehavior`, `WarAimsBehavior` | `WarAimMath` | `hind_war_*` | `war_status` |
 | Succession (crisis, laws, scripted 1707 cascade, treachery arc) | `SuccessionBehavior`, `SuccessionLawBehavior`, `ImperialSuccessionEventBehavior` | `SuccessionLawMath` (incl. incumbent price / treachery / fates), `ImperialSuccessionPlan` | `suc_*` (incl. `suc_treach*`), `tyt_imp_succ_*` | `accession_status` |

@@ -22,7 +22,10 @@ namespace TakhtyaTaboot
     //                       NON-HEREDITARY (a holder's fiefs revert to the crown on his death and
     //                       are re-granted by rank) and ROTATIONAL (the crown periodically transfers
     //                       a mansabdar on; an entrenched holder may DEFY, risking the full ladder
-    //                       reprimand -> dismissal -> rebellion).
+    //                       reprimand -> dismissal -> rebellion). Rotation reaches BOTH the
+    //                       town/castle fiefs (engine ownership) AND the village jagirs (the
+    //                       zamindari feudal layer). Rotation/defiance writes Favor/Grudge opinion
+    //                       records (the grievance-dialogue ledger), not just raw relation.
     //
     // Imposing Mansabdari is gated by legitimacy and priced by opposition (every entrenched magnate
     // must be bought off). All cost/gate/ladder formulas are the proven, engine-free MansabTenureMath;
@@ -215,10 +218,28 @@ namespace TakhtyaTaboot
             int interval = Math.Max(1, Tune.TenureRotationIntervalDays);
             foreach (Kingdom k in Kingdom.All.Where(k => !k.IsEliminated && IsMansabdari(k)))
             {
-                // One rotation per realm per week — keep the upheaval paced.
+                // One town/castle rotation AND one village-jagir rotation per realm per week —
+                // keep the upheaval paced. Village jagirs (the zamindari layer) rotate on the
+                // same term clock but through the feudal layer, not engine ownership.
                 Settlement due = OverdueFiefs(k, interval).FirstOrDefault();
                 if (due != null) TYTLog.Guard("Tenure.Rotate", () => IssueRotation(k, due));
+
+                Settlement dueVillage = OverdueVillageJagirs(k, interval).FirstOrDefault();
+                if (dueVillage != null) TYTLog.Guard("Tenure.RotateVillage", () => IssueVillageRotation(k, dueVillage));
             }
+        }
+
+        // Opinion records on a rotation: the one who receives the grant feels a Favor toward the
+        // crown; the one dragged off his fief holds a Grudge (only in the friction cases). These
+        // ride alongside the raw relation change — the personal ledger the grievance dialogue reads.
+        private static void RotationOpinions(Hero ruler, Hero displaced, Hero successor, bool grudge, float grudgeMag = 0f)
+        {
+            var op = OpinionBehavior.Instance;
+            if (op == null) return;
+            if (successor != null && ruler != null && successor != ruler)
+                op.AddOpinion(successor, ruler, OpinionMath.OpinionType.Favor);
+            if (grudge && displaced != null && ruler != null && displaced != ruler)
+                op.AddOpinion(displaced, ruler, OpinionMath.OpinionType.Grudge, grudgeMag);
         }
 
         private IEnumerable<Settlement> OverdueFiefs(Kingdom k, int interval)
@@ -263,12 +284,14 @@ namespace TakhtyaTaboot
             {
                 case MansabTenureMath.RotationResult.Complied:
                     TransferFief(s, successor);
+                    RotationOpinions(k.Leader, holder, successor, grudge: false);
                     if (playerRules) Notify($"By your edict, {holder.Name} surrenders {s.Name}; {successor.Name} is appointed in his place.", false);
                     break;
 
                 case MansabTenureMath.RotationResult.Reprimand:
                     TransferFief(s, successor);
                     if (k.Leader != null) ChangeRelationAction.ApplyRelationChangeBetweenHeroes(holder, k.Leader, -5);
+                    RotationOpinions(k.Leader, holder, successor, grudge: true);
                     ImperialAuthorityBehavior.Instance?.ModifyAuthority(k, -MansabTenureMath.AuthorityPenaltyForDefiance(rank, 0.5f), "a mansabdar protested his transfer");
                     if (playerRules) Notify($"{holder.Name} protests his transfer from {s.Name} but yields; the court's standing is dented.", false);
                     break;
@@ -277,6 +300,7 @@ namespace TakhtyaTaboot
                     TransferFief(s, successor);
                     if (k.Leader != null) ChangeRelationAction.ApplyRelationChangeBetweenHeroes(holder, k.Leader, -10);
                     if (holderClan != null) ChangeClanInfluenceAction.Apply(holderClan, -20f);
+                    RotationOpinions(k.Leader, holder, successor, grudge: true, grudgeMag: -18f);
                     ImperialAuthorityBehavior.Instance?.ModifyAuthority(k, -MansabTenureMath.AuthorityPenaltyForDefiance(rank, 1f), "a mansabdar was dismissed by force");
                     if (playerRules) Notify($"{holder.Name} refuses to leave {s.Name}; you dismiss him by force and seat {successor.Name}.", true);
                     break;
@@ -300,6 +324,8 @@ namespace TakhtyaTaboot
                 "I comply, and surrender the fief", () => TYTLog.Guard("Tenure.PlayerComply", () =>
                 {
                     TransferFief(s, successor);
+                    if (ruler != null && ruler != Hero.MainHero)
+                        OpinionBehavior.Instance?.AddOpinion(ruler, Hero.MainHero, OpinionMath.OpinionType.Favor);
                     Notify($"You surrender {s.Name} to {successor.Name} as the crown commands.", false);
                 }),
                 "I defy the order", () => TYTLog.Guard("Tenure.PlayerDefy", () => PlayerDefy(k, s, ruler)));
@@ -312,7 +338,11 @@ namespace TakhtyaTaboot
             if (held)
             {
                 // The notables stand with you; the order cannot be enforced — but the crown is humiliated.
-                if (ruler != null) ChangeRelationAction.ApplyRelationChangeBetweenHeroes(Hero.MainHero, ruler, -8);
+                if (ruler != null)
+                {
+                    ChangeRelationAction.ApplyRelationChangeBetweenHeroes(Hero.MainHero, ruler, -8);
+                    if (ruler != Hero.MainHero) OpinionBehavior.Instance?.AddOpinion(ruler, Hero.MainHero, OpinionMath.OpinionType.Grudge);
+                }
                 ImperialAuthorityBehavior.Instance?.ModifyAuthority(k, -3f, "a mansabdar defied a transfer order");
                 Notify($"Your roots in {s.Name} hold firm — the notables stand with you and the crown's order comes to nothing. " +
                        "The court will remember the slight.", false);
@@ -322,10 +352,160 @@ namespace TakhtyaTaboot
                 // Your footing was too shallow; the crown strips you of the fief.
                 Hero successor = ChooseSuccessor(k, s, Clan.PlayerClan) ?? ruler;
                 if (successor != null) TransferFief(s, successor);
-                if (ruler != null) ChangeRelationAction.ApplyRelationChangeBetweenHeroes(Hero.MainHero, ruler, -5);
+                if (ruler != null)
+                {
+                    ChangeRelationAction.ApplyRelationChangeBetweenHeroes(Hero.MainHero, ruler, -5);
+                    if (ruler != Hero.MainHero) OpinionBehavior.Instance?.AddOpinion(ruler, Hero.MainHero, OpinionMath.OpinionType.Grudge, -8f);
+                }
                 ChangeClanInfluenceAction.Apply(Clan.PlayerClan, -20f);
                 Notify($"Your defiance falters — without deep enough roots in {s.Name}, the crown enforces the transfer and strips you of the fief.", true);
             }
+        }
+
+        // ── Village-jagir rotation (the zamindari layer) ────────────────────────────────
+        // Villages are held through the feudal layer (a seated zamindar), not engine ownership,
+        // so they rotate on their own pass: reassign the zamindar through FeudalTitlesBehavior.
+        private IEnumerable<Settlement> OverdueVillageJagirs(Kingdom k, int interval)
+        {
+            var ft = FeudalTitlesBehavior.Instance;
+            if (ft == null) return Enumerable.Empty<Settlement>();
+            return Settlement.All
+                .Where(s => s != null && s.IsVillage && s.MapFaction == k)
+                .Where(s =>
+                {
+                    Hero lord = ft.GetVillageLord(s);
+                    return lord != null && lord.IsAlive && lord.IsLord && lord.Clan != null
+                           && lord.Clan != k.RulingClan && lord.Clan.Kingdom == k
+                           && !lord.Clan.IsUnderMercenaryService;
+                })
+                .Where(s => Today - AppointedDay(s) >= interval)
+                .OrderByDescending(s => Today - AppointedDay(s));
+        }
+
+        private void IssueVillageRotation(Kingdom k, Settlement v)
+        {
+            var ft = FeudalTitlesBehavior.Instance;
+            Hero holder = ft?.GetVillageLord(v);
+            Clan holderClan = holder?.Clan;
+            if (holder == null || holderClan == null) return;
+
+            Hero successor = ChooseVillageSuccessor(k, v, holderClan);
+            if (successor == null && k.Leader != Hero.MainHero) { _appointed[v.StringId] = Today; return; }
+
+            _appointed[v.StringId] = Today; // review has happened; restart the clock
+
+            if (holderClan == Clan.PlayerClan) { PlayerVillageRotationChoice(k, v, successor); return; }
+
+            float chance = RusukhBehavior.Instance != null ? RusukhBehavior.Instance.DefianceChance(holder, v) : 0f;
+            int rank = MansabdariBehavior.Instance?.GetRankIndex(holderClan) ?? 1;
+            var result = MansabTenureMath.ResolveRotationOrder(chance, MBRandom.RandomFloat);
+            bool playerRules = k.Leader == Hero.MainHero;
+            Hero ruler = k.Leader;
+
+            switch (result)
+            {
+                case MansabTenureMath.RotationResult.Complied:
+                    ReseatZamindar(v, successor);
+                    RotationOpinions(ruler, holder, successor, grudge: false);
+                    if (playerRules) Notify($"By your edict, {holder.Name} yields the zamindari of {v.Name}; {successor.Name} is seated in his place.", false);
+                    break;
+
+                case MansabTenureMath.RotationResult.Reprimand:
+                    ReseatZamindar(v, successor);
+                    if (ruler != null) ChangeRelationAction.ApplyRelationChangeBetweenHeroes(holder, ruler, -4);
+                    RotationOpinions(ruler, holder, successor, grudge: true);
+                    ImperialAuthorityBehavior.Instance?.ModifyAuthority(k, -MansabTenureMath.AuthorityPenaltyForDefiance(rank, 0.25f), "a zamindar protested his transfer");
+                    if (playerRules) Notify($"{holder.Name} grumbles at losing the zamindari of {v.Name}, but yields.", false);
+                    break;
+
+                case MansabTenureMath.RotationResult.Dismissal:
+                    ReseatZamindar(v, successor);
+                    if (ruler != null) ChangeRelationAction.ApplyRelationChangeBetweenHeroes(holder, ruler, -8);
+                    if (holderClan != null) ChangeClanInfluenceAction.Apply(holderClan, -10f);
+                    RotationOpinions(ruler, holder, successor, grudge: true, grudgeMag: -18f);
+                    ImperialAuthorityBehavior.Instance?.ModifyAuthority(k, -MansabTenureMath.AuthorityPenaltyForDefiance(rank, 0.5f), "a zamindar was dismissed by force");
+                    if (playerRules) Notify($"{holder.Name} clings to {v.Name}; you strip him of the zamindari and seat {successor.Name}.", true);
+                    break;
+
+                case MansabTenureMath.RotationResult.Traitor:
+                    // A village zamindar hasn't the strength of a great amir to secede — his defiance
+                    // ends in forced removal and a lasting grudge, not a rebel kingdom.
+                    ReseatZamindar(v, successor);
+                    if (ruler != null) ChangeRelationAction.ApplyRelationChangeBetweenHeroes(holder, ruler, -12);
+                    RotationOpinions(ruler, holder, successor, grudge: true, grudgeMag: -24f);
+                    if (playerRules) Notify($"{holder.Name} bitterly resists losing {v.Name} — but a zamindar cannot defy the crown as an amir might. He is removed, and will not forget it.", true);
+                    break;
+            }
+        }
+
+        private void PlayerVillageRotationChoice(Kingdom k, Settlement v, Hero successor)
+        {
+            Hero ruler = k.Leader;
+            if (successor == null)
+            { Notify($"The crown would rotate your zamindari of {v.Name}, but finds no fit successor; you keep it for now.", false); return; }
+
+            string body = $"By the law of Mansabdari, the crown of {k.Name} orders you to surrender the zamindari of {v.Name}. " +
+                          $"{successor.Name} is named to succeed you. Will you comply, or defy the farmaan?";
+            RoyalFarmaan.FromRuler(k, "Order of Transfer (Zamindari)", body,
+                "I comply, and surrender the village", () => TYTLog.Guard("Tenure.PlayerVillageComply", () =>
+                {
+                    ReseatZamindar(v, successor);
+                    if (ruler != null && ruler != Hero.MainHero)
+                        OpinionBehavior.Instance?.AddOpinion(ruler, Hero.MainHero, OpinionMath.OpinionType.Favor);
+                    Notify($"You surrender the zamindari of {v.Name} to {successor.Name} as the crown commands.", false);
+                }),
+                "I defy the order", () => TYTLog.Guard("Tenure.PlayerVillageDefy", () => PlayerVillageDefy(k, v, ruler, successor)));
+        }
+
+        private void PlayerVillageDefy(Kingdom k, Settlement v, Hero ruler, Hero successor)
+        {
+            float chance = RusukhBehavior.Instance != null ? RusukhBehavior.Instance.DefianceChance(Hero.MainHero, v) : 0f;
+            bool held = MansabTenureMath.Resolve(chance, MBRandom.RandomFloat) == MansabTenureMath.RotationOutcome.Defied;
+            if (held)
+            {
+                if (ruler != null)
+                {
+                    ChangeRelationAction.ApplyRelationChangeBetweenHeroes(Hero.MainHero, ruler, -6);
+                    if (ruler != Hero.MainHero) OpinionBehavior.Instance?.AddOpinion(ruler, Hero.MainHero, OpinionMath.OpinionType.Grudge);
+                }
+                ImperialAuthorityBehavior.Instance?.ModifyAuthority(k, -2f, "a zamindar defied a transfer order");
+                Notify($"Your roots in {v.Name} hold — the local gentry stand with you and the order comes to nothing. The court remembers the slight.", false);
+            }
+            else
+            {
+                ReseatZamindar(v, successor ?? ruler);
+                if (ruler != null)
+                {
+                    ChangeRelationAction.ApplyRelationChangeBetweenHeroes(Hero.MainHero, ruler, -4);
+                    if (ruler != Hero.MainHero) OpinionBehavior.Instance?.AddOpinion(ruler, Hero.MainHero, OpinionMath.OpinionType.Grudge, -8f);
+                }
+                ChangeClanInfluenceAction.Apply(Clan.PlayerClan, -10f);
+                Notify($"Your defiance falters — the crown enforces the transfer and strips you of the zamindari of {v.Name}.", true);
+            }
+        }
+
+        // The most deserving clan to receive a village zamindari: a landed-eligible lord loyal to
+        // the crown who holds the fewest villages (spread the land), never the outgoing house.
+        private Hero ChooseVillageSuccessor(Kingdom k, Settlement v, Clan exclude)
+        {
+            var ft = FeudalTitlesBehavior.Instance;
+            Hero ruler = k.Leader;
+            var candidates = k.Clans.Where(c =>
+                c != null && !c.IsEliminated && c != exclude && c != k.RulingClan
+                && !c.IsUnderMercenaryService && c.Leader != null && c.Leader.IsAlive && c.Leader.IsLord
+                && MansabdariBehavior.Instance?.CanHold(c, v) != false).ToList();
+            if (candidates.Count == 0) return null;
+            return candidates
+                .OrderBy(c => ft?.GetVillagesLordedBy(c.Leader).Count ?? 0)
+                .ThenByDescending(c => ruler != null ? CharacterRelationManager.GetHeroRelation(c.Leader, ruler) : 0)
+                .First().Leader;
+        }
+
+        private void ReseatZamindar(Settlement v, Hero successor)
+        {
+            if (successor == null) return;
+            FeudalTitlesBehavior.Instance?.AssignZamindar(v, successor);
+            _appointed[v.StringId] = Today;
         }
 
         private void DeclareTraitor(Kingdom k, Settlement s, Clan holderClan, Hero holder)
@@ -486,11 +666,14 @@ namespace TakhtyaTaboot
             sb.AppendLine($"{k.Name}: tenure law = {Instance.GetLaw(k)}");
             if (Instance.IsMansabdari(k))
             {
-                sb.AppendLine("Already Mansabdari. 'hindostan.tenure_feudal' reverts; 'hindostan.tenure_rotate' forces a rotation review.");
+                sb.AppendLine("Already Mansabdari. 'hindostan.tenure_feudal' reverts; 'hindostan.tenure_rotate' / 'hindostan.tenure_rotate_village' force a review.");
                 int interval = Math.Max(1, Tune.TenureRotationIntervalDays);
                 var overdue = Instance.OverdueFiefs(k, interval).ToList();
-                sb.AppendLine($"Overdue fiefs ({interval}-day term): {overdue.Count}" +
+                var overdueVil = Instance.OverdueVillageJagirs(k, interval).ToList();
+                sb.AppendLine($"Overdue town/castle fiefs ({interval}-day term): {overdue.Count}" +
                               (overdue.Count > 0 ? " — " + string.Join(", ", overdue.Take(5).Select(s => s.Name.ToString())) : ""));
+                sb.AppendLine($"Overdue village jagirs: {overdueVil.Count}" +
+                              (overdueVil.Count > 0 ? " — " + string.Join(", ", overdueVil.Take(5).Select(s => s.Name.ToString())) : ""));
                 return sb.ToString();
             }
             var q = Instance.QuoteMansabdari(k);
@@ -532,6 +715,24 @@ namespace TakhtyaTaboot
             if (s == null) return "No eligible fief to rotate.";
             Instance.IssueRotation(k, s);
             return $"Issued a rotation review for {s.Name} (held by {s.OwnerClan?.Leader?.Name}).";
+        }
+
+        // Force one village-jagir rotation review in the player's realm (ignores the term clock).
+        [CommandLineFunctionality.CommandLineArgumentFunction("tenure_rotate_village", "hindostan")]
+        public static string RotateVillageCmd(List<string> args)
+        {
+            if (Campaign.Current == null || Instance == null) return "Load a campaign first.";
+            Kingdom k = Clan.PlayerClan?.Kingdom;
+            if (k == null) return "You serve no realm.";
+            if (!Instance.IsMansabdari(k)) return $"{k.Name} is not under Mansabdari tenure.";
+            var ft = FeudalTitlesBehavior.Instance;
+            Settlement v = Settlement.All
+                .Where(x => x != null && x.IsVillage && x.MapFaction == k)
+                .Where(x => { Hero l = ft?.GetVillageLord(x); return l != null && l.IsAlive && l.IsLord && l.Clan != null && l.Clan != k.RulingClan; })
+                .OrderByDescending(x => Instance.Today2(x)).FirstOrDefault();
+            if (v == null) return "No eligible village jagir to rotate (need an AI lord zamindar in your realm).";
+            Instance.IssueVillageRotation(k, v);
+            return $"Issued a village-jagir rotation review for {v.Name} (zamindar {ft?.GetVillageLord(v)?.Name}).";
         }
 
         private double Today2(Settlement s) => Today - AppointedDay(s);

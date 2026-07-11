@@ -5,14 +5,15 @@ are the first pass (stability, zamindari, village fiefs, core wave), E–I the f
 pass (farmaans, opinions, dynasties, dialogue, court menu), **J–N the July 2026 waves**
 (unified empire, clan safety net, succession economy + treachery, siege parley, the two
 Gauntlet screens), **O the akhbaar scouts, P bonded labour, Q coronation ceremonies, R monsoon
-harvest+famine** — J–R are the CURRENT focus; A–I were exercised in playtest rounds 1–3.
+harvest+famine, S village-jagir rotation** — J–S are the CURRENT focus; A–I were exercised in
+playtest rounds 1–3.
 
 **Status ledger (2026-07-11, commits `6bad71f` → HEAD):** A–I built + playtested
-(rounds 1–3); J–R built, unit-tested (324 green) and statically verified against the
+(rounds 1–3); J–S built, unit-tested (324 green) and statically verified against the
 v1.3.11 decompile, but **not yet proven in a live campaign end-to-end** except: J1 fold
 confirmed by log + player, hierarchy board seen once (was upside down — fixed, needs a
-second look). O–R (akhbaar scouts, bonded labour, coronations, monsoon harvest) are the newest
-and wholly unverified live.
+second look). O–S (akhbaar scouts, bonded labour, coronations, monsoon harvest, village-jagir
+rotation) are the newest and wholly unverified live.
 
 ## Setup
 
@@ -287,6 +288,31 @@ the harvest" under Seasons (on by default).*
 - **R6.** MCM "Monsoon drives the harvest" off → no harvest swing, no famine, no monsoon
   farmaan (the speed effect, governed by the separate "Monsoon slows parties" toggle, is
   unaffected).
+
+## S. Village-jagir tenure rotation + opinion records (`MansabdariTenureBehavior`)
+
+*New this wave (2026-07-11) — extends the existing town/castle rotation to village jagirs and
+adds Favor/Grudge opinion records. No new pure math (reuses tested `MansabTenureMath`); 324
+green. Requires a realm under Mansabdari tenure (`hindostan.tenure_mansabdari`).*
+
+- **S1.** Put your realm under Mansabdari (`hindostan.tenure_mansabdari`), then
+  `hindostan.tenure` → it now reports **two** overdue lists: town/castle fiefs AND village
+  jagirs (villages with an AI **lord** zamindar, not local notables).
+- **S2.** `hindostan.tenure_rotate_village` (as sovereign) → an AI lord zamindar is rotated off a
+  village and a deserving lord seated in his place (fewest villages, best relation to you). The
+  encyclopedia/hierarchy should show the new zamindar; the old one is unseated. Message reports
+  comply/grumble/dismiss per the ladder.
+- **S3.** **Opinion records:** after a rotation, check dispositions — the **new** zamindar carries
+  "a favour done" toward you; a **dismissed/defiant** one carries "an old grudge" (making him a
+  grievance-dialogue target, playtest H3). This now also applies to **town/castle** rotations
+  (S-adjacent: run `hindostan.tenure_rotate` and check the same records).
+- **S4.** **Player as village zamindar being rotated:** hold a village jagir as a vassal under a
+  Mansabdari sovereign; when its term is up (or force via console as the AI crown), an "Order of
+  Transfer (Zamindari)" farmaan offers comply (surrender, the crown favours you) or defy (gamble
+  your local roots — hold and the crown resents it, or fail and lose the village + influence).
+- **S5.** Local **notable** zamindars (non-lords) are never rotated — only lord-held village jagirs.
+- **S6.** Save/load: the rotation clock persists for villages (the `_appointed` map is shared);
+  no double-rotation after load. Under feudal (non-Mansabdari) law, nothing rotates.
 
 ---
 

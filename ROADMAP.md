@@ -30,19 +30,14 @@ Update this file when an item ships (move it to "Shipped") or when priorities ch
 
 ## C. Deepening what already ships
 
-1. **Tenure rotation reach + opinions.** Jagir rotation EXISTS
-   (`MansabdariTenureBehavior`: Mansabdari tenure law, rotation clocks, comply/defy
-   ladder). Extend it to village jagirs (the zamindari layer is currently never rotated)
-   and write `Grudge`/`Favor` opinion records on rotation and defiance instead of raw
-   relation only.
-2. **Zat/sawar split ranks.** Mansab as dual rank: zat (personal rank — gates fiefs and
+1. **Zat/sawar split ranks.** Mansab as dual rank: zat (personal rank — gates fiefs and
    stipend) and sawar (cavalry obligation — sets the muster target). Mostly re-labelling
    numbers already tracked.
-3. **Festivals** (Eid, Diwali, Nauroz, Baisakhi — culture/faith-keyed like royal styles):
+2. **Festivals** (Eid, Diwali, Nauroz, Baisakhi — culture/faith-keyed like royal styles):
    seasonal Ceremonial farmaan, a court gathering that batches nazrana presentation and
    opinion gains; natural stage for petitions and betrothals. Builds on SeasonMath + the
    court menu.
-4. **Women's court influence.** Official darbar posts are men-only (period rule, shipped);
+3. **Women's court influence.** Official darbar posts are men-only (period rule, shipped);
    model the Nur Jahan pattern properly: influential women act through the intrigue layer —
    whispers that shift the holder's decisions, opinion records, faction ties.
 
@@ -68,6 +63,15 @@ waqai-nawis LLM news layer (ch.18).
 
 ## Shipped (for orientation)
 
+- Village-jagir tenure rotation + opinion records (was C.1) — 2026-07-11. Under Mansabdari
+  law, `MansabdariTenureBehavior` now rotates VILLAGE jagirs too (through the zamindari feudal
+  layer, not engine ownership): one town/castle and one village review per realm per week on
+  the same term clock. AI village zamindars run the full comply/reprimand/dismissal ladder (a
+  village holder can't secede, so "traitor" collapses to a forced, grudge-laden removal); the
+  player gets the comply/defy farmaan for his own village jagirs. Every rotation now writes
+  `Favor` (to the new holder) / `Grudge` (to the displaced, in the friction cases) opinion
+  records feeding the grievance dialogue — town/castle paths too. Console:
+  `hindostan.tenure_rotate_village`; `tenure` status lists overdue village jagirs.
 - Monsoon beyond speed (was C.4) — 2026-07-11. `MonsoonBehavior`: once a year the rains draw
   a good/bad quality roll (announced by farmaan only when notably bountiful or failed). Post-
   monsoon village tax scales with it (fat after good rains, thin after bad), read into

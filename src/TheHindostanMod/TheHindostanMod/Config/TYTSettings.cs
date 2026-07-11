@@ -202,6 +202,11 @@ namespace TakhtyaTaboot.Config
             HintText = "Collecting the village coffer more than once a week costs this much relation with the village's notables.", Order = 5)]
         public int VillageTaxCollectRelationPenalty { get; set; } = 2;
 
+        [SettingPropertyGroup("Village Fiefs")]
+        [SettingPropertyBool("Allow bonded labour in villages", RequireRestart = false,
+            HintText = "Let battle captives be set to forced labour (begar) in your villages: more tax and prosperity, but rising unrest and a gang that thins as men escape or die. Turn off to hide the option entirely.", Order = 6)]
+        public bool SlaveLabourEnabled { get; set; } = true;
+
         // ── Nazrana & tribute ────────────────────────────────────────────────────────
         [SettingPropertyGroup("Nazrana & Tribute")]
         [SettingPropertyBool("Nazrana gift cycle", RequireRestart = false,

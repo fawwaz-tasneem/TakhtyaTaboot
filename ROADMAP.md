@@ -10,9 +10,7 @@ Update this file when an item ships (move it to "Shipped") or when priorities ch
    Muslim courts (Zill-e-Ilahi, Jahanpanah, bismillah invocations), distinct registers for
    Rajput/Maratha/Sikh courts; sweep remaining vanilla Calradia prose through the
    LocalizationOverride pipeline.
-2. **Slave labour in villages.** Capped workforce per village fed from battle captives:
-   +productivity/tax, +threat. (User-requested upcoming feature.)
-3. **Clan-screen fiefs visibility.** The engine cannot give a village an owner separate
+2. **Clan-screen fiefs visibility.** The engine cannot give a village an owner separate
    from its bound town, so zamindari villages never appear in the vanilla Fiefs tab —
    inject a "Zamindari" block into the clan screen via UIExtenderEx instead.
 
@@ -79,6 +77,14 @@ waqai-nawis LLM news layer (ch.18).
 
 ## Shipped (for orientation)
 
+- Slave labour in villages (was A.2, user-requested) — 2026-07-11. `SlaveLabourBehavior`:
+  in a village you hold, bind common battle captives from your prison train to forced
+  labour (begar). The gang (capped by hearth, ~5–60) raises the village's tax and the bound
+  town's prosperity, but adds a daily UNREST term to bandit threat that watchtowers can't
+  police, and thins over time as men escape (fugitives feed the local banditry) or die at
+  the work. Free them for a threat drop + notable goodwill. Village menu options + status
+  line; pure `SlaveLabourMath` (12 tests); `VillageFiefMath.ThreatStep` gained an `unrest`
+  term. Console: `hindostan.labour_status / settle_labour`. MCM toggle under Village Fiefs.
 - Akhbaar scouts (was A.1) — 2026-07-11. `AkhbaarScoutBehavior`: from any court, pay a
   harkara to trail a named lord; his *akhbaar* (newsletter) arrives in the farmaan layer
   N days later — location, what he's about, and strength in hearsay terms (rounded count +

@@ -61,6 +61,9 @@ namespace TakhtyaTaboot.Config
         public static bool AiZamindarEngineOwnership => S?.AiZamindarEngineOwnership ?? false;
         public static int VillageTaxCollectRelationPenalty => S?.VillageTaxCollectRelationPenalty ?? 2;
 
+        // Bonded labour (battle captives set to work in a village fief)
+        public static bool SlaveLabourEnabled => S?.SlaveLabourEnabled ?? true;
+
         // Nazrana (the courtly gift cycle)
         public static bool NazranaEnabled => S?.NazranaEnabled ?? true;
         public static int NazranaCycleDays => S?.NazranaCycleDays ?? 90;

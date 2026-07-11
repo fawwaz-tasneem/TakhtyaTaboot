@@ -159,6 +159,7 @@ namespace TakhtyaTaboot
             starter.AddBehavior(new FiefHierarchyBehavior());
             starter.AddBehavior(new FeudalTitlesBehavior());
             starter.AddBehavior(new VillageDevelopmentBehavior());
+            starter.AddBehavior(new SlaveLabourBehavior()); // bonded-labour gangs; adds options to hindostan_village (must follow it)
 
             // Phase 2 — Lord ranks
             starter.AddBehavior(new MansabdariBehavior());

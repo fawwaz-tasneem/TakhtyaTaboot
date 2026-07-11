@@ -48,6 +48,7 @@
     <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\ClanRehomeMath.cs" Link="Linked\ClanRehomeMath.cs" />
     <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\SiegeParleyMath.cs" Link="Linked\SiegeParleyMath.cs" />
     <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\AkhbaarMath.cs" Link="Linked\AkhbaarMath.cs" />
+    <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\SlaveLabourMath.cs" Link="Linked\SlaveLabourMath.cs" />
   </ItemGroup>
 
 </Project>

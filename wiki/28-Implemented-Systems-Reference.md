@@ -33,6 +33,7 @@
 | Feudal layer / zamindari | `FeudalTitlesBehavior` | — | `hind_zamindar_*`, `hind_liege_*` | `village_lords` |
 | Tribute & call-to-arms | `FiefHierarchyBehavior` | — | `hind_fh_*` | `summon`, `tax_now`, `feudal_status` |
 | Village fiefs (projects, coffer, threat) | `VillageDevelopmentBehavior` + `UI/VillageWorksScreen` (works ledger) | `VillageFiefMath` | `hind_vil_*` | `village_status`, `set_village_threat` |
+| Bonded labour (captives → begar gang: +tax/+prosperity/+unrest, attrition) | `SlaveLabourBehavior` (owns gang; `VillageDevelopmentBehavior` reads yields) | `SlaveLabourMath` (+ `VillageFiefMath.ThreatStep` `unrest` term) | `hind_labour_*` | `labour_status`, `settle_labour` |
 | Mansabdari ladder | `MansabdariBehavior`, `CareerProgressionBehavior` | `MansabTenureMath` | `hind_mansab_*` etc. | `set_rank`, `mansab_status`, `add_valour` |
 | Tenure law | `MansabdariTenureBehavior` | `MansabTenureMath` | — | — |
 | Legitimacy / authority | `LegitimacyBehavior`, `ImperialAuthorityBehavior` | — | `hind_legit_*`, `hind_authority_*` | — |

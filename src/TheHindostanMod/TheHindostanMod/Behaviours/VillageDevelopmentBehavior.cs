@@ -136,6 +136,14 @@ namespace TakhtyaTaboot
         public float GetThreat(Settlement s) => s != null && _threat.TryGetValue(s.StringId, out float v) ? v : 0f;
         public float GetTreasury(Settlement s) => s != null && _treasury.TryGetValue(s.StringId, out float v) ? v : 0f;
 
+        // Adjust a village's bandit threat by delta (clamped 0..100). Used by the bonded-labour
+        // layer: fugitives raise it, manumission eases it.
+        public void AddThreat(Settlement s, float delta)
+        {
+            if (s == null) return;
+            _threat[s.StringId] = MathF.Max(0f, MathF.Min(100f, GetThreat(s) + delta));
+        }
+
         // The player may oversee a village he holds outright (engine owner) OR one he holds in
         // zamindari through our feudal layer — the latter covers a vassal granted a village
         // beneath an AI lord, where the engine owner is still that lord's clan.
@@ -160,6 +168,10 @@ namespace TakhtyaTaboot
                 if (names.Contains(kv.Value.Name)) sum += pick(kv.Value);
             return sum;
         }
+
+        // The village's total tax-bonus %: its built works plus any bonded-labour gang.
+        private float TotalTaxBonusPct(Settlement s)
+            => SumBuilt(s, d => d.TaxBonusPct) + (SlaveLabourBehavior.Instance?.TaxBonusPct(s) ?? 0f);
 
         private float BuiltThreatMultiplier(Settlement s)
         {
@@ -220,7 +232,8 @@ namespace TakhtyaTaboot
                 flatReduction: SumBuilt(s, d => d.ThreatFlat),
                 watchMultiplier: BuiltThreatMultiplier(s),
                 defence: DefenceStrength(s),
-                lordPresent: lordPresent);
+                lordPresent: lordPresent,
+                unrest: SlaveLabourBehavior.Instance?.DailyUnrest(s) ?? 0f);
         }
 
         // Daily suppression from the village's own defenders: its militia, the built
@@ -249,7 +262,7 @@ namespace TakhtyaTaboot
             if (s.MapFaction is Kingdom k && ImperialAuthorityBehavior.Instance != null)
                 authorityRate = ImperialAuthorityBehavior.Instance.GetTaxCollectionRate(k);
             _treasury[s.StringId] = GetTreasury(s) + VillageFiefMath.DailyTax(
-                s.Village.Hearth, SumBuilt(s, d => d.TaxBonusPct), GetThreat(s),
+                s.Village.Hearth, TotalTaxBonusPct(s), GetThreat(s),
                 authorityRate, z?.GetSkillValue(DefaultSkills.Steward) ?? 0, rate);
         }
 
@@ -441,7 +454,8 @@ namespace TakhtyaTaboot
             if (hearthDelta != 0f)
                 s.Village.Hearth = MathF.Max(0f, s.Village.Hearth + hearthDelta);
 
-            float prosperity = SumBuilt(s, d => d.BoundProsperity) * pace;
+            float prosperity = (SumBuilt(s, d => d.BoundProsperity)
+                                + (SlaveLabourBehavior.Instance?.BoundProsperityPerDay(s) ?? 0f)) * pace;
             if (prosperity > 0f)
             {
                 Town boundTown = s.Village.Bound?.Town;
@@ -675,9 +689,17 @@ namespace TakhtyaTaboot
 
                 float authorityRate = s.MapFaction is Kingdom k && ImperialAuthorityBehavior.Instance != null
                     ? ImperialAuthorityBehavior.Instance.GetTaxCollectionRate(k) : 1f;
-                float perDay = VillageFiefMath.DailyTax(s.Village.Hearth, SumBuilt(s, d => d.TaxBonusPct),
+                float perDay = VillageFiefMath.DailyTax(s.Village.Hearth, TotalTaxBonusPct(s),
                     GetThreat(s), authorityRate, steward, Config.Tune.VillageTaxPerHearth);
                 sb.AppendLine($"Coffer: {(int)GetTreasury(s)} dinars  (~{perDay:0.0}/day)");
+
+                int gang = SlaveLabourBehavior.Instance?.LabourCount(s) ?? 0;
+                if (gang > 0)
+                {
+                    int cap = Util.SlaveLabourMath.LabourCap(s.Village.Hearth);
+                    sb.AppendLine($"Bonded labourers: {gang}/{cap}  (+{Util.SlaveLabourMath.TaxBonusPct(gang):0.0}% tax, " +
+                                  $"+{SlaveLabourBehavior.Instance.DailyUnrest(s):0.0} unrest/day)");
+                }
 
                 if (_reliefUntil.TryGetValue(s.StringId, out int until))
                     sb.AppendLine($"Under relief for {Math.Max(0, until - (int)CampaignTime.Now.ToDays)} more days.");
@@ -778,7 +800,7 @@ namespace TakhtyaTaboot
             Hero z = FeudalTitlesBehavior.Instance?.GetVillageLord(s);
             float authorityRate = s.MapFaction is Kingdom k && ImperialAuthorityBehavior.Instance != null
                 ? ImperialAuthorityBehavior.Instance.GetTaxCollectionRate(k) : 1f;
-            return VillageFiefMath.DailyTax(s.Village.Hearth, SumBuilt(s, d => d.TaxBonusPct),
+            return VillageFiefMath.DailyTax(s.Village.Hearth, TotalTaxBonusPct(s),
                 GetThreat(s), authorityRate, z?.GetSkillValue(DefaultSkills.Steward) ?? 0,
                 Config.Tune.VillageTaxPerHearth);
         }

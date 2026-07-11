@@ -4,14 +4,14 @@ Covers every component built across the passes. Work through in order; sections 
 are the first pass (stability, zamindari, village fiefs, core wave), E–I the foundations
 pass (farmaans, opinions, dynasties, dialogue, court menu), **J–N the July 2026 waves**
 (unified empire, clan safety net, succession economy + treachery, siege parley, the two
-Gauntlet screens), **O the akhbaar scouts** — J–O are the CURRENT focus; A–I were exercised
-in playtest rounds 1–3.
+Gauntlet screens), **O the akhbaar scouts, P bonded labour** — J–P are the CURRENT focus;
+A–I were exercised in playtest rounds 1–3.
 
 **Status ledger (2026-07-11, commits `6bad71f` → HEAD):** A–I built + playtested
-(rounds 1–3); J–O built, unit-tested (289 green) and statically verified against the
+(rounds 1–3); J–P built, unit-tested (301 green) and statically verified against the
 v1.3.11 decompile, but **not yet proven in a live campaign end-to-end** except: J1 fold
 confirmed by log + player, hierarchy board seen once (was upside down — fixed, needs a
-second look). O (akhbaar scouts) is the newest and wholly unverified live.
+second look). O (akhbaar scouts) and P (bonded labour) are the newest and wholly unverified live.
 
 ## Setup
 
@@ -203,6 +203,39 @@ run live. This is the seed of the wider akhbarat espionage layer (wiki ch.17).*
   tick; `hindostan.akhbaar_status` lists the road; `hindostan.akhbaar_arrive` forces delivery.
 - **O7.** Old save (pre-feature): loads clean, no scouts, court entry present and usable.
 
+## P. Bonded labour in villages (`SlaveLabourBehavior`, village menu → "Settle captive labourers here")
+
+*New this wave (2026-07-11), user-requested — built, unit-tested (12 new `SlaveLabourMathTests`,
+301 green), never run live. Extends the village-fief tax/threat pipeline; MCM toggle "Allow
+bonded labour in villages" under Village Fiefs (on by default).*
+
+- **P1.** Win a battle, take common prisoners, ride to a village you hold → "Oversee your fief"
+  → the option "Settle captive labourers here" is enabled. With no captives, or a full gang, it's
+  greyed with the right tooltip. In a village you DON'T hold, the option is absent. Turn the MCM
+  toggle off → the option disappears entirely.
+- **P2.** Settle → a confirmation inquiry states the count and the trade-off; confirm → that many
+  common prisoners LEAVE your prison roster, the fief menu shows "Bonded labourers: X/cap (+Y%
+  tax, +Z unrest/day)". Cap sanity: a bigger-hearth village allows a larger gang (≈ hearth/40,
+  floored at 5, capped at 60). Captured **lords are never taken** (only non-hero prisoners).
+- **P3.** **The yield:** with a gang settled, the coffer's "~/day" tax estimate rises vs. before
+  (and the bound TOWN's prosperity ticks up daily). Verify the tax bonus roughly matches +0.4%
+  per labourer.
+- **P4.** **The cost (unrest):** watch the village's bandit threat over several days — it climbs
+  faster than an identical village with no gang, and a **near-full** gang pushes threat harder
+  than a sparse one. Confirm a Watchtower/Kotwali does NOT fully suppress it (unrest is added
+  after the watch multiplier by design). Push `hindostan.set_village_threat 90` then hold a gang:
+  expect faster attrition (see P5).
+- **P5.** **Attrition & escape:** over days, "N bonded labourer(s) are lost — M fled to the bandit
+  country" messages appear; the gang count drops; when men flee, the village threat bumps up. Loss
+  is faster at high threat (~5%/day) than in a calm village (~1%/day). A gang can dwindle to zero
+  and the line disappears.
+- **P6.** **Free them:** "Free the bonded labourers" → gang cleared, a threat drop, small notable
+  relation gain, confirming message. Option then disappears (nothing to free).
+- **P7.** **Save/load:** settle a gang, save, load → `hindostan.labour_status` still lists it with
+  the right count/cap; yields and attrition resume. Old save (pre-feature): loads clean, no gangs.
+- **P8.** Console: `hindostan.settle_labour <n>` adds a free gang (no captives spent) up to cap;
+  `hindostan.labour_status` lists every village's gang with its tax/unrest.
+
 ---
 
-**When you report back**, the ideal format per finding: section-number, PASS/FAIL, repro steps, log excerpt, screenshot if UI. The single most valuable data points now are **J3 (the breakaway, never seen live)**, **M2 (siege unwind — the riskiest engine path)**, **N1/N2 (the fixed board)**, L3's fates, **O3/O4 (the first akhbaar report and its dead/captive/no-party edge cases)**, and anything that throws in `tyt_log.txt`.
+**When you report back**, the ideal format per finding: section-number, PASS/FAIL, repro steps, log excerpt, screenshot if UI. The single most valuable data points now are **J3 (the breakaway, never seen live)**, **M2 (siege unwind — the riskiest engine path)**, **N1/N2 (the fixed board)**, L3's fates, **O3/O4 (the first akhbaar report and its dead/captive/no-party edge cases)**, **P3–P5 (the labour trade-off: yield up, unrest up, gang thinning)**, and anything that throws in `tyt_log.txt`.

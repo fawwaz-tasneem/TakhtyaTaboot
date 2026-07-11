@@ -47,17 +47,21 @@ namespace TakhtyaTaboot.Util
         // One day of bandit-threat evolution. Mirrors the long-standing behavior rules:
         // relief crushes it fast; otherwise it grows, war feeds it, defences and the
         // lord's presence suppress it, and watch-works scale the remainder down.
+        //   unrest — a NON-BANDIT source of danger (bonded-labour resentment). It is added
+        //   AFTER the watch multiplier because watchtowers police bandits, not a restive
+        //   slave gang: a village can be walled tight and still simmer with forced labour.
         public static float ThreatStep(float current, bool reliefActive, bool atWar,
                                        float flatReduction, float watchMultiplier,
-                                       float defence, bool lordPresent)
+                                       float defence, bool lordPresent, float unrest = 0f)
         {
-            if (reliefActive) return Math.Max(0f, current - 8f);
+            if (reliefActive) return Math.Max(0f, current - 8f + Math.Max(0f, unrest));
             float t = current + 1f;                 // bandits always return
             if (atWar) t += 2f;
             t -= Math.Max(0f, flatReduction);
             if (lordPresent) t -= 5f;
             t -= Math.Max(0f, defence);
             t *= Clamp(watchMultiplier, 0.1f, 1f);
+            t += Math.Max(0f, unrest);              // labour resentment resists policing
             return Clamp(t, 0f, 100f);
         }
 

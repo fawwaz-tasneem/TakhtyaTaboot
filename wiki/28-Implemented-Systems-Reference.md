@@ -31,6 +31,7 @@
 | System | Behavior (Behaviours/) | Pure math (Util/) | SyncData prefix | Console (`hindostan.*`) |
 |---|---|---|---|---|
 | Feudal layer / zamindari | `FeudalTitlesBehavior` | — | `hind_zamindar_*`, `hind_liege_*` | `village_lords` |
+| Clan-screen zamindari visibility (inject feudal-layer villages into the Fiefs tab) | `UI/ClanFiefsZamindariMixin` (UIExtenderEx mixin on `ClanFiefsVM`, guarded) | — | — | — |
 | Tribute & call-to-arms | `FiefHierarchyBehavior` | — | `hind_fh_*` | `summon`, `tax_now`, `feudal_status` |
 | Village fiefs (projects, coffer, threat) | `VillageDevelopmentBehavior` + `UI/VillageWorksScreen` (works ledger) | `VillageFiefMath` | `hind_vil_*` | `village_status`, `set_village_threat` |
 | Bonded labour (captives → begar gang: +tax/+prosperity/+unrest, attrition) | `SlaveLabourBehavior` (owns gang; `VillageDevelopmentBehavior` reads yields) | `SlaveLabourMath` (+ `VillageFiefMath.ThreatStep` `unrest` term) | `hind_labour_*` | `labour_status`, `settle_labour` |

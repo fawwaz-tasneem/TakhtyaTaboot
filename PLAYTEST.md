@@ -6,14 +6,16 @@ pass (farmaans, opinions, dynasties, dialogue, court menu), **J–N the July 202
 (unified empire, clan safety net, succession economy + treachery, siege parley, the two
 Gauntlet screens), **O the akhbaar scouts, P bonded labour, Q coronation ceremonies, R monsoon
 harvest+famine, S village-jagir rotation, T fief petitions, U darbar petition court, V zat/sawar
-split** — J–V are the CURRENT focus; A–I were exercised in playtest rounds 1–3.
+split, W clan-screen zamindari** — J–W are the CURRENT focus; A–I were exercised in playtest
+rounds 1–3.
 
 **Status ledger (2026-07-11, commits `6bad71f` → HEAD):** A–I built + playtested
-(rounds 1–3); J–V built, unit-tested (340 green) and statically verified against the
+(rounds 1–3); J–W built, unit-tested (340 green) and statically verified against the
 v1.3.11 decompile, but **not yet proven in a live campaign end-to-end** except: J1 fold
 confirmed by log + player, hierarchy board seen once (was upside down — fixed, needs a
-second look). O–V (akhbaar scouts, bonded labour, coronations, monsoon harvest, village-jagir
-rotation, fief petitions, darbar court, zat/sawar) are the newest and wholly unverified live.
+second look). O–W (akhbaar scouts, bonded labour, coronations, monsoon harvest, village-jagir
+rotation, fief petitions, darbar court, zat/sawar, clan-screen zamindari) are the newest and
+wholly unverified live — W (clan-screen) is UI-only and the highest-priority live check.
 
 ## Setup
 
@@ -386,6 +388,28 @@ follows zat. 4 new `MansabRankMathTests` (340 green). Existing mansab progressio
   Qiledar, town ≥ Subahdar), and the muster/retention floor still uses the sawar target — confirm
   promotion/demotion behave exactly as before (no regression from the relabel).
 - **V4.** Old save: loads clean; ranks intact; the stipend simply switches basis to zat.
+
+## W. Clan-screen zamindari visibility (`UI/ClanFiefsZamindariMixin`) — UI-ONLY, VERIFY LIVE
+
+*New this wave (2026-07-11). A UIExtenderEx mixin — no unit tests possible (pure UI). Fully
+guarded (failure = villages just not listed, never a crash). This is the ONE feature of this
+wave that could not be verified without opening the screen; please eyeball it first.*
+
+- **W1.** **The core check (open the screen):** be a village zamindar of a village you hold ONLY
+  through the feudal layer (a village beneath an AI town-lord — e.g. `hindostan.grant_village`
+  while a vassal, or seat yourself via the village menu). Open the clan screen (kingdom/clan
+  management) → **Fiefs** tab. Confirm it OPENS WITHOUT ERROR and your zamindari village(s) now
+  appear as fief cards. (Before this, they never showed there at all.)
+- **W2.** No duplicates: a village that took real engine ownership (already in the vanilla list)
+  must appear ONCE, not twice.
+- **W3.** Clicking a zamindari card should not crash (its select action is a deliberate no-op —
+  the vanilla town/castle selection logic is bypassed for these injected villages).
+- **W4.** Known cosmetic caveat to note in your report: injected villages currently sit in the
+  **Castles** bucket (the header count may read one short), because there is no dedicated
+  "Zamindari" section yet. If the plain listing reads oddly, say so and I'll add a labelled block
+  (a prefab change that itself needs a visual pass).
+- **W5.** If the Fiefs tab ever throws (check `tyt_log.txt` for `ClanFiefsZamindari...`), that is
+  the finding to report — the guard should prevent it, but this path is unverified live.
 
 ---
 

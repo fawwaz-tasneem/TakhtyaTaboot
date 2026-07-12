@@ -10,9 +10,6 @@ Update this file when an item ships (move it to "Shipped") or when priorities ch
    Muslim courts (Zill-e-Ilahi, Jahanpanah, bismillah invocations), distinct registers for
    Rajput/Maratha/Sikh courts; sweep remaining vanilla Calradia prose through the
    LocalizationOverride pipeline.
-2. **Clan-screen fiefs visibility.** The engine cannot give a village an owner separate
-   from its bound town, so zamindari villages never appear in the vanilla Fiefs tab —
-   inject a "Zamindari" block into the clan screen via UIExtenderEx instead.
 
 ## C. Deepening what already ships
 
@@ -46,6 +43,14 @@ waqai-nawis LLM news layer (ch.18).
 
 ## Shipped (for orientation)
 
+- Clan-screen zamindari visibility (was A.2) — 2026-07-11. `UI/ClanFiefsZamindariMixin`: a
+  UIExtenderEx ViewModelMixin on `ClanFiefsVM` that injects the player's zamindari villages (held
+  only through the feudal layer beneath an AI town-lord, so absent from `Clan.Settlements` and the
+  vanilla Fiefs tab) into the fiefs list after it rebuilds. Fully guarded — any failure degrades to
+  "not listed", never a broken clan screen. Villages that took real engine ownership are skipped
+  (no duplicates). **UI-only; unverified live — needs a visual check that the clan Fiefs tab opens
+  and lists the zamindari villages.** (They currently ride in the Castles bucket for want of a
+  dedicated section; a labelled "Zamindari" block is a follow-up if the plain listing reads oddly.)
 - Zat/sawar split ranks (was C.2) — 2026-07-11. The mansab is now presented as the historical
   DUAL rank it always encoded: ZAT (the mansab number — personal rank/status, gates fiefs and
   now sets the stipend) and SAWAR (the cavalry obligation — the muster target). Both numbers were

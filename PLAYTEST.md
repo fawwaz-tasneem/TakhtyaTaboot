@@ -10,16 +10,16 @@ split, W clan-screen zamindari** — J–W are the CURRENT focus; A–I were exe
 rounds 1–3.
 
 **Status ledger (2026-07-12, commits `6bad71f` → HEAD):** A–I built + playtested
-(rounds 1–3); J–W built, unit-tested (340 green) and statically verified against the
+(rounds 1–3); J–Y built, unit-tested (357 green) and statically verified against the
 v1.3.11 decompile. **Playtest round 4 (2026-07-12)** exercised the akhbaar scout (works), the
 darbar court (worked but felt shallow → REWORKED as dialogue, see U), fief petitions (two grants
 seen in the log), the monsoon roll, and found + fixed: the works-ledger CRASH on Begin (N4, the
 int/float binding — Modding-Findings ch.19) and the missing coronation on FOUNDING a kingdom
-(Q1). Round-4 changes to re-verify: **U (the dialogue court chain — riskiest), O8 (encyclopedia
-scout button), N4 (works ledger after the crash fix), Q1 (founding coronation)**, plus the
-still-unseen J3 breakaway, M2 siege unwind, and W (clan-screen zamindari). NOTE: the player now
-runs WITH the Diplomacy mod (round 4 module list) — earlier assumptions of a no-Diplomacy setup
-no longer hold.
+(Q1). **STANDING DECISION: no Diplomacy mod** — its mechanics are integrated natively instead
+(X war exhaustion, Y secession/abdication conspiracies; remaining parity items in ROADMAP block
+E). Priority re-verify: **U (dialogue court chain), X/Y (the diplomacy-parity wave — Y5
+graduation is the riskiest), O8, N4, Q1**, plus the still-unseen J3 breakaway, M2 siege unwind,
+and W (clan-screen zamindari).
 
 ## Setup
 
@@ -437,6 +437,63 @@ wave that could not be verified without opening the screen; please eyeball it fi
   (a prefab change that itself needs a visual pass).
 - **W5.** If the Fiefs tab ever throws (check `tyt_log.txt` for `ClanFiefsZamindari...`), that is
   the finding to report — the guard should prevent it, but this path is unverified live.
+
+## X. War exhaustion (`WarExhaustionBehavior`; no-Diplomacy mandate)
+
+*New (2026-07-12) — 12 new `WarExhaustionMathTests` (357 green), never run live. Replaces the
+old time-only "realm wearies" counter as the source of the council's peace advisory.*
+
+- **X1.** At war, `hindostan.exhaustion_status` lists both sides' exhaustion per war with tiers
+  (fresh/strained/weary/reeling/spent). It should CLIMB with battles (casualties on each side,
+  scaled so small realms tire faster), jump when a fief falls (+8 to the loser) or a village is
+  raided (+3 to the defender), and creep daily.
+- **X2.** "Direct the war effort" (sovereign, war menu) now shows "exhaustion ours/theirs" per
+  war, with tier words in the hint. The council's "Realm Wearies of War" farmaan fires when YOUR
+  side's exhaustion crosses 60 (was: a time-only counter).
+- **X3.** **AI peace:** `hindostan.set_exhaustion 100 <enemy>` while YOUR realm is AI-uninvolved…
+  or simpler: find two AI realms at war and wait/watch — when one side hits 100 it makes peace
+  ("X is spent by the war and has sued for peace" if you're in either realm). Verify in the
+  diplomacy screen.
+- **X4.** **Player-ruler is never forced:** with YOUR realm spent (set_exhaustion 100), no auto-
+  peace; instead "The Realm Is Spent" farmaan + authority bleeding daily (~0.3/day) until you
+  make peace from the war menu.
+- **X5.** **Throne wars are immune:** during an accession war / AI civil war / secession war
+  (hind_rebel_*), `exhaustion_status` shows NO entry for that war, and it can never peace out by
+  exhaustion (the binary rules hold).
+- **X6.** After peace, the pair's exhaustion DECAYS (~1.5/day, visible in status as "[at peace,
+  decaying]") — an immediate re-war starts already weary. Save/load persists the ledger.
+
+## Y. Secession & abdication conspiracies (`DisaffectionBehavior`; no-Diplomacy mandate)
+
+*New (2026-07-12) — 6 new `DisaffectionMathTests`, never run live. Built on the opinion
+ledger + the existing civil-war/claim-kingdom machinery; the riskiest new path is the
+secession war's resolution and GRADUATION of a winning breakaway into a real kingdom.*
+
+- **Y1.** `hindostan.disaffection_status` shows simmering cabals, an active secession war, and
+  graduated realms. `hindostan.force_conspiracy` (as ruler) forges a pre-simmered cabal from
+  your most disaffected clans — note they must genuinely hold a low opinion of you (≤ −15) to
+  hold together on the next weekly tick.
+- **Y2.** **The spymaster earns his keep:** with a Spymaster seated on your council, a forming
+  cabal produces his warning message; without one, the first you hear is the ultimatum.
+- **Y3.** **The ultimatum (player-ruler):** a Ceremonial farmaan from the confederate houses.
+  With a lawful heir + your legitimacy < 55 they demand ABDICATION (yield → the heir accedes,
+  authority −8, and the coronation darbar fires for the new ruler); otherwise they demand to
+  DEPART (yield → a new kingdom leaves in peace, graduated immediately, founding darbar held).
+- **Y4.** **Refusal:** refused abdication → the cabal's lead house raises the EXISTING
+  leadership civil war (D3 rules apply: side-choice farmaan, 45-day resolution). Refused
+  secession → a secession war: the confederates rise as a hind_rebel_* "Dominion of X"; within
+  45 days it is crushed (clans fold home, authority +6, ringleader's grudge) or WINS FREE.
+- **Y5.** **Graduation (the big new path):** a secession that wins (or is granted) becomes a
+  REAL kingdom: `disaffection_status` lists it under "Graduated realms"; it can make peace and
+  war normally (no longer blocked by the throne-war patch); the safety net stops vetoing its
+  lifecycle; its ruler holds a founding darbar; it never gets darbar'd as a claim kingdom. Play
+  on several days: no odd re-folding, no eternal war, encyclopedia sane.
+- **Y6.** **AI realms run the whole arc autonomously:** watch the log for "Disaffection:" lines —
+  cabals forming, ultimatums, AI rulers yielding (abdication or granted independence) or
+  fighting, by legitimacy and strength odds.
+- **Y7.** One secession war at a time; no new ultimatum while ANY convulsion (accession war, AI
+  civil war, secession war) is raging — cabals bide their time. Save/load persists cabals, the
+  war, and the graduation register.
 
 ---
 

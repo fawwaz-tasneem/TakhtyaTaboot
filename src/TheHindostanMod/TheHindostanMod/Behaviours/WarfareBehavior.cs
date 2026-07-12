@@ -419,9 +419,11 @@ namespace TakhtyaTaboot
             {
                 Kingdom ok = Find(id);
                 if (ok == null || !pk.IsAtWarWith(ok)) continue;
-                float w = (_weary.TryGetValue(id, out float v) ? v : 0f) + 0.6f + (ScoreOf(id) < 0 ? 0.6f : 0f);
-                _weary[id] = w;
-                if (w >= 60f && IsRuler && !_peaceUrged.Contains(id))
+                // The council's urging now reads the REAL war exhaustion (casualties, fiefs,
+                // raids — WarExhaustionBehavior) instead of the old time-only weariness.
+                // _weary stays serialized for save-compat but no longer accrues.
+                float w = WarExhaustionBehavior.Instance?.Exhaustion(pk, ok) ?? 0f;
+                if (Util.WarExhaustionMath.CouncilUrgesPeace(w) && IsRuler && !_peaceUrged.Contains(id))
                 {
                     _peaceUrged.Add(id);
                     RoyalFarmaan.Issue("The Realm Wearies of War", $"From the Imperial Council of {pk.Name}",
@@ -506,9 +508,16 @@ namespace TakhtyaTaboot
             foreach (var k in wars) EnsureWarTracked(k);
             if (wars.Count == 0) { Notify("The realm is at peace.", false); return; }
 
-            var elements = wars.Select(k => new InquiryElement(k,
-                $"{k.Name} — {GoalOf(k.StringId)}, war score {ScoreOf(k.StringId)}",
-                null, true, $"Score {ScoreOf(k.StringId)} ({Standing(ScoreOf(k.StringId))}). Choose to dictate terms.")).ToList();
+            var elements = wars.Select(k =>
+            {
+                float ours = WarExhaustionBehavior.Instance?.Exhaustion(pk, k) ?? 0f;
+                float theirs = WarExhaustionBehavior.Instance?.Exhaustion(k, pk) ?? 0f;
+                return new InquiryElement(k,
+                    $"{k.Name} — {GoalOf(k.StringId)}, war score {ScoreOf(k.StringId)}, exhaustion {ours:0}/{theirs:0}",
+                    null, true,
+                    $"Score {ScoreOf(k.StringId)} ({Standing(ScoreOf(k.StringId))}). Our realm is {Util.WarExhaustionMath.Tier(ours)}; " +
+                    $"theirs is {Util.WarExhaustionMath.Tier(theirs)}. Choose to dictate terms.");
+            }).ToList();
 
             MBInformationManager.ShowMultiSelectionInquiry(new MultiSelectionInquiryData(
                 "Direct the War Effort", "Choose a war to bring to terms.",

@@ -194,7 +194,8 @@ namespace TakhtyaTaboot
         private static Kingdom OriginRealmOf(string rebelKingdomId)
             => SuccessionBehavior.Instance?.OriginRealmOf(rebelKingdomId)
                ?? CivilWarBehavior.Instance?.OriginRealmOf(rebelKingdomId)
-               ?? AccessionWarBehavior.Instance?.OriginRealmOf(rebelKingdomId);
+               ?? AccessionWarBehavior.Instance?.OriginRealmOf(rebelKingdomId)
+               ?? DisaffectionBehavior.Instance?.OriginRealmOf(rebelKingdomId);
 
         private void Remember(string clanId)
         {

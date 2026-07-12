@@ -40,6 +40,8 @@
 | Tenure law + rotation (town/castle AND village jagirs; Favor/Grudge on rotation) | `MansabdariTenureBehavior` | `MansabTenureMath` | `tyt_tenure_*` | `tenure`, `tenure_mansabdari`, `tenure_feudal`, `tenure_rotate`, `tenure_rotate_village` |
 | Legitimacy / authority | `LegitimacyBehavior`, `ImperialAuthorityBehavior` | — | `hind_legit_*`, `hind_authority_*` | — |
 | Warfare (aims, score, terms, tributaries) | `WarfareBehavior`, `WarAimsBehavior` | `WarAimMath` | `hind_war_*` | `war_status` |
+| War exhaustion (per-side; AI sues at 100, player-ruler bleeds authority; claim-kingdom wars never tracked) | `WarExhaustionBehavior` (WarfareBehavior reads it for advisory + menu) | `WarExhaustionMath` | `hind_wex_*` | `exhaustion_status`, `set_exhaustion` |
+| Disaffection conspiracies (secession/abdication ultimatums; graduation of winning breakaways) | `DisaffectionBehavior` (refused abdication → `CivilWarBehavior.StartChallenge`; graduation via `ThroneWar.Graduate`) | `DisaffectionMath` | `hind_disaff_*` | `disaffection_status`, `force_conspiracy` |
 | Succession (crisis, laws, scripted 1707 cascade, treachery arc) | `SuccessionBehavior`, `SuccessionLawBehavior`, `ImperialSuccessionEventBehavior` | `SuccessionLawMath` (incl. incumbent price / treachery / fates), `ImperialSuccessionPlan` | `suc_*` (incl. `suc_treach*`), `tyt_imp_succ_*` | `accession_status` |
 | Coronation darbar (accession summons: attend/snub, late oath) | `CoronationBehavior` (own ruler snapshot; player-sovereign & player-vassal beats; AI silent) | `CoronationMath` | `hind_coron_*` | `coronation_test` |
 | Unified empire until Aurangzeb dies (fold + breakaway) | `UnifiedEmpireBehavior` | `UnifiedEmpireMath` | `tyt_unified_*` | `unified_status` |
@@ -65,6 +67,16 @@
 | Party orders | `PartyOrdersBehavior` | — | — | — |
 
 ## 3. Load-bearing invariants (break these and "it feels buggy" comes back)
+
+**`ThroneWar.IsRebelKingdom` is the ONE test for "is this a live claim kingdom",** and it now
+respects GRADUATION: a secession that won its independence keeps its `hind_rebel_*` StringId
+(ids are immutable) but `ThroneWar.Graduate(id)` strips its claim-kingdom status everywhere at
+once — the peace block lifts, the safety net stands down, war exhaustion starts tracking it,
+the coronation eligibility opens. Never test the `hind_rebel_` prefix directly; always call
+`IsRebelKingdom`. The graduation set is persisted by `DisaffectionBehavior.SyncData` and
+reloaded into the static registry on load. Corollary: war exhaustion NEVER tracks (and can
+never peace out) a war involving a live claim kingdom — those wars are binary and settle by
+their own deadlines.
 
 **One liege chain.** `FeudalTitlesBehavior.GetFeudalLiege` is the ONLY liege resolution.
 The rungs, top to bottom (playtest round 3): explicit `_liegeOverride` bond → village

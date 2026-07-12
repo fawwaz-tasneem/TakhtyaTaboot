@@ -65,9 +65,10 @@ namespace TakhtyaTaboot
                     // A realm we have never seen: kingdoms standing at session launch were
                     // seeded by Snapshot(), so this is a kingdom FOUNDED mid-campaign — a
                     // genuine accession (the playtest gap: founding your own kingdom gave no
-                    // coronation). The mod's temporary claim kingdoms (hind_rebel_*) are a war
-                    // measure, not a throne — no darbar for them.
-                    if (!k.StringId.StartsWith("hind_rebel") && k.Leader.IsAlive && !k.Leader.IsChild)
+                    // coronation). The mod's LIVE claim kingdoms are a war measure, not a
+                    // throne — no darbar for them (a GRADUATED secession state is a real
+                    // realm and crowns; ThroneWar.IsRebelKingdom knows the difference).
+                    if (!Util.ThroneWar.IsRebelKingdom(k) && k.Leader.IsAlive && !k.Leader.IsChild)
                         TYTLog.Guard("Coronation.Found:" + k.Name, () => HoldCoronation(k));
                     continue;
                 }
@@ -82,6 +83,14 @@ namespace TakhtyaTaboot
             foreach (string id in _lastRuler.Keys.ToList())
                 if (Kingdom.All.FirstOrDefault(x => x.StringId == id)?.IsEliminated ?? true)
                     _lastRuler.Remove(id);
+        }
+
+        // A newly independent realm's founding darbar (secession graduation calls this).
+        public void HoldFoundingDarbar(Kingdom k)
+        {
+            if (k?.Leader == null) return;
+            _lastRuler[k.StringId] = k.Leader.StringId;
+            TYTLog.Guard("Coronation.Founding:" + k.Name, () => HoldCoronation(k));
         }
 
         private void HoldCoronation(Kingdom k)

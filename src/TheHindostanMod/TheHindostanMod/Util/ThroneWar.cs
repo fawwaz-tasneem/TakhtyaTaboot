@@ -18,8 +18,29 @@ namespace TakhtyaTaboot.Util
         // to conclude peace with a rebel realm it is dissolving. The patch honours this and lets it through.
         [System.ThreadStatic] public static bool AllowInternalPeace;
 
+        // GRADUATED claim kingdoms: a secession that WON its independence keeps its hind_rebel_*
+        // StringId (ids are immutable) but is a claim kingdom no longer — it makes peace and war
+        // like any realm, the safety net stops vetoing its lifecycle, and it may hold a
+        // coronation. DisaffectionBehavior persists this set across saves and reloads it here.
+        private static readonly System.Collections.Generic.HashSet<string> _graduated =
+            new System.Collections.Generic.HashSet<string>();
+
         public static bool IsRebelKingdom(IFaction f)
-            => f is Kingdom k && k.StringId != null && k.StringId.StartsWith("hind_rebel_");
+            => f is Kingdom k && k.StringId != null && k.StringId.StartsWith("hind_rebel_")
+               && !_graduated.Contains(k.StringId);
+
+        public static void Graduate(string kingdomId)
+        { if (!string.IsNullOrEmpty(kingdomId)) _graduated.Add(kingdomId); }
+
+        public static System.Collections.Generic.List<string> GraduatedIds
+            => new System.Collections.Generic.List<string>(_graduated);
+
+        public static void LoadGraduated(System.Collections.Generic.IEnumerable<string> ids)
+        {
+            _graduated.Clear();
+            if (ids == null) return;
+            foreach (string id in ids) if (!string.IsNullOrEmpty(id)) _graduated.Add(id);
+        }
 
         // Run an action with internal peace permitted, then restore the flag.
         public static void WithInternalPeace(System.Action act)

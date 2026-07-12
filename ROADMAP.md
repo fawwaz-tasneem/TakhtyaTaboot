@@ -21,6 +21,19 @@ Update this file when an item ships (move it to "Shipped") or when priorities ch
    model the Nur Jahan pattern properly: influential women act through the intrigue layer —
    whispers that shift the holder's decisions, opinion records, faction ties.
 
+## E. Diplomacy-parity (no-Diplomacy mandate, 2026-07-12: the user plays WITHOUT the
+## Diplomacy mod; its mechanics are integrated natively instead)
+
+*Shipped in the first wave: war exhaustion, secession civil wars, abdication ultimatums
+(see Shipped). Remaining candidates:*
+
+1. **Alliances & non-aggression pacts.** Formal pacts between realms with opinion/authority
+   stakes; must respect throne-war rules (no pact can bind a hind_rebel_* war).
+2. **Messengers.** Speak with any lord at a distance (the akhbaar scouts' infrastructure is
+   the natural carrier — a harkara carries words both ways).
+3. **Coalitions against the overreaching.** Realms that grow too fast draw a defensive
+   league; ties into ImperialAuthority and the tolerance/legitimacy systems.
+
 ## D. The big new arcs
 
 1. **Marriage alliances with negotiation.** Dowry/mehr terms, inter-faith matches
@@ -42,6 +55,23 @@ assassination/blackmail/spy schemes, main quest (Restoration vs Domination),
 waqai-nawis LLM news layer (ch.18).
 
 ## Shipped (for orientation)
+
+- Diplomacy-parity wave 1 (block E) — 2026-07-12. **War exhaustion** (`WarExhaustionBehavior`
+  + `WarExhaustionMath`, 12 tests): every side of every real war accrues exhaustion from
+  casualties, fiefs lost, raids and time (small realms feel it harder); a SPENT AI realm sues
+  for peace (plain `MakePeaceAction` — the throne-war patch still stands guard, and wars
+  involving live claim kingdoms are never tracked); a spent PLAYER-ruled realm is never
+  forced but bleeds authority daily; exhaustion lingers into the next war. WarfareBehavior's
+  council advisory + war menu now read it. **Secession & abdication conspiracies**
+  (`DisaffectionBehavior` + `DisaffectionMath`, 6 tests): personally disaffected houses
+  (opinion ledger) form cabals; simmered and strong, they serve an ULTIMATUM — abdicate in
+  favour of the lawful heir (low legitimacy + heir exists) or let them depart. AI rulers
+  yield or fight by tested odds; the player-ruler chooses via farmaan (spymaster gives early
+  warning). Refused abdication → the EXISTING CivilWarBehavior leadership war; refused
+  secession → a secession war on the claim-kingdom machinery; a secession that wins (or is
+  granted) GRADUATES (`ThroneWar.Graduate`): its realm makes peace like any kingdom, the
+  safety net stands down, and it holds a founding darbar. Console:
+  `hindostan.exhaustion_status / set_exhaustion / disaffection_status / force_conspiracy`.
 
 - Clan-screen zamindari visibility (was A.2) — 2026-07-11. `UI/ClanFiefsZamindariMixin`: a
   UIExtenderEx ViewModelMixin on `ClanFiefsVM` that injects the player's zamindari villages (held

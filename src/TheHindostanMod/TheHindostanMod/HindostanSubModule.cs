@@ -172,6 +172,7 @@ namespace TakhtyaTaboot
             starter.AddBehavior(new LegitimacyBehavior());
             starter.AddBehavior(new ImperialAuthorityBehavior());
             starter.AddBehavior(new RoyalDecisionsBehavior());
+            starter.AddBehavior(new WarExhaustionBehavior()); // native war exhaustion (no-Diplomacy mandate); WarfareBehavior reads it
             starter.AddBehavior(new WarfareBehavior());
             starter.AddBehavior(new SiegeParleyBehavior()); // the attacker's envoy at the walls
             starter.AddBehavior(new Util.WarAimsBehavior()); // trait-driven affronts -> casus belli -> judgement
@@ -199,6 +200,7 @@ namespace TakhtyaTaboot
             starter.AddBehavior(new ImperialCourtBehavior());
             starter.AddBehavior(new PartyOrdersBehavior());
             starter.AddBehavior(new CivilWarBehavior());          // AI leadership challenges (Ch.16)
+            starter.AddBehavior(new DisaffectionBehavior());      // secession/abdication conspiracies (no-Diplomacy mandate); must follow CivilWarBehavior
             starter.AddBehavior(new ReligiousToleranceBehavior()); // realm faith policy + jizya (Ch.17)
 
             // Phase 8 — QoL systems

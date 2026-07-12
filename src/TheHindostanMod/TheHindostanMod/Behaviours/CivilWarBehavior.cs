@@ -108,6 +108,16 @@ namespace TakhtyaTaboot
             }
         }
 
+        // Public entry for other systems (the disaffection conspiracies' refused-abdication
+        // war): the same leadership challenge, started deliberately rather than by the
+        // monthly roll. Returns false if a war is already raging or the challenge fizzles.
+        public bool StartChallenge(Kingdom kingdom, Clan challenger)
+        {
+            if (_active || kingdom == null || challenger?.Leader == null) return false;
+            StartAiChallenge(kingdom, challenger);
+            return _active;
+        }
+
         private void StartAiChallenge(Kingdom kingdom, Clan challenger)
         {
             Settlement seat = challenger.Settlements.FirstOrDefault(s => s.IsTown)

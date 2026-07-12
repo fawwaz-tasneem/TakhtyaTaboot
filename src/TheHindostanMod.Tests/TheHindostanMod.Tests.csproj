@@ -53,6 +53,8 @@
     <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\FiefPetitionMath.cs" Link="Linked\FiefPetitionMath.cs" />
     <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\DarbarCourtMath.cs" Link="Linked\DarbarCourtMath.cs" />
     <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\MansabRankMath.cs" Link="Linked\MansabRankMath.cs" />
+    <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\WarExhaustionMath.cs" Link="Linked\WarExhaustionMath.cs" />
+    <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\DisaffectionMath.cs" Link="Linked\DisaffectionMath.cs" />
   </ItemGroup>
 
 </Project>

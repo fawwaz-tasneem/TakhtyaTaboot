@@ -61,7 +61,14 @@ namespace TakhtyaTaboot
                 string now = k.Leader.StringId;
                 if (!_lastRuler.TryGetValue(k.StringId, out string prev))
                 {
-                    _lastRuler[k.StringId] = now; // first sighting of this realm: record, do not crown
+                    _lastRuler[k.StringId] = now;
+                    // A realm we have never seen: kingdoms standing at session launch were
+                    // seeded by Snapshot(), so this is a kingdom FOUNDED mid-campaign — a
+                    // genuine accession (the playtest gap: founding your own kingdom gave no
+                    // coronation). The mod's temporary claim kingdoms (hind_rebel_*) are a war
+                    // measure, not a throne — no darbar for them.
+                    if (!k.StringId.StartsWith("hind_rebel") && k.Leader.IsAlive && !k.Leader.IsChild)
+                        TYTLog.Guard("Coronation.Found:" + k.Name, () => HoldCoronation(k));
                     continue;
                 }
                 if (prev == now) continue;

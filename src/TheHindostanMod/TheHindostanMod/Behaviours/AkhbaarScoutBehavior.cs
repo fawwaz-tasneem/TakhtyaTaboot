@@ -38,6 +38,11 @@ namespace TakhtyaTaboot
 
         private List<Scout> _scouts = new List<Scout>();
 
+        // The registers: the last akhbaar's short where-line and its day, per hero — what the
+        // encyclopedia shows as the lord's last known whereabouts.
+        private Dictionary<string, string> _lastWhere = new Dictionary<string, string>();
+        private Dictionary<string, float> _lastDay = new Dictionary<string, float>();
+
         public override void RegisterEvents()
         {
             Instance = this;
@@ -55,6 +60,14 @@ namespace TakhtyaTaboot
             dataStore.SyncData("hind_akhbaar_names", ref names);
             dataStore.SyncData("hind_akhbaar_days", ref days);
             dataStore.SyncData("hind_akhbaar_origins", ref origins);
+
+            var regIds = _lastWhere.Keys.ToList();
+            var regWheres = _lastWhere.Values.ToList();
+            var regDays = regIds.Select(id => _lastDay.TryGetValue(id, out float d) ? d : 0f).ToList();
+            dataStore.SyncData("hind_akhbaar_regIds", ref regIds);
+            dataStore.SyncData("hind_akhbaar_regWheres", ref regWheres);
+            dataStore.SyncData("hind_akhbaar_regDays", ref regDays);
+
             if (!dataStore.IsSaving)
             {
                 _scouts = new List<Scout>();
@@ -64,6 +77,13 @@ namespace TakhtyaTaboot
                         TargetId = ids[i], TargetName = names[i], ArriveDay = days[i],
                         Origin = i < origins.Count ? origins[i] : "",
                     });
+                _lastWhere = new Dictionary<string, string>();
+                _lastDay = new Dictionary<string, float>();
+                for (int i = 0; i < regIds.Count && i < regWheres.Count; i++)
+                {
+                    _lastWhere[regIds[i]] = regWheres[i];
+                    if (i < regDays.Count) _lastDay[regIds[i]] = regDays[i];
+                }
             }
         }
 
@@ -127,7 +147,7 @@ namespace TakhtyaTaboot
         private static int CostFor(Hero h)
             => AkhbaarMath.DispatchCost(h.Clan?.Tier ?? 0, h.Clan?.Kingdom == Clan.PlayerClan?.Kingdom);
 
-        private bool IsTracked(Hero h) => _scouts.Any(s => s.TargetId == h.StringId);
+        public bool IsTracked(Hero h) => h != null && _scouts.Any(s => s.TargetId == h.StringId);
 
         private void Dispatch(Hero h)
         {
@@ -135,8 +155,11 @@ namespace TakhtyaTaboot
             int cost = CostFor(h);
             if (Hero.MainHero.Gold < cost) return;
 
+            // The scout sets out from wherever the player is: the settlement he stands in, or
+            // his camp on the map (the encyclopedia path).
             Settlement here = Settlement.CurrentSettlement;
-            float distance = here != null ? here.GetPosition2D.Distance(TargetPosition(h)) : 0f;
+            Vec2 from = here?.GetPosition2D ?? MobileParty.MainParty?.GetPosition2D ?? Vec2.Zero;
+            float distance = from != Vec2.Zero ? from.Distance(TargetPosition(h)) : 0f;
             float days = AkhbaarMath.DaysToLocate(distance);
 
             Hero.MainHero.ChangeHeroGold(-cost);
@@ -145,10 +168,64 @@ namespace TakhtyaTaboot
                 TargetId = h.StringId,
                 TargetName = h.Name.ToString(),
                 ArriveDay = (float)CampaignTime.Now.ToDays + days,
-                Origin = here?.Name.ToString() ?? "",
+                Origin = here?.Name.ToString() ?? "your camp",
             });
             Notify($"Your harkara slips out after {h.Name} ({cost} dinars). Expect his akhbaar in some {(int)Math.Ceiling(days)} days.", false);
-            TYTLog.Info($"Akhbaar: scout dispatched after {h.StringId} from {here?.StringId}, {cost} dinars, ~{days:0.0} days.");
+            TYTLog.Info($"Akhbaar: scout dispatched after {h.StringId} from {(here?.StringId ?? "map")}, {cost} dinars, ~{days:0.0} days.");
+        }
+
+        // ── The encyclopedia surface ─────────────────────────────────────────────────
+        // Any living adult lord of a realm (not your own house) can be scouted from his page —
+        // the report handles courtiers, captives and the dead, so no party requirement here.
+        public bool CanDispatchFor(Hero h, out string label, out string reason)
+        {
+            label = ""; reason = "";
+            if (h == null || !h.IsAlive || h.IsChild || !h.IsLord
+                || h.Clan == null || h.Clan == Clan.PlayerClan || h.Clan.Kingdom == null)
+            { reason = "not a scoutable lord"; return false; }
+            if (IsTracked(h))
+            {
+                float now = (float)CampaignTime.Now.ToDays;
+                Scout s = _scouts.First(x => x.TargetId == h.StringId);
+                reason = $"A harkara is on his trail — akhbaar in ~{Math.Max(0f, s.ArriveDay - now):0} day(s).";
+                return false;
+            }
+            int cost = CostFor(h);
+            label = $"Dispatch a scout ({cost} dinars)";
+            if (Hero.MainHero.Gold < cost) { reason = $"You cannot pay the {cost}-dinar fee."; return false; }
+            return true;
+        }
+
+        // Dispatch from the hero's encyclopedia page, with a confirmation inquiry.
+        public void DispatchFromEncyclopedia(Hero h)
+        {
+            if (!CanDispatchFor(h, out _, out string reason)) { if (!string.IsNullOrEmpty(reason)) Notify(reason, true); return; }
+            int cost = CostFor(h);
+            InformationManager.ShowInquiry(new InquiryData(
+                "Dispatch an Akhbaar Scout",
+                $"Send a harkara after {UI.RoyalFarmaan.NameWithHonorific(h)} for {cost} dinars? His akhbaar — where the lord is, " +
+                "what he is about, and his strength in hearsay terms — arrives when the runner returns, and is entered in the registers.",
+                true, true, "Dispatch", "Not now",
+                () => TYTLog.Guard("Akhbaar.EncyclopediaDispatch", () => Dispatch(h)), null), true);
+        }
+
+        // The lord's line in the registers, for his encyclopedia page: the scout on the road,
+        // or his last reported whereabouts. Null when the registers hold nothing on him.
+        public string RegisterLine(Hero h)
+        {
+            if (h == null) return null;
+            if (IsTracked(h))
+            {
+                float now = (float)CampaignTime.Now.ToDays;
+                Scout s = _scouts.First(x => x.TargetId == h.StringId);
+                return $"a harkara is on his trail (akhbaar in ~{Math.Max(0f, s.ArriveDay - now):0} day(s))";
+            }
+            if (_lastWhere.TryGetValue(h.StringId, out string where))
+            {
+                int age = (int)((float)CampaignTime.Now.ToDays - (_lastDay.TryGetValue(h.StringId, out float d) ? d : 0f));
+                return $"last reported {where} — {(age <= 0 ? "today" : age == 1 ? "yesterday" : age + " days ago")}";
+            }
+            return null;
         }
 
         private static Vec2 TargetPosition(Hero h)
@@ -170,12 +247,21 @@ namespace TakhtyaTaboot
             }
         }
 
-        private static void DeliverReport(Scout s)
+        private void DeliverReport(Scout s)
         {
             Hero h = Hero.AllAliveHeroes.FirstOrDefault(x => x.StringId == s.TargetId);
-            string body = h == null
-                ? $"Your scout returns with word already on every road: {s.TargetName} is dead. Whatever business you had with him passes to his heirs."
-                : BuildReport(h);
+            string shortWhere;
+            string body;
+            if (h == null)
+            {
+                body = $"Your scout returns with word already on every road: {s.TargetName} is dead. Whatever business you had with him passes to his heirs.";
+                shortWhere = "reported dead";
+            }
+            else body = BuildReport(h, out shortWhere);
+
+            // Enter it in the registers: the encyclopedia shows this as his last known whereabouts.
+            _lastWhere[s.TargetId] = shortWhere;
+            _lastDay[s.TargetId] = (float)CampaignTime.Now.ToDays;
 
             UI.RoyalFarmaan.Issue("Akhbaar: " + s.TargetName,
                 "By the hand of your harkara, come off the road" + (string.IsNullOrEmpty(s.Origin) ? "" : " to " + s.Origin),
@@ -183,10 +269,10 @@ namespace TakhtyaTaboot
                 seal: "Set down in the akhbaar registers, " + UI.RoyalFarmaan.CurrentDate(),
                 primary: "Noted",
                 dedupeKey: "akhbaar_" + s.TargetId);
-            TYTLog.Info($"Akhbaar: report delivered for {s.TargetId}.");
+            TYTLog.Info($"Akhbaar: report delivered for {s.TargetId} ({shortWhere}).");
         }
 
-        private static string BuildReport(Hero h)
+        private static string BuildReport(Hero h, out string shortWhere)
         {
             string name = UI.RoyalFarmaan.NameWithHonorific(h);
 
@@ -197,15 +283,20 @@ namespace TakhtyaTaboot
                     : h.PartyBelongedToAsPrisoner?.LeaderHero != null
                         ? $"in the train of {h.PartyBelongedToAsPrisoner.LeaderHero.Name}"
                         : "in unknown hands";
+                shortWhere = "a captive, " + where;
                 return $"{name} is a CAPTIVE, held {where}. He commands nothing while he sits in chains.";
             }
 
             MobileParty party = h.PartyBelongedTo;
             if (party == null || party.LeaderHero != h)
             {
-                return h.CurrentSettlement != null
-                    ? $"{name} keeps to {h.CurrentSettlement.Name}, with no war band under his banner. If you would find him, find him at court."
-                    : $"{name} has gone to ground; no war band rides under his banner. The last rumour places him near {h.HomeSettlement?.Name.ToString() ?? "his home estates"}.";
+                if (h.CurrentSettlement != null)
+                {
+                    shortWhere = $"at court in {h.CurrentSettlement.Name}";
+                    return $"{name} keeps to {h.CurrentSettlement.Name}, with no war band under his banner. If you would find him, find him at court.";
+                }
+                shortWhere = $"gone to ground near {h.HomeSettlement?.Name.ToString() ?? "his estates"}";
+                return $"{name} has gone to ground; no war band rides under his banner. The last rumour places him near {h.HomeSettlement?.Name.ToString() ?? "his home estates"}.";
             }
 
             // Count and composition, in hearsay terms.
@@ -233,6 +324,12 @@ namespace TakhtyaTaboot
                         : party.Army != null
                             ? $"on the march near {NearestHolding(party)}, riding with the army of {party.Army.LeaderParty?.LeaderHero?.Name}"
                             : $"on the march near {NearestHolding(party)}";
+
+            shortWhere = party.SiegeEvent?.BesiegedSettlement != null
+                ? $"besieging {party.SiegeEvent.BesiegedSettlement.Name}"
+                : party.CurrentSettlement != null
+                    ? $"in {party.CurrentSettlement.Name}"
+                    : $"near {NearestHolding(party)}";
 
             return $"Your scout found {name} {doing}.\n \nHe rides with {strength}.";
         }

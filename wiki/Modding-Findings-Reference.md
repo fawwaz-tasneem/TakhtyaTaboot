@@ -229,6 +229,15 @@ Four different files own different parts of a lord, and confusing them wastes ti
 - **History.** Every mod prefab written before this finding used `VerticalTopToBottom` and therefore rendered reversed; the hierarchy board and village works ledger are fixed. `HindostanCouncil.xml` / `HindostanFarmaan.xml` still carry the old value - flip them the next time either screen is touched (their layouts have been accepted as-is for weeks, so flipping blind is riskier than leaving them).
 - **Faces on cards:** v1.3 split `ImageIdentifierVM` into typed classes under `TaleWorlds.Core.ViewModelCollection.ImageIdentifiers` - use `new CharacterImageIdentifierVM(CharacterCode.CreateFrom(hero.CharacterObject))` and bind `<ImageIdentifierWidget DataSource="{Visual}" ImageId="@Id" AdditionalArgs="@AdditionalArgs" TextureProviderName="@TextureProviderName" />`.
 
+## 19. Gauntlet layout bindings write BACK into the VM — the property type must match exactly
+
+*(Root-caused from the mosque-build crash, 2026-07-12: `Exception occurred inside invoke: set_BarWidth … Object of type 'System.Single' cannot be converted to type 'System.Int32'`, then the same conversion error broke `ExecuteAct`, then a native crash took the game down. Heartbeat showed an unrelated crumb — the exception fired in the UI invoke path, which writes no crumbs.)*
+
+- **The mechanism.** Binding a VM property to a widget LAYOUT attribute (`SuggestedWidth="@BarWidth"`, margins, offsets) is not one-way: Gauntlet's binding system also pushes the widget-side value back into the VM property via reflection invoke. Widget layout attributes are `float`. If the VM property is `int`, the write-back invoke throws `Single → Int32` **inside Gauntlet's invoke wrapper** — no managed crash report (it is swallowed and logged only to `rgl_log`), the screen is left half-broken, and the next interaction (a button `ExecuteAct`) cascades into a native crash.
+- **The rule.** Any `[DataSourceProperty]` bound to a widget layout attribute must be **`float`**, even when the value is conceptually integral. Text/bool/list bindings are unaffected.
+- **Diagnosing.** `rgl_log_<pid>.txt` in the crash folder prints the `Exception occurred inside invoke: set_<Property>` lines with the target VM type — grep for `inside invoke` before reaching for WinDbg. The tyt heartbeat is NOT useful here: UI-thread invokes write no crumbs, so the last crumb points at whatever campaign tick ran last.
+- **History.** `VillageWorksVM.BarWidth` (the crash) and `CouncilEntryVM.IndentWidth` (same latent bug) are fixed to `float`.
+
 ---
 
 **[Home](Home.md)**

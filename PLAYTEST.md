@@ -9,13 +9,17 @@ harvest+famine, S village-jagir rotation, T fief petitions, U darbar petition co
 split, W clan-screen zamindari** — J–W are the CURRENT focus; A–I were exercised in playtest
 rounds 1–3.
 
-**Status ledger (2026-07-11, commits `6bad71f` → HEAD):** A–I built + playtested
+**Status ledger (2026-07-12, commits `6bad71f` → HEAD):** A–I built + playtested
 (rounds 1–3); J–W built, unit-tested (340 green) and statically verified against the
-v1.3.11 decompile, but **not yet proven in a live campaign end-to-end** except: J1 fold
-confirmed by log + player, hierarchy board seen once (was upside down — fixed, needs a
-second look). O–W (akhbaar scouts, bonded labour, coronations, monsoon harvest, village-jagir
-rotation, fief petitions, darbar court, zat/sawar, clan-screen zamindari) are the newest and
-wholly unverified live — W (clan-screen) is UI-only and the highest-priority live check.
+v1.3.11 decompile. **Playtest round 4 (2026-07-12)** exercised the akhbaar scout (works), the
+darbar court (worked but felt shallow → REWORKED as dialogue, see U), fief petitions (two grants
+seen in the log), the monsoon roll, and found + fixed: the works-ledger CRASH on Begin (N4, the
+int/float binding — Modding-Findings ch.19) and the missing coronation on FOUNDING a kingdom
+(Q1). Round-4 changes to re-verify: **U (the dialogue court chain — riskiest), O8 (encyclopedia
+scout button), N4 (works ledger after the crash fix), Q1 (founding coronation)**, plus the
+still-unseen J3 breakaway, M2 siege unwind, and W (clan-screen zamindari). NOTE: the player now
+runs WITH the Diplomacy mod (round 4 module list) — earlier assumptions of a no-Diplomacy setup
+no longer hold.
 
 ## Setup
 
@@ -172,6 +176,9 @@ For the report: for each numbered check mark PASS / FAIL / SKIPPED, and for FAIL
 - **N4.** Village works ledger ("Open the works ledger" in your village): header numbers
   match the old menu, progress BAR fills as days pass, Collect button works + refreshes,
   Begin/Queue per project with correct disabled reasons; ESC and the X both close it.
+  **ROUND-4 CRASH FIXED (2026-07-12):** clicking Begin (the mosque case) crashed the game —
+  `BarWidth` was an int bound to a float widget attribute (see Modding-Findings ch.19). Re-run
+  this check, especially STARTING a work while the ledger is open and watching the bar appear.
 - **N5.** Council + Farmaan screens were ALWAYS rendered upside-down (see wiki findings
   ch.18) and were left untouched — if their reversed layout bothers you now that you know,
   ask for the flip (one-line change each, needs a visual check after).
@@ -206,6 +213,13 @@ run live. This is the seed of the wider akhbarat espionage layer (wiki ch.17).*
 - **O6.** Console: `hindostan.akhbaar_send <name>` dispatches a free scout arriving next daily
   tick; `hindostan.akhbaar_status` lists the road; `hindostan.akhbaar_arrive` forces delivery.
 - **O7.** Old save (pre-feature): loads clean, no scouts, court entry present and usable.
+- **O8.** **Encyclopedia surface (round 4 — replaces hunting the list):** open any foreign lord's
+  encyclopedia page → a "Dispatch a scout (N dinars)" button sits under the bookmark star; click →
+  confirm inquiry → dispatched (works from the map too, not just in a settlement — the scout rides
+  from your camp). While the scout is out the button reads "A scout is on his trail…", and the
+  Info section gains an "Akhbaar" row ("a harkara is on his trail (akhbaar in ~N day(s))"). After
+  the report arrives, the row shows his LAST REPORTED whereabouts with age ("last reported
+  besieging X — 3 days ago"), persisting across save/load. The court-menu list still works.
 
 ## P. Bonded labour in villages (`SlaveLabourBehavior`, village menu → "Settle captive labourers here")
 
@@ -249,6 +263,10 @@ run live. Reuses the existing opinion records, Ceremonial farmaan, and grievance
   lead a realm): a Ceremonial "Your Coronation Darbar" farmaan lists the verdict of the hall, who
   bent the knee, and who left an empty place. Sanity: high-relation house heads should mostly
   attend, resented ones mostly stay away. Legitimacy shifts with the balance of attend vs. absent.
+  **ROUND-4 FIX:** FOUNDING your own kingdom now also stages the darbar (it previously only fired
+  on a leader change of an existing realm — the reported gap). With no vassal houses yet, the
+  farmaan still shows ("No vassal houses yet answer to your throne"). Claim/rebel kingdoms
+  (`hind_rebel_*`) deliberately get no coronation.
 - **Q2.** With absentees, the farmaan offers "Demand a late oath" → a follow-up "The Late Oath"
   farmaan reports who bent (warmer lords) and who defied (colder lords). Defiant lords get a
   **grudge** you can then pursue in the grievance dialogue (playtest H3). "Let their absence stand"
@@ -346,30 +364,39 @@ Kanpur/Lucknow were instantly claimable). Built, unit-tested (6 new `FiefPetitio
 - **T7.** Save/load: a standing petition persists (tier, stakes, filed day). Old save: no
   petition; the menu option now files rather than instant-grants.
 
-## U. Darbar petition court (`DarbarPetitionBehavior`; sovereign's Darbar → "Hear a petition")
+## U. Darbar petition court AS DIALOGUE (`DarbarPetitionBehavior`; sovereign's Darbar → "Hear a petition")
 
-*New this wave (2026-07-11) — the first user of the `CourtRuling` opinion record (defined long
-ago, never written until now). Built, unit-tested (6 new `DarbarCourtMathTests`, 336 green),
-never run live. Requires you to be a sovereign.*
+*Round-4 REWORK (2026-07-12) of the inquiry-screen version the playtest called shallow. The
+sitting now runs as a CHAIN OF CONVERSATIONS before the throne: the plaintiff speaks, the
+defendant answers, your advisor counsels, and you speak the judgment. Same tested outcome math
+(`DarbarCourtMath`, CourtRuling records). The conversation chain itself is UNVERIFIED LIVE —
+this is the riskiest new engine path of round 4 (map conversations chained through a tick pump).*
 
-- **U1.** As a sovereign, court menu → "Hold court and issue decrees" → "Hear a petition and
-  render judgment". A grounded case appears drawn from YOUR realm: a boundary dispute between two
-  village zamindars, OR a raided village's plea (needs a high-threat village — force via
-  `hindostan.set_village_threat 60`), OR a quarrel between two notables. `hindostan.darbar_petition`
-  forces a sitting (bypasses the 3-day cooldown).
-- **U2.** **Dispute case:** four rulings — for plaintiff / for defendant / compromise / dismiss.
-  Rule for one side → he warms to you (a "judgement at court" record, +relation), the other cools
-  (negative record, −relation); you gain influence, a little legitimacy. Compromise → both warm
-  slightly but you SPEND influence. Dismiss → both cool and you LOSE legitimacy.
-- **U3.** **Plea case:** grant relief (deep gratitude + legitimacy), refer to the local lord
-  (mild), or turn away (the petitioner sours, legitimacy drops). Verify the plaintiff's disposition
-  toward you moves accordingly.
-- **U4.** **The CourtRuling record:** after a ruling, check the parties' encyclopedia "Disposition
-  toward you" — a favoured party shows "a judgement at court" (positive); a party ruled against
-  shows it negative, making him a grievance-dialogue target (playtest H3).
-- **U5.** **Cooldown:** immediately after a sitting the option is greyed ("the docket is thin…")
-  for 3 days. Save/load preserves the cooldown day. With no eligible parties (a tiny, vassal-less
-  realm), "No petitioner brings a case worth the crown's time."
+- **U1.** As a sovereign in your town/castle, court menu → "Hold court and issue decrees" →
+  "Hear a petition and render judgment" (`hindostan.darbar_petition` bypasses the 3-day cooldown).
+  A CONVERSATION opens with the **plaintiff** (a zamindar / a raided village's notable / a market
+  notable, drawn from your realm), who states his case in his own words.
+- **U2.** **Act I — the plaintiff:** press him ("what proof do you bring?") → he answers once (the
+  option then disappears). Options: call the accused forward (disputes), take counsel (pleas, if
+  an advisor is seated), judge directly (pleas with no advisor), or adjourn.
+- **U3.** **Act II — the defendant** (disputes): the accused's conversation opens on its own a
+  beat after the plaintiff's closes (**verify the chain doesn't stall here** — if it does, that's
+  the finding). Press him to swear; then judge directly, take counsel, or adjourn.
+- **U4.** **Act III — the advisor:** if your council seats a wazir (or diwan), "take counsel"
+  opens HIS conversation: political advice leaning toward whichever party HE likes better (or the
+  middle way) — defy it freely. Judgment options appear here too, as spoken rulings ("The throne
+  has heard…").
+- **U5.** **Outcomes (unchanged math):** rule for one side → he warms ("a judgement at court"
+  record, +relation), the other cools; influence up, a little legitimacy. Compromise → both warm
+  slightly, influence SPENT. Dismiss → both sour, legitimacy LOST. Plea: grant (deep gratitude +
+  legitimacy) / refer (mild) / turn away (sours, legitimacy drops). Check the encyclopedia
+  "Disposition toward you" rows afterward (grievance-dialogue fodder, H3).
+- **U6.** **Abandonment safety:** ESC-ing out mid-testimony adjourns the sitting cleanly ("without
+  judgment"); the adjourn option does the same; no stuck state, no re-opened conversation. The
+  cooldown still applies (the docket was spent). Save/load mid-sitting is impossible (conversations
+  block saving); after any load there is no lingering sitting.
+- **U7.** With no eligible parties (a tiny, vassal-less realm): "No petitioner brings a case worth
+  the crown's time."
 
 ## V. Zat/sawar split ranks (`MansabdariBehavior` display + stipend)
 

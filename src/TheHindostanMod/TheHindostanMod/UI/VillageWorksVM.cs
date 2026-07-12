@@ -21,7 +21,7 @@ namespace TakhtyaTaboot.UI
         private MBBindingList<VillageProjectItemVM> _projects;
         private string _titleText, _statsLine, _cofferLine, _activeLine, _queuedLine, _builtLine;
         private bool _hasActive;
-        private int _barWidth;
+        private float _barWidth;
         private bool _canCollect;
 
         public VillageWorksVM(Settlement village, Action onClose)
@@ -51,7 +51,7 @@ namespace TakhtyaTaboot.UI
             ActiveLine = HasActive
                 ? $"Under construction: {activeName} — {(int)(done * 100f)}%  ({daysLeft} day(s) left)"
                 : "No work is under way. The masons stand idle.";
-            BarWidth = HasActive ? Math.Max(6, (int)(done * BarFullWidth)) : 0;
+            BarWidth = HasActive ? Math.Max(6f, done * BarFullWidth) : 0f;
 
             string queued = dev.GetQueuedWorkName(s);
             QueuedLine = string.IsNullOrEmpty(queued) ? "" : $"Queued next: {queued} (charged when work begins)";
@@ -105,8 +105,13 @@ namespace TakhtyaTaboot.UI
         [DataSourceProperty]
         public bool HasQueued => !string.IsNullOrEmpty(_queuedLine);
 
+        // FLOAT, not int: this binds to a widget's SuggestedWidth, a float on the Gauntlet side,
+        // and Gauntlet also writes the value BACK into the VM. Invoking set_BarWidth(Single)
+        // against an int property throws inside invoke, which then broke ExecuteAct and crashed
+        // the game (the mosque-build crash of 2026-07-12). Any VM property bound to a widget
+        // layout attribute must match the widget-side type exactly.
         [DataSourceProperty]
-        public int BarWidth { get => _barWidth; set { if (_barWidth != value) { _barWidth = value; OnPropertyChangedWithValue(value); } } }
+        public float BarWidth { get => _barWidth; set { if (_barWidth != value) { _barWidth = value; OnPropertyChangedWithValue(value); } } }
 
         [DataSourceProperty]
         public bool CanCollect { get => _canCollect; set { if (_canCollect != value) { _canCollect = value; OnPropertyChangedWithValue(value); } } }

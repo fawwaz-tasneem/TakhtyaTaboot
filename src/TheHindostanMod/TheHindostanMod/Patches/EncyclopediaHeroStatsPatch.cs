@@ -75,6 +75,10 @@ namespace TakhtyaTaboot
             // since valour is a player mechanic the AI does not use.
             if (hero.Clan == Clan.PlayerClan && MansabdariBehavior.Instance != null)
                 Row(vm, "Valour earned", $"{MansabdariBehavior.Instance.GetValour(hero.Clan):0}");
+
+            // The akhbaar registers: a scout on his trail, or his last reported whereabouts.
+            if (hero.Clan != Clan.PlayerClan)
+                Row(vm, "Akhbaar", AkhbaarScoutBehavior.Instance?.RegisterLine(hero));
         }
 
         // The dynasty layer: a prince or princess of a reigning (or fallen) line carries

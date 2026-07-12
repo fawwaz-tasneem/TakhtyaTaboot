@@ -11,7 +11,7 @@ namespace TakhtyaTaboot.UI
         private string _name;
         private string _subtitle;
         private string _detail;
-        private int _indentWidth;
+        private float _indentWidth;
         private bool _isClickable;
 
         public CouncilEntryVM(string name, string subtitle, string detail, bool isClickable, Action onActivate)
@@ -36,8 +36,11 @@ namespace TakhtyaTaboot.UI
         [DataSourceProperty]
         public bool HasDetail => !string.IsNullOrEmpty(_detail);
 
+        // FLOAT, not int: bound to a widget's SuggestedWidth (a float), and Gauntlet writes the
+        // value back into the VM — set_IndentWidth(Single) against an int throws inside invoke
+        // (the same trap that crashed the works ledger; see VillageWorksVM.BarWidth).
         [DataSourceProperty]
-        public int IndentWidth { get => _indentWidth; set { if (_indentWidth != value) { _indentWidth = value; OnPropertyChangedWithValue(value); } } }
+        public float IndentWidth { get => _indentWidth; set { if (_indentWidth != value) { _indentWidth = value; OnPropertyChangedWithValue(value); } } }
 
         [DataSourceProperty]
         public bool IsClickable { get => _isClickable; set { if (_isClickable != value) { _isClickable = value; OnPropertyChangedWithValue(value); } } }

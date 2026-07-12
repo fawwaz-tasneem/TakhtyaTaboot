@@ -49,6 +49,7 @@
 | Siege parley (bribe / terms / honour-or-defy) | `SiegeParleyBehavior` | `SiegeParleyMath` | — | — |
 | Akhbaar scouts (dispatch from court menu OR encyclopedia → timed akhbaar report; updates the hero's NATIVE "Last seen" + the Akhbaar info row) | `AkhbaarScoutBehavior` (+ `UI/EncyclopediaHeroAkhbaarMixin` buttons) | `AkhbaarMath` | `hind_akhbaar_*` | `akhbaar_status`, `akhbaar_arrive`, `akhbaar_send` |
 | Qasid messengers (encyclopedia dispatch → audience opens AS IF PRESENT: the full dialogue tree; waits for map, never interleaves the darbar court) | `MessengerBehavior` | `MessengerMath` | `hind_qasid_*` | `qasid_status`, `qasid_arrive` |
+| Historical cast (66 cross-referencing lord biographies in heroes.xml; ~60-pair relations web + trait assignments applied ONCE per campaign; main quest re-themed onto Alamgir's Deccan folly via hindostan_story_overrides.xml — Alam of Timur, Wagingera, Zinat-un-Nissa/Khando Ballal mentors, Indian family names) | `HistoricalCastBehavior` | `HistoricalCast` (pure table, 8 tests) | `hind_cast_applied` | `cast_reapply` |
 | Accession war (player) / AI civil war | `AccessionWarBehavior`, `CivilWarBehavior` | `CivilWarMath` | `hind_acc_*`, `hind_cw_*` | `force_accession_win`, `force_ai_civil_war`, `civil_war_status` |
 | Revolts | `RevoltCascadeBehavior` | — | — | — |
 | Nazrana gift cycle | `NazranaBehavior` | `NazranaMath` | `hind_naz_*` | — |

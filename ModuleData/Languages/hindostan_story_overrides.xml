@@ -1,0 +1,334 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ══════════════════════════════════════════════════════════════════════════════════
+     THE HINDOSTAN MOD — story & world-name overrides (round 7, the historical overhaul).
+
+     Re-themes the StoryMode main quest onto REAL Mughal history and finishes the
+     Calradia sweep. The mapping, used consistently throughout:
+
+       Calradia                    → Hindostan
+       Emperor Neretzes            → Alamgir (Aurangzeb), the old Padishah
+       Neretzes' Folly             → Alamgir's Folly — the 25-year Deccan war
+       Battle of Pendraic (1077)   → the storming of Wagingera (1705), Alamgir's last siege
+       Dragon Banner of Calradios  → the Alam of Timur, the dynastic war-standard
+       Calradios the Great         → Amir Timur
+       Arenicos (murdered heir)    → Farrukhsiyar (deposed & killed 1719 by the kingmakers)
+       Raganvad / Olek anecdote    → prince Bedar Bakht / Daler Khan the Rohilla
+       king Vadinslav (Sturgia)    → Mir Wais Hotak (Afghans)
+       king Caladog (Battania)     → Santaji (Marathas)
+       king Derthert (Vlandia)     → Ajit Singh Rathore (Rajputs)
+       Rhagaea / Garios / Lucon    → Muhammad Shah (Delhi) / Asaf Jah (Deccan) / Murshid Quli Khan (Bengal)
+       Istiana (imperial mentor)   → Zinat-un-Nissa Begum, Alamgir's daughter
+       Arzagos (rebel mentor)      → Khando Ballal, veteran of the Maratha wars
+       Radagos (raider chief)      → Raghu Das
+       Tacteos (wandering doctor)  → Tek Chand
+       Galter                      → Gulzar
+
+     The coalition of the folly, in this telling: the Maratha bands (battania) in the
+     wooded ghats, Afghan mercenaries who turned their coats (sturgia), and the Rajput
+     contingents (vlandia) that abandoned the imperial cause — against the grand camp
+     with its hired Sikh horse (khuzait) and Deccani lancers of Mysore (aserai).
+     ══════════════════════════════════════════════════════════════════════════════════ -->
+<base xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" type="string">
+  <strings>
+
+    <!-- ════════ THE PLAYER'S FAMILY — Indian names per culture ════════ -->
+    <!-- father -->
+    <string id="776J8Fng" text="Mirza Baqir" />
+    <string id="QZHSvGrD" text="Bhoj Singh" />
+    <string id="4IZnbvlD" text="Baji Patil" />
+    <string id="Sfd3aqia" text="Buddh Singh" />
+    <string id="XsIq2RFs" text="Bahadur Khan" />
+    <string id="GCqWwDWg" text="Basappa" />
+    <!-- mother -->
+    <string id="yvdQ9MD6" text="Taj Begum" />
+    <string id="X7Xp9xGe" text="Tara Bai" />
+    <string id="EhELIf65" text="Tulsa Bai" />
+    <string id="opUBnFym" text="Tej Kaur" />
+    <string id="Z33uQl2f" text="Torpekai" />
+    <string id="DELVwiEM" text="Devamma" />
+    <!-- elder brother -->
+    <string id="4kBdT24F" text="Nadir" />
+    <string id="dFpNRB1g" text="Nahar Singh" />
+    <string id="C8NDynaB" text="Nilkanth" />
+    <string id="JDtbzwB0" text="Nihal Singh" />
+    <string id="CaCfbRJq" text="Nur Khan" />
+    <string id="m2uEbrkh" text="Nanjaraj" />
+    <!-- little brother -->
+    <string id="CONYULU6" text="Parviz" />
+    <string id="8YvBapxl" text="Veer" />
+    <string id="w4Ajm40u" text="Khando" />
+    <string id="WTF4ZIe7" text="Jassa" />
+    <string id="NWxC3CbS" text="Feroz" />
+    <string id="at4MdVBJ" text="Fateh" />
+    <!-- little sister -->
+    <string id="OA9bQ8QJ" text="Aisha" />
+    <string id="3Y5dudW9" text="Amba" />
+    <string id="IcBq2jSZ" text="Ahilya" />
+    <string id="MgBazeaE" text="Amrit Kaur" />
+    <string id="pAf5Mt3X" text="Alia" />
+    <string id="q65JaEBW" text="Alamelu" />
+
+    <!-- ════════ QUEST NPC NAMES ════════ -->
+    <string id="O8QblvbQ" text="Tek Chand" />
+    <string id="No2HgX5E" text="Raghu Das" />
+    <string id="IMwAoSax" text="Raghu Das's Dacoit" />
+    <string id="uCmEaWOI" text="Zinat-un-Nissa" />
+    <string id="daOtjNZp" text="Khando Ballal" />
+    <string id="SLxnu4XO" text="Gulzar" />
+
+    <!-- ════════ THE MAIN QUEST — Alamgir's Folly ════════ -->
+
+    <!-- Quest titles / objectives -->
+    <string id="zLRlmitp" text="Investigate 'Alamgir's Folly'" />
+    <string id="y84UnOQX" text="Assemble the Alam of Timur" />
+    <string id="qV1e0x8i" text="What is 'Alamgir's Folly'?" />
+    <string id="6UIa4784" text="Can you tell me anything about the storming of Wagingera?" />
+    <string id="r8ZLabb0" text="I have gathered all pieces of the Alam of Timur. What now?" />
+    <string id="WTjAYUoD" text="Find Another Piece of the Alam for Zinat-un-Nissa" />
+    <string id="ay1gPPsP" text="Find Another Piece of the Alam for Khando Ballal" />
+    <string id="GxlPj4GC" text="Find the hideout that Zinat-un-Nissa told you about and get the next piece of the Alam." />
+    <string id="wvHvnEog" text="Find the hideout that Khando Ballal told you about and get the next piece of the Alam." />
+    <string id="5K4wvz3w" text="Find and meet {HERO.LINK} to learn more about the Alam of Timur. He is currently in {SETTLEMENT}." />
+    <string id="h9VP4ypW" text="Find and meet {HERO.LINK} to learn more about the Alam of Timur. She is currently in {SETTLEMENT}." />
+    <string id="OS8YjyE5" text="You should collect all of the pieces of the Alam of Timur before deciding your path." />
+    <string id="qNR8WKcX" text="You should join a kingdom before supporting it with the Alam of Timur." />
+    <string id="ysRVZiA6" text="As you explore Hindostan, you can learn more about your artifact and its importance by asking any lord or lady about the Empire's recent history." />
+    <string id="4d5SP6B6" text="{MENTOR.LINK} suggested that you should support a kingdom set against the Mughal throne by offering it the Alam of Timur." />
+    <string id="TZZX9kWf" text="{MENTOR.LINK} suggested that you should support one of the imperial successor courts by offering it the Alam of Timur." />
+    <string id="atUTLABh" text="You have chosen to support the {KINGDOM} by presenting them the Alam of Timur, taking the advice of {MENTOR.LINK}." />
+    <string id="kqj1Wp0f" text="You have decided to keep the Alam of Timur within the kingdom you are ruling." />
+    <string id="eH8z6Fws" text="Despite its Alam of Timur, the {PLAYER_SUPPORTED_KINGDOM} has been destroyed!" />
+    <string id="eNJBjYG8" text="You successfully assembled the Alam of Timur." />
+    <string id="YxEcX6pS" text="On {DAY_OF_YEAR}, {YEAR}, you found a second piece of the Alam of Timur." />
+    <string id="0wQlpbtL" text="In order for the Mughal Empire to go into its final decline, there should be fewer than {NUMBER} imperial-owned settlements. If this happens, another kingdom can become the dominant power in Hindostan." />
+
+    <!-- The Alam's legend -->
+    <string id="40oa2Nav" text="The Alam of Timur is part of a legend. They say it was carried by Amir Timur himself when he crossed the Indus, and by Babur at Panipat when he won Hindostan with twelve thousand men. They say that, so long as it flies over a true heir of the House of Timur, his army shall never be defeated in battle. Or an heiress, I imagine, although that has never come up.[ib:confident][if:convo_undecided_closed]" />
+    <string id="SmVwMrUM" text="The Alam of Timur is part of a legend. It was said to be carried by Amir Timur, who first led his horsemen over the Indus to conquer and despoil. The legend says that no army led by a true heir of Timur shall be defeated in battle.[ib:confident2][if:convo_thinking]" />
+    <string id="cNwejsNl" text="Convenient legend, eh? Of course the armies of the Timurid line have been defeated many times, but I guess those were not 'true heirs.' Still, you could say it represents the strength and endurance of this empire.[ib:normal][if:convo_focused_happy]" />
+    <string id="tfm5hcks" text="I believe I have a piece of the Alam of Timur." />
+    <string id="Ke7f4XSC" text="I present you with the Alam of Timur." />
+    <string id="N5jJtZyr" text="As the nemesis of the Mughal throne, I am ready to declare my ownership of the Alam of Timur." />
+    <string id="O2BAcMNO" text="As the legitimate {?PLAYER.GENDER}Empress{?}Emperor{\?} of Hindostan, I am ready to declare my ownership of the Alam of Timur." />
+    <string id="exoZygYL" text="Very well. The Alam of Timur in your hands proclaims you the avenger of the empire's crimes and its successor. Now go forth and claim your destiny![if:convo_calm_friendly]" />
+    <string id="gL241Hoz" text="Very nice. Superstitious twaddle, of course, but people will believe you. Very well, oh heir of Timur, go forth![if:convo_nonchalant]" />
+    <string id="4olAbDTq" text="It will be a powerful tool in our hands. People will believe that the Heavens have transferred dominion over Hindostan from the House of Timur to us.[if:convo_pondering]" />
+    <string id="ULn7iWlz" text="It will be a powerful tool in our hands. People will believe that the Heavens intend us to restore the empire of Hindostan.[if:convo_pondering]" />
+
+    <!-- What was the folly? -->
+    <string id="hFYG3lXw" text="Well, that's what some people call the storming of Wagingera in the year 1705 — the last siege of Alamgir's long Deccan war.[ib:normal][if:convo_normal]" />
+    <string id="Y6OJHdMH" text="I am a busy man, but there is always time to talk about the blessed storming of Wagingera.[if:convo_mocking_teasing][ib:confident3]" />
+    <string id="vJyTsFdU" text="It doesn't look like much and I suspect this lot would give it away for a few coins, but I got it from a mercenary whom I treated once, and swore it was related to 'Alamgir's Folly'. I don't know what that means, except that Alamgir was, of course, the old Padishah whose Deccan war killed him by inches. Maybe you can find out its true value.[if:convo_calm_friendly]" />
+    <string id="bhQ6Jbom" text="You come across a chest with an old piece of bronze in it. It's so battered and corroded that it could have been anything from a cup to a crown. This must be the chest {TACTEOS.NAME} mentioned to you, that had something to do with 'Alamgir's Folly'." />
+    <string id="TKpFB4qN" text="Alamgir led the grand imperial camp — with hired Sikh horse and Deccani lancers of Mysore riding in his pay — against the fortress of Wagingera, while the Maratha bands, the Berad matchlockmen, and the Afghan companies who turned their coats made the country around it a graveyard." />
+    <string id="BstbQV5Z" text="It was a tragedy that gnawed at the roots of all the great families of Hindostan, even ours, so far away from the battle.[if:convo_annoyed][ib:normal2]" />
+
+    <!-- Veterans' testimonies — the imperial side -->
+    <string id="yRAl8YRL" text="Yes. I was a junior officer on Alamgir's staff. People say much about the campaign that betrays a lack of understanding, of Alamgir and of the circumstances he faced.[if:convo_undecided_closed][ib:closed]" />
+    <string id="CRmUZvaW" text="Perhaps Alamgir was rash, sending our columns up into the ravines to storm the outworks. But he thought he could take Wagingera quickly, before the Maratha horse had time to close the roads. If he had made the other wager and that turned out to be wrong, people would say he was hesitant.[ib:demure2]" />
+    <string id="Os79KwFa" text="I was with the vanguard. Alamgir apparently knew that the Marathas had laid an ambush in the ghats - the Sikh riders in our pay had told him. But he never bothered to inform us. So up we went, along a lovely wooded stream, until the Berad musket-balls started whistling in from all sides.[if:convo_bored2][ib:normal2]" />
+    <string id="AGIPUYvy" text="We had our shields but you can only point them in one direction at once. So we started to drop, one by one, until the Maratha bargirs came screaming down out of the scrub. Ordinarily they'd be very vulnerable to matchlock fire, but, well, old Alamgir hadn't thought to send any gunners along with us. So they came upon us, cutting and slashing, and we fought until we broke." />
+    <string id="4IS4Lou7" text="I ran too. And any man who tells you he wouldn't, in those circumstances, is a liar. When I was sitting in the cold ravine later that night, hiding with other fugitives, listening to the bands whoop and holler as they took heads for trophies - I promised them that no soldier of Hindostan should again be led into battle by a Padishah who has stopped listening to his own scouts.[if:convo_thinking][ib:hip]" />
+    <string id="wajioDaK" text="I stayed by the imperial standard until we were forced back to the camp lines, and then fought on the barricades. Eventually we could hold them no longer. I did not see what happened to the Alam. Farrukhsiyar's grandfather's men got us out of there, and got us home. I had not respected that house before, but that day I saw they were worthy of the throne." />
+    <string id="AhWyBEhd" text="He was one of the Padishah's trusted commanders. He could not stop Alamgir from marching to ruin, but he managed to salvage something from the disaster. When the Afghan companies came over our barricades, he managed to lead a group of the camp's guardsmen out the back." />
+    <string id="iQrwsvb1" text="We had no choice but to go to war. Anyone who tells you they would have done otherwise is either a liar or a coward or both. The Deccan defied the throne, and needed to be chastised. We lost an army and the Alam. But we did not lose our honor, and without honor the empire would be finished." />
+    <string id="bWdsH2Ls" text="This is what I learned from a lifetime in politics: There is nothing worse than disorder. Suffice to say that I know better than anyone about the lies and cruelty that kept the empire alive. But all the murders I ever committed in ten years of serving Alamgir do not amount to the death toll in a single hour when an army storms a town.[if:convo_snide_voice]" />
+    <string id="GDNXavAl" text="There's nothing special about our empire. [if:convo_calm_friendly]Any one of these petty rajas and nawabs and sultans could probably get lucky and conquer Hindostan and do as good a job ruling it as we did. But the point is - we already did it. Our greatest crimes are in the past. Let us not undo what has already been done." />
+    <string id="aYozMy3Z" text="We lost because the Rajput contingents abandoned us, and withheld their lances when they should have ridden with us. I was given command of the heavy horse, and we easily broke the Berad skirmishers. Their sharpshooters gave us more trouble. Meanwhile, the Afghan companies turned their coats and attacked our main force. That's where my father fell." />
+    <string id="kYtRsxSL" text="We fought before the walls. We won our corner of the field, but there was a great slaughter. My husband's horse was slain and he was ridden down, though he died amid a pile of the enemy's dead. Elsewhere the old Padishah's heart was breaking - within the year Alamgir was dead in his camp, and no one had been paid." />
+    <string id="flGyoqa6" text="It was the Afghan companies who met the camp guard face-to-face. My father ordered me to stay back as he led them into battle, but he was at their head. He forced them back, then they broke and ran for the shelter of their lines. We went and attacked their barricades, and broke them, but my father was hit by an imperial mace at the moment of his triumph and died." />
+
+    <!-- The murdered emperor (Arenicos → Farrukhsiyar) and the succession -->
+    <string id="9aYCfBVz" text="Shahjahanabad was in a state of panic after hearing rumors of what happened. Farrukhsiyar's house kept things from descending into chaos. When it came time for the court to read the khutba for a new Padishah, there was no question whose name it should carry. I loved him before as a man, but that day learned to love him as something more: what a gift he was to the people of Hindostan![ib:demure2]" />
+    <string id="cYibaPhn" text="The bands just kept coming and coming. I fought my way out with some loyal men, and made my way back toward Delhi. But I found that Farrukhsiyar's faction had got there before me, and had him proclaimed Padishah. His backers always were cunning operators." />
+    <string id="sn3Eabme" text="Of course. I did not witness the campaign, but my husband Farrukhsiyar spoke frequently of it.[if:convo_calm_friendly]" />
+    <string id="DuUhVWaV" text="Let me tell you about myself... I was a confidant of my father, the old Padishah Alamgir. Officially I was not his spymaster, as I am a woman, but that was the role I played nonetheless. I loved my father, and was grateful for his trust, but he was not a good emperor by the end. Too stubborn and principled. The Deccan war should have been ended twenty years before it killed him.[ib:demure2][if:convo_empathic_voice]" />
+    <string id="HOb07MJF" text="I don't know much about it. I know two who might, though. {IMPERIAL_MENTOR.LINK} - she was the old Padishah's unofficial spymaster, and his daughter. Then there's {ANTI_IMPERIAL_MENTOR.LINK}. He rode against the imperial camp in the Deccan war, and people say now he's very different than he was back then." />
+    <string id="p4qJ4KSm" text="If you want more information, there are two people you might try to speak to. {IMPERIAL_MENTOR.NAME} worked as a sort of unofficial spymaster for old Alamgir. She lives near {IMPERIAL_MENTOR_SETTLEMENT}." />
+
+    <!-- The claimants -->
+    <string id="oL9BdThD" text="Choose one and pledge allegiance. When this struggle began, I was a bit torn... Muhammad Shah in Delhi holds the name and the khutba, Asaf Jah is probably the ablest man alive, and Murshid Quli Khan's Bengal is the treasury of the world. But you can make up your own mind." />
+    <string id="UCoOMWaj" text="As I said before, there's a case for all of the claimants. When this struggle began, I thought Muhammad Shah understood best how to reign, Asaf Jah was the strongest hand, and Murshid Quli Khan had the firmest grasp of what actually pays for a throne.[if:convo_empathic_voice]" />
+
+    <!-- The banner-breaking anecdote (Olek/Raganvad → Daler Khan/Bedar Bakht) -->
+    <string id="sSaZVD2e" text="My father carried the Alam out of the wreck of the imperial camp - it's a famous story - but then the young prince Bedar Bakht tried to claim it for his own train. My father broke the staff over his knee, threw it at him, and told him to get his own toys to play with. Hah! It was a good, good day.[if:convo_huge_smile]" />
+    <string id="ZkSthA9d" text="They say Daler Khan the Rohilla pried the Alam from the wreck of the camp. But then prince Bedar Bakht, who had not so much as drawn his sword in the fighting, claimed it as a trophy. Daler Khan, who was covered in his enemies' blood, laughed at him and told him to go find his own toy to play with. The prince struck him, so Daler Khan broke the banner staff over his knee and threw it in his face." />
+    <string id="X3pDRmjK" text="A victory, won by my father, claimed by prince Bedar Bakht.[if:convo_annoyed][ib:warrior2]" />
+
+    <!-- The Maratha side (battania) -->
+    <string id="XEuhxpCX" text="Now, the imperials use tricks and traps in war. No Maratha fears to meet an imperial soldier, man-to-man, but we thought it would be a good laugh to use their tricks against them. So we laid an ambush, on both sides of a wooded ghat, and wouldn't you know? They marched right into it.[if:convo_happy]" />
+    <string id="aMBoh7gL" text="They turned and twisted as our musket-balls rained down upon them, like fish going frantic in a pond as you draw the net tighter. Then, when they were greatly discomfited, we drew our talwars and rode down the harvest. Oh, there was some unpleasantness later with the Afghan companies, about the spoils of war, but what a grand old day it was![if:convo_relaxed_happy]" />
+    <string id="4Oc6MEvR" text="Ah... For any son of the Deccan, there will be no prouder moment in his life than that day. Any true son of the Deccan, anyway.[if:convo_calm_friendly][ib:hip]" />
+    <string id="vjOHmHOH" text="The ambush... Masterfully planned and executed, that none can deny. But I will also not deny that the Afghan companies fought the main body of the imperial forces, and the Berads broke their famous cavalry, so I don't think the greatest glory went to the sons of the Deccan.[if:convo_contemptuous]" />
+    <string id="lIArdHty" text="Yes. The day my father died, thanks to Maratha treachery.[if:convo_annoyed][ib:convo_hip2]" />
+    <string id="3BjIb3CG" text="Or perhaps it was just prince Bedar Bakht. He was stewing in his anger when up comes Santaji of the Maratha bands. The Marathas had taken their time stripping the bodies of the imperial vanguard and the Afghans were angry at them, so the prince called him a coward. Santaji sneers at him and walks off." />
+
+    <!-- The Afghan side (sturgia) -->
+    <string id="6qgXAcZB" text="Alamgir, when he heard we were bargaining over our pay, sent us a message calling us cowards and traitors. And you say that to an Afghan sardar at your peril. Alamgir should have known what he was doing. We took the Deccan's silver instead.[if:convo_undecided_closed]" />
+    <string id="scjogyUD" text="Old Mir Wais was brave enough. He led us all into battle. I stood at my father's side as we faced the imperials eye-to-eye over the tops of our shields. It was like any battle where the lines lock - thrust and push, struggling to stay on your feet, but you can't really describe it. Let's just say it's the kind of battle that Afghans usually win.[ib:confident2]" />
+    <string id="A9fChKmz" text="The empire was an old bear. Well-fed, slow-moving. It wanted to keep what it had. The Afghans were, and are, hungry wolves. Like us. Sometimes wolves hunt in packs, and sometimes they don't. Sometimes one wolf wants the lion to kill his rival." />
+    <string id="kJxPtbHo" text="At the end of the day, what have we gained? The Marathas trust us less than ever. The Rajputs too. The empire, I suppose, is shattered. What can I say... I believe that wars should have a goal. But I am a minority, it seems, among our people.[ib:closed]" />
+    <string id="RtryETdA" text="When they pledged to share the field with us, we believed they would stand with us in the line, like men. But of course this is not the Maratha way. They sprung some hill-country trickery up in the ghats, killed off the imperial vanguard, and no doubt spent the rest of the battle whooping and boasting and taking the heads of men who were already dead.[if:convo_angry]" />
+    <string id="bdbZLJf3" text="Alamgir had an obligation to avenge the raids on the imperial roads. He marched out, with all the forces he could gather. The Rajputs abandoned us, but that's what you expect when a throne has spent thirty years insulting them. Fortune favored the enemy. What matters is that we did what honor required.[if:convo_thinking]" />
+    <string id="Zz6IvIH9" text="The empire had left us alone for a while, and Alamgir was offering silver for men, so I thought, 'Why not? Let them help the empire.' Ah, I should have known. The best course with wars is to have as little to do with them as you possibly can." />
+    <string id="L1V8L2N1" text="Yes. The Padishah Alamgir had offered to hire our warriors as mercenaries. I saw nothing wrong with that.[ib:confident3][if:convo_bored]" />
+
+    <!-- The Rajput side (vlandia) -->
+    <string id="vaLehwRl" text="We had given an oath to the empire, to ride with it when called. It seemed clear to me that we should have honored our oath, whatever the throne's insults, but, there is always room to argue details. Ultimately our thakurs did not wish to bleed for a Padishah who taxed our temples, so they resisted coming to his help.[if:convo_undecided_closed]" />
+    <string id="WN1tHPnB" text="We should have ridden on Delhi itself. If Ajit Singh had pressed his hand, we'd have done so. But his heart was never in open rebellion. He believed he'd broken his oath to the empire by standing aside, and it gnawed at him. He'd have made a fine courtier. Instead he's our king.[if:convo_contemptuous]" />
+    <string id="duD8SJDb" text="Our riders spotted a mass of Deccani light infantry spread across a valley, and charged them. They weren't ready to meet the onslaught, and were routed. But then the hired Sikh horse showed up and kept their distance, shooting the horses out from under our men. That's when we showed up." />
+    <string id="sejEf69A" text="I have heard no sweeter music than the thunder of our hooves as we bore down on the camp's rabble. We fell on them like a falcon plunges upon a rabbit.[if:convo_bemused]" />
+
+    <!-- The Sikh riders (khuzait) -->
+    <string id="NGbgfPoP" text="I was there. Many of the misls sent riders. Mostly the Nakai, who were hungry for silver and glory, but I was also young and hungry for glory so I went along as well.[ib:demure2][if:convo_bored]" />
+    <string id="KYW1UiKm" text="The Nakai were never the richest of the misls, but we made up for it with our valor. When word spread that the Padishah was promising silver for men to ride at his side, against the Marathas and the Berads and others, of course our young brave boys leapt at the chance. My husband, the bravest and best of them all, led them." />
+    <string id="UVuwofhS" text="Misls rise, misls fall. My duty is to all the Panth. Look at it this way. Were it not for her husband's death, Mai Bhago would never have led the riders home. Death creates opportunity. The survivors of a great battle make a great show of mourning, but inside they rejoice.[ib:closed][if:convo_mocking_revenge]" />
+    <string id="Lep5YKdt" text="While the imperial vanguard was getting slaughtered in the ghats, we met the Rajput riders. But they brought their matchlock men, and our horse took heavy losses. Eventually the armored imperial cuirassiers showed up, and rolled over the guns. But we were caught in a melee with the Rathore lancers, and that was where things got bloody." />
+
+    <!-- The Mysorean lancers (aserai) -->
+    <string id="aGX3L8mV" text="We heard that the empire was making war in the Deccan, or maybe it was the other way around. I thought that we had no stake in this quarrel but Nanjaraj, a fiery young hero of the Kalale house, asked me for permission to take some young warriors, eager for glory." />
+    <string id="dWVsS3D8" text="The bravest and most valiant son of our house, Nanjaraj, led off a large troop of Mysorean lancers to fight for the empire, for gold and glory. I went with them. When we saw the Berad marksmen come down from the rocks, Nanjaraj was ready. He gave the word: we held our shields over our heads as the balls rained down, then threw our lances and charged. We cut them down." />
+    <string id="EOSyvdFG" text="Then the Rathore lancers came. We were attacked on two sides and the Padishah, who could have sent men to save us, took his time. Perhaps he wanted the best of Mysore to die, lest we become too powerful later. But that betrayal was nothing compared to what we received from our own countrymen of the Sira house." />
+    <string id="Xg6jhfPt" text="Nanjaraj returned, in well-deserved glory. A daughter of the Sira house took an interest in him, and they had a secret affair, as the youth sometimes do. As heroes do. But his acts wounded the Sira house's pride. They kidnapped him, slew him and hung him in a cage in their market. We will forgive the empire and the Rajputs. The house of Sira... better not ask me that.[if:convo_contemptuous][ib:confident]" />
+
+    <string id="kw9sltab" text="The Marathas had laid an ambush up in a wooded ghat for the imperial vanguard, and the Berad marksmen and the turncoat Afghan companies were to come sweeping down on the flanks. Our scouts found the ambush, but Alamgir did not listen, and blundered into it anyway." />
+    <string id="MREvo37b" text="If you can keep an eye out for him, this Tek Chand, we'd be very grateful. Maybe, if he's alive and well, he'll tell you a little more about his 'quest.'[if:convo_normal]" />
+
+    <!-- Radagos → Raghu Das (tutorial arc) -->
+    <string id="0I9siaQY" text="Bastards... You're the kin of my captives, right? I saw {RADAGOS.LINK} with you. You know he can't be trusted?[if:convo_confused_annoyed][ib:aggressive]" />
+    <string id="9xaEPyNV" text="{RADAGOS.NAME}'s Hideout" />
+    <string id="ZhZ7MCeh" text="Well. I recognize defeat when I see it. If I'm going to be your captive, let me introduce myself. I'm Raghu Das.[ib:weary2][if:convo_uncomfortable_voice]" />
+    <string id="ehnbi5yD" text="I am afraid I haven't seen any children. But after our caravan was attacked, the chief of the dacoits, the one they call Raghu Das, took and rode off with our more valuable belongings, including a chest that I had.[ib:closed][if:convo_empathic_voice]" />
+    <string id="datALLCZ" text="When our lads came back, and said you'd led them to victory over Raghu Das and his gang, we thought the danger had passed. But it looks like we rejoiced too soon. A few desperate dacoits got away, and now they have our headman. They're demanding a ransom - a half-dozen horses and ten sacks of grain. After all their theft and villainy we have no horses at all, sirs, and the grain would leave us nothing to plant!" />
+    <string id="sbX4fQ0R" text="A boy came to your camp and told you some of Raghu Das's men returned to {VILLAGE_LINK} and took the headman hostage." />
+    <string id="lVfxJkYb" text="You and your brother part ways. As he rides over the crest of a hill, he lifts his arm in salute, then disappears from view. A few days ago you were a family of six. Now, you are alone, and you realize that despite your courage and determination you and your brother may never see each other again.{newline}However, you are not left long in your solitude. As you make the final preparations to set out, a young boy whom you recognize staggers into your camp. Once he regains his breath, he explains: a small band of Raghu Das's men escaped the showdown at his hideout, returned to the village, and seized the headman as a hostage. He begs you to come back with him and rescue their elder." />
+
+    <!-- Tek Chand (Tacteos) -->
+    <string id="9VxUSDQ7" text="My name's Tek Chand. I'm a physician by trade. I was on, well, a bit of a quest, but now I'm thinking I'm not really made for this kind of thing.[ib:nervous][if:convo_pondering]" />
+    <string id="lnAhXvbo" text="There's this wandering physician who comes through here from time to time. Name of Tek Chand. Treats people for free... We're fond of him.[if:convo_thinking]" />
+
+    <!-- Tutorial / opening texts -->
+    <string id="jg3T5AyE" text="Like many families in Hindostan, your life was upended by war. Your home was ravaged by the passage of army after army. Eventually, you sold your property and set off with your father, mother, brother, and your two younger siblings to a new town you'd heard was safer. But you did not make it. Along the way, the serai at which you were staying was attacked by dacoits. Your parents were slain and your two youngest siblings seized, but you and your brother survived because..." />
+    <string id="IITkXnnU" text="Hindostan is a land full of peril - but also opportunities. To face the challenges that await, you will need to build up your house.{newline}Your brother told you that there are many ways to go about this but that none forego coin. Trade would be one means to this end, fighting and selling off captured dacoits in town another. Whatever path you choose to pursue, travelling alone would make you easy pickings for whomever came across your trail.{newline}You know that you can recruit men to follow you from the notables of villages and towns, though they may ask you for a favor or two of their own before they allow you access to their more valued fighters.{newline}Naturally, you may also find more unique characters in the serais of Hindostan. However, these tend to favor more established houses." />
+
+    <!-- ════════ THE GENERAL CALRADIA SWEEP ════════ -->
+
+    <!-- Comment/claim strings -->
+    <string id="LBb7YgXU" text="rightful emperor of Hindostan" />
+    <string id="tUa5WBpp" text="rightful empress of Hindostan" />
+    <string id="lH3cgbVX" text="We will not sign a peace until we are recognized by all the kingdoms of Hindostan." />
+    <string id="LWFDXeQc" text="Furthermore, I accept induction into the imperial army of Hindostan, at the rank of mansabdar." />
+    <string id="UfpmWfbG" text="{PLAYER.NAME}, you are a {?PLAYER.GENDER}lady{?}lord{\?} without a master, holding lands in your name, with only the barest scrap of a claim to legitimacy. No throne in Hindostan would accept a lasting peace with you." />
+    <string id="W6pKpEoT" text="You prepare to set off for a grand adventure in Hindostan! Here is your character. Continue if you are ready, or go back to make changes." />
+
+    <!-- Mercenary / tavern talk -->
+    <string id="aaQtzfjL" text="Well done, {?PLAYER.GENDER}madam{?}sir{\?}. Keep the money and wine coming our way, and there's no foe in Hindostan you need fear.[ib:convo_approving]" />
+    <string id="kM1Y8XT0" text="You will not be dissapointed {?PLAYER.GENDER}madam{?}sir{\?}. You will not find better warriors in all Hindostan.[ib:convo_approving]" />
+
+    <!-- Companion backstories -->
+    <string id="1EKWnCBa" text="So, in time, I made contacts in towns up and down the western half of Hindostan. Sometimes it's a guard who's not averse to a little extra cash. Sometimes there's a washerwoman who'll let down a rope over the walls at night. Is that the knowledge that's useful to you?" />
+    <string id="gQa9XZfG" text="I can offer you my knowledge of the ancestries of the nawabs, rajas, sardars, and other nobility of Hindostan, both courtly and wild. You will find that it may please them if you claim to recognize, on first making their acquaintance, the name of their house, and whether they are called 'The Tiger', 'The Miser', or some other charming sobriquet." />
+    <string id="jb3TXFa9" text="A sad tale, my dear, but Hindostan is full of them. Good day." />
+    <string id="MigoHjvo" text="Our own world and the Otherworld are shadows of each other, you see. Every time I see the spirits, they tell me to follow someone - a caravan, a raiding party, a group of mercenaries. I join that party, and it leads me to another. In this way I have crossed Hindostan and crossed it again. Now they are telling me to follow you." />
+    <string id="plzerw4U" text="If you're knocking down, I'm not just one of the best - I am the best. I do rams, mines, and of course the great guns. You can ask any qiladar in any town in Hindostan... Well, maybe best not ask in this town, but any other town in Hindostan." />
+    <string id="swaLbjD1" text="More importantly, I really should be moving on. I don't suppose you might be in the market for my talents and knowledge? I know a back door into every city in the eastern half of Hindostan, or the right guard to bribe." />
+    <string id="UlsvDHLV" text="Ah, a pity. If you were a native of Hindostan, I would be most interested to know about your ancestry and some particulars of your place of birth. I am collecting notes on the lineages of this land, both of the great imperial families and of the hill chiefs." />
+    <string id="ZO6PptgQ" text="Oh, here and there. I'm a recent arrival in Hindostan." />
+    <string id="Gepa1szA" text="My father was a merchant. When he died, he left his children a small inheritance. Most went to my brothers. They headed west, to the lands of the Persian Shah, leaving me in charge of our interests in Hindostan. For me to step into my father's shoes, and be treated as an equal by other merchants, I knew I had to make a lot of money in a short time or they would elbow me out of the market." />
+
+    <!-- Wanderer backstories -->
+    <string id="7tCl75xJ" text="I was part of the old Padishah's Ahadi guard. But the court turned on us after his death, and attacked us. Maybe you've heard the story before. There's a whole lot of us, spat out into the world by the ungrateful courts of Hindostan." />
+    <string id="L7tJUtlN" text="I was an orphan, you see. Worked for a gang, as our kind must so often do. Did their foul work for them. But they perished in a siege, and I decided to strike out on my own, see what this fine land of Hindostan could offer me." />
+    <string id="N0yE1Ptz" text="I was an herbalist in a village in the north. But our home was raided, and I've been forced to wander in search of work. There are many like me on the roads of Hindostan." />
+    <string id="wRS9yqyx" text="I fled a bad marriage. There are many like me; I meet them in every serai in Hindostan. I am lucky in that my father was a sowar, and taught me to ride and fight before he died, and I suppose that's how I must make a living." />
+
+    <!-- World lore / ruler statements -->
+    <string id="5BWAsyeB" text="Fortune smiled on me. I was born to one of the richest houses in Hindostan. My father spent much money to educate me, so that I can retain that wealth. And the first and most important thing I learned is that the common people are the source of my wealth, so I must protect the common people." />
+    <string id="SCogGc7N" text="We are the family of the martyred Padishah. Every man wishes to leave what he has to his children, be it a tiny patch of land or the imperial throne. Everyone in Hindostan, rich or poor, grasps this. The universal principle of inheritance, not the intrigues of the kingmakers, is what makes a Padishah in the eyes of the people." />
+    <string id="uX0dbuLa" text="The richest third of the empire is ruled from Bengal by the widow's party of the murdered Padishah. For them, politics is personal: all men want their families to inherit what they have, and if you loved Farrukhsiyar then you will support the rights of his heirs. He was indeed loved, and also there are some in Hindostan who believe that the endless intrigues and successions can only be overcome by one strong throne." />
+
+    <!-- SandBox misc -->
+    <string id="4tY23HWb" text="Of course. I'm welcome in every court in Hindostan. There's not many who can say that! So always be sure to keep a pot of rupees buried somewhere, and a loyal servant who can find it in a hurry." />
+    <string id="AULqrp7D" text="a cup of Shiraz wine" />
+    <string id="EA2JcVcb" text="As well you might! They're a grand old custom that's now spread all over Hindostan. Back in the old days, they'd give a hundred condemned criminals swords and have them slash at each other until the sands were drenched in blood![if:convo_merry]" />
+    <string id="o0H8Qs0D" text="The rules of the akhara are standard across Hindostan, even beyond the imperial lands. We match the fighters up by drawing lots. Sometimes you're part of a team, and sometimes you fight by yourself." />
+    <string id="PLbxHyPu" text="It varies. I fancy that I have a fine eye for assessing a ransom. There are a dozen little things about a man that will tell you whether he goes to bed hungry, or spices his meat with saffron and cloves. The real money of course is in the aristocracy, and if you ever want to do my job you'll want to learn about every landowning family or hill chief in Hindostan, their estates, their offspring both lawful and bastard, and, of course, their credit with the sarrafs." />
+
+    <!-- Concept pages -->
+    <string id="4yfdFMMz" text="Generosity represents characters' sense of obligation towards their family, their comrades, and those who have done them a service. It differs from Mercy in that it is reciprocal, based on a relationship with others rather than a general sense of benevolence. A Generous lord will take care of his men and look out for his friends - though, perhaps to the point of overlooking their sins against others. The opposite trait, Closefisted, is generally not well regarded in Hindostan, although in combination with Honor it might represent a qazi known for his or her impartiality. Players can increase Generosity by treating their troops well and keeping morale high, or choices made during quests. They lose generosity by allowing their troops to suffer or starve." />
+    <string id="A84cKUfo" text="Towns are the largest {SETTLEMENTS_LINK} in Hindostan.  They are surrounded by walls, and control territory.  They trade with nearby {VILLAGES_LINK}, exchanging manufactured goods for raw materials and food. They are home to Merchants, who run trading caravans to nearby towns, Artisans, who represent local guild leaders and often speak for their fellow workers, and Gang Leaders, who control the back alleys, migrant shantytowns, waterfronts, and other neighborhoods which distrust the formal government. Towns have Projects, representing its fortifications and other public buildings, as well as Workshops, privately owned by Merchants and other characters, where goods are manufactured." />
+    <string id="daapjBki" text="Marriages in Hindostan are arranged between families, but love and attraction are not entirely ignored. Royal marriages are often contracted purely to cement alliances, but as you go down the social ladder and the political stakes get lower, it becomes more likely that the couple will know and like each other before they are wed. Because Hindostan is at a particularly unsettled time in its history, with some social barriers breaking down, courtship plays a greater role than in earlier eras.{newline}{newline}Players in Bannerlord may wish to marry a member of a noble house to further their political ambitions and to produce heirs. To marry, a player must first raise the possibility with a prospective spouse or his or her families. Then the player then complete two persuasion tasks to convince the prospective spouse that they are compatible and that a marriage would work. The player may then speak to the head of the house to complete the courtship, which may involve the payment of a bride price or dowry.{newline}{newline}Non-player characters will have different criteria for their prospective spouses. Some may wish to marry an honorable and upright player, while others may be attracted to rogues. All will attach some importance to a player's renown, or his or her relationship with the spouse's family, but some will value this much more than others.{newline}{newline}Non-player characters will also marry in the course of the game, and a player may wish to marry off his or her heirs to other houses to continue the dynasty. The spouses of players or their heirs will join the player's house, so players are not allowed to marry the heads of other houses." />
+    <string id="eE5xclPO" text="Trade goods represent items that are used in bulk across Hindostan. They include food, clothing, tools, raw materials, and luxury goods." />
+    <string id="FP4KyHBK" text="Players who rob or otherwise aggress against the inhabitants of a kingdom, unless they are at war, will receive a crime rating there. Acts like coercing villagers into giving you recruits and supplies, or illegal behavior in quests, will add a small amount of crime rating. An outright attack on a neutral party will add a rather large amount and will usually trigger a war.{newline}{newline}Crime ratings go up to 100. Players with a rating of 30 or higher in a neutral kingdom will be barred from entering a settlement of that kingdom, and if they try to sneak in and are caught, they may be briefly imprisoned or receive corporal punishment. The kotwals of Hindostan generally lack the resources to hold many prisoners for very long, so the penalties for minor crimes tend to be rough and immediate but not as harsh as they might be. Justice is unpredictable, though - if the player has low health and the beating would result in death, he or she is considered to have been executed.{newline}{newline}An independent player with a crime rating of 60 or higher on the other hand will be declared outlaw by the kingdom and attacked on sight. If the player accumulates a crime rating while a vassal of a kingdom, he or she will still be able to enter its settlements but may face imprisonment, a fine, or a loss of influence once inside. Also, each day the player will lose influence equal to half his or her crime rating. Crime rating will decay over time, so after a while a character's misdeeds will be forgotten. If a player has been declared outlaw, however, he or she will need to end the war through a bartered peace agreement." />
+    <string id="jWdTNUbZ" text="Bannerlord groups the wide range of languages and customs in Hindostan into a half-dozen main cultures. People are generally aware when their local dialect or way of life is similar to that of a neighboring district, and may use a common name to describe each other or even speak of a shared destiny. However, there is relatively little expectation in Hindostan that anyone will be loyal to a kingdom or overlord because of their language or place of birth. Each culture has its own aesthetic sense, shown by its architecture and clothing, as well as some traditions that influence a kingdom's politics or its military.{newline}{newline}Settlements are assigned cultures that represent the main language spoken there, although many of its residents - especially merchants, wanderers, and soldiers of fortune - might be from a different cultural background. It is slightly easier for a lord to govern settlements from the same culture, but generally local grievances weigh more heavily than cultural solidarity or the lack of it. The imperial court in particular has a long history of promoting outsiders to positions of power, in the expectation that they or their heirs will eventually be absorbed into the court's Persianate world." />
+    <string id="qzwTz5Kh" text="The population of Hindostan is mostly concentrated in {TOWNS_LINK}, {CASTLES_LINK} and {VILLAGES_LINK}, collectively called settlements. Towns and castles are the centers of districts that will also include two to five villages. These districts change sides when the town or castle is captured. They are protected by garrisons - troops loyal to the settlement's liege, who remain inside the walls at all times - and militia, troops whose loyalty is to the community, which can sometimes sally forth and pursue bandits but which also has the potential to become rebellious.{newline}Castles and towns are rated for Prosperity, Security and Loyalty. The local economies of Hindostan are often cyclical, with good times sowing the seeds for hard times. Prosperity will increase with trade and good governance, increasing revenues for the liege lord. But wealth brings problems, such overcrowding, increased food consumption, corruption, greater divisions between rich and poor, and tensions between longtime towndwellers and new migrants from the countryside. The settlement's security may fall, and loyalty will fall with it. If loyalty gets too low, a rebellion will break out if the militia outnumbers the garrison.{newline}A settlement is designated as one of the main {CULTURES_LINK} in Hindostan, which represents the language spoken by a majority of its residents." />
+    <string id="uce9Opgg" text="Minor factions represent groups in Hindostan that are not part of a kingdom. They may include dacoit brotherhoods, mercenary jamiats, religious movements and wandering peoples. Typically they sustain themselves either by hiring themselves out to fight for a kingdom or by collecting protection money from caravans and travellers passing through their territory." />
+    <string id="wybXag9U" text="The silver rupee is the standard currency of Hindostan. Even the most far-flung tribes know what they look like, and can usually tell if they've been cut with baser metals. Gold is generally too valuable to be used in transactions other than those between kingdoms or great lords. You'll need money in the game for virtually all your basic needs - equipment, food, raising and maintaining troops - and it can also come in handy in politics and quest-solving. There are some things that money cannot buy, but you also don't get those things for free. For example, warriors risk their lives for pride or revenge, out of love of their homes or their commanders, status or adventure. Only the most cynical of mercenaries only care about the silver. But even the most loyal expect some payment as a token that their sacrifices are not going unnoticed. During rebellions, few lords will change sides for as crass a bribe as a bag of gold. But if they do decide you'd make a better king than the current one, a bag of gold can help offset the risk they're taking on your behalf.{newline}{newline}The people of Hindostan rarely keep all their money on their person or in one place. Some of your wealth will be in your purse or traveler's chest but much will be buried, otherwise hidden, or left with a sarraf you trust. Some wealth will be in the form of hundis from merchants. In the game, it's assumed that anyone can get access to their money at all times, but the amount that can be taken from you in any one robbery is limited." />
+
+    <!-- Character-creation backstories (campaign system) -->
+    <string id="F7OO5SAa" text="As a youngster growing up in Hindostan, war was never too far away. You..." />
+    <string id="5kbeAC7k" text="In wartorn Hindostan, especially in frontier or hill areas, some women as well as men learn to fight from an early age. You..." />
+    <string id="888lmJqs" text="All of Hindostan's kingdoms recognize the value of good light cavalry and horse archers, and are sure to recruit borderers and men of the wandering peoples with the skills to fulfill those duties. You were a good enough rider that your neighbors pitched in to buy you a small pony and a good bow so that you could fulfill their levy obligations." />
+    <string id="sYuN6hPD" text="All of Hindostan's kingdoms recognize the value of good light cavalry, and are sure to recruit borderers and men of the wandering peoples with the skills to fulfill those duties. You were a good enough rider that your neighbors pitched in to buy you a small pony and a sheaf of javelins so that you could fulfill their levy obligations." />
+    <string id="afH90aNs" text="Levy armed with spear and shield, drawn from smallholding farmers, have always been the backbone of most armies of Hindostan." />
+    <string id="I3PcdaaL" text="Wolves and bears are a constant menace to the flocks of northern Hindostan, while tigers and leopards trouble the south. You went with a group of your fellow villagers and fired the missile that brought down the beast." />
+    <string id="yYhX6JQC" text="Your father joined one of Rajputana's many mercenary companies, composed of men who got such a taste for war in their lord's service that they never took well to peace. Their matchlockmen were much valued across Hindostan. Your mother was a camp follower, taking you along in the wake of bloody campaigns." />
+    <string id="1SUTcF0J" text="The gang leaders who kept watch over the slums of Hindostan's cities were always in need of poor youth to run messages and back them up in turf wars, while thrill-seeking merchants' sons and daughters sometimes slummed it in their company as well." />
+
+    <!-- Campaign events / children -->
+    <string id="BxpJKMYq" text="Dispel the spirits in the approved orthodox way, by loudly calling on Heaven to ward off the ghosts of Below." />
+    <string id="gQigaCkD" text="One of your {RECRUIT} fell asleep on guard. He was new to your company and not popular, and your men are angry. He put their lives at risk, and they demand he be turned over to them to face the old camp penalty - to run the gauntlet of men with sticks who will beat him, an ordeal that frequently ends in death." />
+    <string id="qaGbN6wX" text="It has not escaped your men's notice that you have accumulated a fair amount of money in your treasury. A delegation approaches you and suggests that this would be a good time for the traditional donative, as the Padishahs of old were known to give their armies." />
+    <string id="K1HrvDLO" text="{?CHILD.GENDER}She{?}He{\?} won't talk much about it, but you know that {?CHILD.GENDER}she{?}he{\?} has seen the darker side of Hindostan." />
+    <string id="SA4JbVo2" text="Your steward acts as magistrate in the lord's absence. {?PLAYER_CHILD}Your{?}The{\?} child will sit at his side as he rules on land disputes, family feuds, and cases of alleged banditry, giving {?CHILD.GENDER}her{?}him{\?} a look at the darker side of life in Hindostan." />
+    <string id="X68PZrYv" text="Tell them that every people in Hindostan has its own legend about warriors concealed in unlikely places, and you can't imagine them getting away with it." />
+
+    <!-- Items / photo mode / multiplayer texture -->
+    <string id="trGnmFsh" text="Hindostani Mace Head" />
+    <string id="YLplNGxb" text="Hindostani Mace" />
+    <string id="ZzWwDCBS" text="Hindostani Autumn" />
+    <string id="jKviMpbP" text="Hindostani" />
+    <string id="5FPhltaZ" text="Replaces Crossbow with Arbalest, best in Hindostan. Has a reinforced bow arm, increasing effective range." />
+    <string id="qzsjGcEz" text="The pastoral country of Rajputana has a tradition of training the best marksmen in all of Hindostan. They are highly sought after as mercenaries or trainers throughout the land. These folk know their business very well and they are ready for everything, be it an incoming lancer on the charge or a bowman shooting from behind battlements." />
+    <string id="wg96CXKf" text="Some tandas travel even deeper into the dry country where there is no hope for survival without their loyal mounts because of the vast distances. These people are natural riders who are literally born in the saddle. The Banjara are the fastest riders in Hindostan and they are very good at hit and run tactics." />
+    <string id="cuzMV8pT" text="Every character in Hindostan has three equipment sets for different purposes: Civilian, battle, and stealth. You can switch between their sets using the buttons over the character's model. Note that some equipment may be unusable in certain equipment sets, due to their intended environment." />
+
+    <!-- Workshops -->
+    <string id="llI5116T" text="We press grapes and ferment the juice. Wine is always in demand in the serais of Hindostan, whatever the qazis say." />
+    <string id="oFKrLaBy" text="We weave raw silk into even finer velvet to make the most luxurious garments in Hindostan." />
+
+    <!-- Minor faction / kingdom lore -->
+    <string id="B8c2mNKj" text="The Mahdawi Darwesh are the descendants of a revival movement that rose up nearly a century ago, after a saintly young claimant was toppled by one of his generals. They claim that they are preparing the way for Heaven to bring back the hidden one and usher in a golden age, but like so many other such movements in Hindostan they have been forced to turn to extortion to survive." />
+    <string id="Xtyb9Dyr" text="The lands of the southern empire were once ruled by proud independent sultanates controlling the trade routes over the western sea and the plateau. They invited the empire into their internal feuds and one by one they were absorbed, some by treaty, some by conquest. The court's Persianate aristocracy intermarried with merchant princes and Deccani chiefs, many of whom claimed descent from the kings, champions and saints of southern legend. In recent generations, as these towns grew to become some of the richest and most populous in Hindostan, the court in Delhi came to suspect that the south would someday raise a throne of its own. The Deccan's loyalty to its own Nizam, an unapologetic advocate of southern rule, would seem to confirm these fears." />
+
+    <!-- Settlement lore (vanilla ids leak old place-names; rewritten nameless) -->
+    <string id="8UJ3cPrZ" text="This rich hill country was brought into the empire relatively peacefully, its chiefs offered protection against raiders from the drylands in exchange for tribute. When their patron at court fell afoul of his rivals, the hill houses tried to raise a confederacy of their own. The empire snuffed it out, but the people here still harbor an attachment to their old assemblies and the men who led them." />
+    <string id="JhBSnWAe" text="This port was among the first of the coast's great harbours. In its early centuries it answered to a merchant city-state across the water, but the empire's expansion soon folded it into the imperial roads. For centuries, sailors coming up from the pirate-infested islands gave thanks when they saw its towers looming through the haze, signalling a return to safe patrolled waters." />
+    <string id="RL2vacqv" text="This town sits at the head of a valley that is one of the main grain-producing regions of the empire. Once the largest of the hill cities, its leaders led a league of the country against imperial encroachment. But when the empire's victory looked inevitable, they made their peace. The population have a reputation for being serious, respectable and trade-minded, dependable if a bit humorless." />
+    <string id="Settlements.Settlement.text.castle_village_ES2_1" text="This village is one of the farthest flung to answer to the imperial registers. It sits in the plains at the edge of the dry country, beyond which the roads belong to the tribes. Villagers grow grain here, keeping watch for raiders from across the frontiers." />
+    <string id="Settlements.Settlement.text.castle_village_ES3_2" text="This village sits at the foot of a narrow valley in a rugged plateau. The silver mined from nearby hills helps explain the effort and expense to which the empire has gone in past centuries to conquer and defend these lands." />
+    <string id="Settlements.Settlement.text.castle_village_EW2_1" text="This village sits in a river valley in the heart of Hindostan. Irrigation and the warm inland climate ensure that the grain fields of this district feed much of the surrounding country." />
+    <string id="Settlements.Settlement.text.castle_village_EW2_2" text="This village sits in a river valley in the heart of Hindostan. Irrigation and the warm inland climate ensure that the grain fields of this district feed much of the surrounding country." />
+    <string id="Settlements.Settlement.text.village_EN4_1" text="This village sits in a valley under the hills. The people of these parts have raised cattle since before the empire came, and its milk and ghee are sought out by traders and travellers passing through the region." />
+    <string id="Settlements.Settlement.text.village_ES1_2" text="This village sits among a network of rivers and backwaters near the borderlands. Villagers harvest salt from a lagoon to their west, a former inlet of the sea that was cut off by a sandspit. These lowlands are shunned by many, who find the air thick and fetid, but the inhabitants are proud of their watch on the frontier." />
+    <string id="Settlements.Settlement.text.village_ES3_1" text="This village sits in the flat southern reaches of a great plain. This land has been good horse country since before the empire came, furnishing the steeds of riders who routed more than one imperial column before their final defeat and absorption into the imperial cavalry." />
+    <string id="Settlements.Settlement.text.village_EW3_2" text="This village sits at the head of a broad valley in the south. Though its pastures once ran with goats, the landowners have turned them over to the raising of far more profitable horses." />
+    <string id="Settlements.Settlement.text.village_S4_2" text="This village sits beneath a craggy peak named for an old god of the hill peoples. These wild lands abound with fur-bearing marten, fox, rabbits and other animals." />
+    <string id="Settlements.Settlement.text.castle_village_V7_1" text="This village sits in the middle of a fertile valley. Villagers tend orchards here on the hillsides." />
+    <string id="Settlements.Settlement.text.village_S6_1" text="The villagers here raise small, sturdy cattle at the base of the mountains. They include the descendants of refugees and malcontents from across Hindostan, seeking isolation in the high valleys." />
+    <string id="banXBv0D" text="The villagers here include the descendants of refugees and malcontents from across Hindostan, seeking isolation in the high valleys. They grow barley for sustenance, but many fare afield for seasonal work in the caravan season." />
+    <string id="uO4dxCl8" text="This port is the gateway through which the grain of the lower river country has flowed forth to feed a hungry world. The empire's periodic advances along this coast have usually been aimed at seizing this strategic prize. Though the armies have come and gone, it remains among the most cosmopolitan cities in Hindostan, filled with merchants from many lands bidding for the lowest bulk prices." />
+    <string id="WGtzBswe" text="This natural fortress sits on a spur jutting out of a great rock. In the final years of the imperial conquest, the hill people here negotiated a peaceful settlement with the empire, only to see their home seized by a rebel captain. The ensuing siege was only the first of many, as the nearby silver mines made it a prize for every pretender who ever tried his luck in a war of succession. It is said that the colony of vultures who inhabit the upper reaches of the rock have dined on the flesh of every people of Hindostan." />
+    <string id="ytBRXqt8" text="This town was founded by a rogue commander who broke away from the empire during its expansion and chose to rule as a god-king. His dynasty lasted for generations, until imperial troops overran it and smashed every haloed statue of his line into rubble. Even today, the court's officers accuse families from this region of harbouring thrones in their hearts." />
+
+    <!-- Naval line -->
+    <string id="6Cdlb2cd" text="Alam of Timur" />
+    <string id="2oEhDTjU" text="Well, some of the brothers listened to him, men who had fought against him before, to whom a fine meal of wealth seasoned with revenge sounded rather tasty. But the rest of us... We'd heard such promises before, and we had no wish to serve any king. Better to fight for gold... and if you want the gold to flow, you honor your contracts, even if some fancy merchant of Hindostan comes along offering you the riches of the seven seas." />
+    <string id="H5FJWA7W" text="You bid farewell to Gunnar. He returned to his home port in the north, where he hopes that some day you might visit him. Your sister, recovered from her ordeal, stands ready to join you and the rest of your house as you continue to forge your destiny in Hindostan." />
+    <string id="Iq2YN7o3" text="Throughout your travels, you overheard hushed conversations about a new menace, a pirate confederacy terrorizing the coasts of Hindostan. These corsairs have built a reputation for trading in captives from dacoits and raiders such as the ones who attacked your family. Do you want to go now to try to pick up your sister's trail and embark on a hunt across the seas of Hindostan?" />
+    <string id="unIV7bqB" text="Born into a Hindostan perpetually at war, you didn't know playgrounds, you knew battlefields. Survival as a youngster meant picking through the battlefields. You learned to be self-sufficient, sometimes tending to wounds amidst the carnage. The law of the battlefield was simple: take what you can, and don't get caught." />
+    <string id="XcaoQSjv" text="Often, when you were growing up, you wondered if your destiny might lie upon the sea. You listened closely to old sailors telling their tales of daring and peril: steering ghurabs through the monsoon storms, outfoxing corsairs along the pirate-infested coasts, or standing in the forecastle of a war-grab as it crashed through the enemy battle-line. You wonder what opportunities lie for you to seize on the seas of Hindostan: a fortune made in the commerce and intrigues of a bustling port, or glory won on the bloodied deck of a foe's flagship." />
+    <string id="IWzzeHb6" text="I am from the coast. The islands here are rich in mackerel and tuna but treacherous, with many small currents and unpredictable winds. We reckon ourselves the finest sailors in Hindostan, if you don't mind my saying." />
+
+  </strings>
+</base>

@@ -57,6 +57,7 @@
     <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\DisaffectionMath.cs" Link="Linked\DisaffectionMath.cs" />
     <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\MessengerMath.cs" Link="Linked\MessengerMath.cs" />
     <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\CoronationOaths.cs" Link="Linked\CoronationOaths.cs" />
+    <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\HistoricalCast.cs" Link="Linked\HistoricalCast.cs" />
   </ItemGroup>
 
 </Project>

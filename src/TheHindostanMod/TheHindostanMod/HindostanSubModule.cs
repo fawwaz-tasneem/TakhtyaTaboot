@@ -210,6 +210,7 @@ namespace TakhtyaTaboot
             // Phase 8 — QoL systems
             starter.AddBehavior(new AkhbaarScoutBehavior()); // pay a harkara to trail a named lord; akhbaar report via farmaan
             starter.AddBehavior(new MessengerBehavior()); // the qasid: your word carried OUT — audience as if you stood there (no-Diplomacy parity)
+            starter.AddBehavior(new HistoricalCastBehavior()); // round 7: the cast's historical relations + traits, applied once per campaign
             starter.AddBehavior(new MonsoonBehavior()); // the rains beyond speed: harvest swing + famine chain
             // starter.AddBehavior(new TradeRouteBehavior());
             // starter.AddBehavior(new FoodSecurityBehavior());

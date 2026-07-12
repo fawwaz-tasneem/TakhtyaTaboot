@@ -548,6 +548,50 @@ and the qasid audience opening are the risky new paths here.*
 - **Z5.** **Save/load with a qasid on the road and a follow order standing:** both persist;
   a follow order re-asserts hourly after load exactly as before.
 
+## AA. Round-7 historical overhaul (biographies, relations web, quest re-theme, Calradia sweep)
+
+*The world made historical: 66 encyclopedia biographies covering EVERY house head (heroes.xml,
+cross-referencing one another), a tested relations+traits web applied once per campaign
+(`HistoricalCastBehavior`, `hindostan.cast_reapply`), the main quest re-themed onto Alamgir's
+Deccan folly, and ~250 string overrides killing every remaining Calradia/vanilla-faction leak.*
+
+- **AA1.** **Biographies:** open the encyclopedia on any clan leader in any kingdom — every one
+  now has a historical bio, and they reference each other (e.g. Abdullah Khan Barha ↔ Qamar ud
+  Din's Turani party; the Sidi of Janjira ↔ Laxmibai Angre; Rohilla ↔ Bangash; Zamorin ↔
+  Palakkad). Spot-check ~10 across kingdoms.
+- **AA2.** **Relations web:** on first load (new or old save) `HistoricalCast: applied N
+  relations` appears in tyt_log (~60 pairs, ~50 lords). Verify a few in-game: Bajirao vs Asaf
+  Jah hostile; the Sayyid Brothers +80; Scindia/Holkar/Bajirao warm; Charat Singh vs Jai Singh
+  Kanhaiya hostile. Traits: check encyclopedia trait icons (e.g. Budh Singh Hada honest+valiant,
+  Murshid Quli calculating).
+- **AA3.** **Main quest re-themed:** 'Investigate Neretzes' Folly' is now **'Investigate
+  Alamgir's Folly'** — the veterans' testimonies retell the storming of Wagingera (1705) and the
+  Deccan war (Marathas in the ghats, Berad marksmen, turncoat Afghan companies, Rajputs who
+  withheld their lances, hired Sikh/Mysorean horse). The banner is the **Alam of Timur**; the
+  mentors are **Zinat-un-Nissa Begum** (restore the Raj) and **Khando Ballal** (break it); the
+  murdered emperor beat maps to Farrukhsiyar. Radagos→Raghu Das, Tacteos→Tek Chand.
+- **AA4.** **Family + character creation:** new campaign → parents/siblings carry Indian names
+  per culture (e.g. Mughal: Mirza Baqir/Taj Begum/Nadir/Parviz/Aisha); backstory and CC texts
+  say Hindostan. Verify the culture-select and review screens show no Calradia.
+- **AA5.** **The sweep:** encyclopedia concept pages, companion/wanderer backstories, settlement
+  lore, tournament/tavern lines — grep-level goal: NO "Calradia/Calradian/Calradios" anywhere in
+  normal play. Report any survivor with a screenshot (it will have a findable string key).
+
+### Round-7 BUGS FILED (2026-07-12, not yet fixed — user report with screenshot)
+
+- **BUG-1 (procession placement).** The ceremony lords do NOT appear before the sovereign at
+  the throne: they spawn scattered — other floors/rooms of the keep — and the procession does
+  not bring them to the player. EXPECTED: the attending lords spawn/assemble in the CENTRE of
+  the throne hall and each walks to the seated sovereign in turn. Suspects: `sp_notable` spawn
+  tags resolve to points outside the hall chamber (multi-level keep scenes), and
+  `AgentNavigator.SetTargetFrame` may not path across floors — the stand-ins likely need a
+  hall-centre spawn tag (e.g. `sp_common_area`/dedicated frames near `sp_throne`) plus a
+  procession teleport fallback when pathing fails/timeouts.
+- **BUG-2 (farmaan buttons overflow).** The primary/secondary buttons at the popup's foot
+  render wider than the decree panel — text like "Take the oaths by farmaan — forgo the
+  ceremony" pushes the button past the canvas/frame edge. The button row needs to fit within
+  the 780-wide panel (cap button text width / allow wrap / widen panel).
+
 ---
 
 **When you report back**, the ideal format per finding: section-number, PASS/FAIL, repro steps, log excerpt, screenshot if UI. The single most valuable data points now are **J3 (the breakaway, never seen live)**, **M2 (siege unwind — the riskiest engine path)**, **N1/N2 (the fixed board)**, L3's fates, **O3/O4 (the first akhbaar report and its dead/captive/no-party edge cases)**, **P3–P5 (the labour trade-off: yield up, unrest up, gang thinning)**, and anything that throws in `tyt_log.txt`.

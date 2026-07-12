@@ -4,5 +4,8 @@
        and culture lore) load first; the curated std strings load after so they win for any
        shared ids. Without this the ~600 entries below fell back to vanilla text. -->
   <LanguageFile xml_path="hindostan_demonym_overrides.xml" />
+  <!-- Round 7: the main quest re-themed onto Alamgir's Deccan folly + the full Calradia
+       sweep (story, character creation, family names, companions, settlement lore). -->
+  <LanguageFile xml_path="hindostan_story_overrides.xml" />
   <LanguageFile xml_path="std_module_strings_xml.xml" />
 </LanguageData>

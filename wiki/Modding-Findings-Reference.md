@@ -20,6 +20,15 @@
 
 - **Proven:** at runtime in an English game, `_gameTextDictionary` is **empty** (logged `dict 0->84`). It is the translation layer; it stays empty unless a non-English language is loaded.
 - **Therefore:** to change English text you must overwrite the `GameText` in `GameTexts._gameTextManager`. Writing to `_gameTextDictionary`, or patching `LocalizedTextManager.GetTranslatedText`, does nothing in English. Both were tried and both failed.
+- **ROUND-8 SUPERSEDING NOTE (see ch.21):** there IS a second working path, found later —
+  a Harmony prefix on `MBTextManager.GetLocalizedText` (upstream of `GetTranslatedText`, the
+  point where English short-circuits to the inline text). It covers what GameText-poking
+  cannot: inline code TextObjects (quests, dialogue, backstories) and strings baked into
+  saves. The two mechanisms now coexist: `LocalizationOverride` for GameText variations,
+  `EnglishTextOverridePatch` for everything `{=key}`-driven at render. Nuance to §1.2's
+  "inner key not retained": the key has no dedicated field, but it IS embedded in the raw
+  `TextObject.Value` (`"{=key}text"`) and re-parsed on every render — which is exactly what
+  makes the render-time override (and its save-healing) possible.
 
 ### 1.2 Inner `{=}` key vs outer id â€” the trap that cost the most time
 
@@ -264,6 +273,79 @@ Four different files own different parts of a lord, and confusing them wastes ti
 - **State discipline:** anything scoped to the live mission (who attended, who swore) can stay
   unserialized — the game cannot save inside a mission — but the *summons* that leads to it must
   be serialized, with a deadline fallback so it can never dangle (`CoronationBehavior` pattern).
+
+## 21. English NEVER loads language files — override strings at render time
+
+*(Root-caused in round 8 after the round-7 quest re-theme silently failed: "Neretzes' Folly"
+and the vanilla family names survived ~250 language-file overrides. Verified against the
+v1.3.11 decompile of TaleWorlds.Localization.)*
+
+- **The mechanism.** `LocalizedTextManager.LoadLanguage` wraps its string deserialization in
+  `if (languageId != "English")` — for English, NO language file's `<string>` entries are ever
+  read, from any module, vanilla or mod. And `MBTextManager.GetLocalizedText` (the choke point
+  every `{=key}text` passes through at render) short-circuits: `if (_activeTextLanguageId ==
+  "English") return inline text;` — it never consults the translation dictionary. A
+  `<LanguageData id="English">` override file is therefore **dead on arrival**, no matter how
+  it is ordered or registered.
+- **The three string pipelines** (know which one your target string uses):
+  1. **Inline TextObjects** (`new TextObject("{=key}text")` in code; also XML attributes) —
+     the vast majority: quests, dialogue, backstories. Overridable ONLY by intercepting
+     render (see the fix).
+  2. **GameTexts** (`GameTexts.FindText(outerId, variation)` — flat dotted-id strings in
+     `module_strings.xml` files, e.g. `str_player_father_name.empire`) — overridable by
+     poking `GameTextManager` at runtime: that is what `Patches/LocalizationOverride.cs`
+     does via `hindostan_string_map.xml` (inner→outer id map). Note the *variation
+     TextObjects* still carry `{=key}` inline text, so the render-time fix covers these too.
+  3. **Names/titles already baked into a SAVE** (hero names set at character creation, quest
+     journal titles) — stored as the raw `"{=key}text"` value and re-resolved every frame,
+     so a render-time override HEALS EXISTING SAVES with no migration.
+- **The fix.** `Patches/EnglishTextOverridePatch`: a Harmony **prefix on
+  `MBTextManager.GetLocalizedText`** that extracts the `{=key}` and serves the mod's override
+  first. It lazily loads every `<string id= text=>` from `ModuleData/Languages/*.xml`
+  (excluding `language_data.xml`; ids ≤ 64 chars — the very long snake_case ids are outer
+  GameText ids that never appear inside `{=…}`). One dictionary lookup per call; the native
+  path already allocates more.
+- **The rule.** Any English-facing string override goes in a `ModuleData/Languages/*.xml`
+  file and just works — no registration needed beyond the file existing. The
+  `language_data.xml` LanguageFile listing is now only ceremony (kept for non-English
+  players, for whom the engine DOES read the files).
+- **Diagnosing.** `tyt_log` prints `EnglishTextOverride: N inner-key overrides live` at first
+  render. If a vanilla string survives: it either isn't `{=key}`-driven (rare), its key is
+  missing from the override files, or it is a GameText read *before* first render.
+
+## 22. Banner codes, the palette, and repainting a kingdom at runtime
+
+*(From the round-8 Tipu lion-standard work; ids verified against the v1.3.11 data files.)*
+
+- **Banner code anatomy**: dot-separated fields, 10 per layer —
+  `mesh.color1.color2.sizeX.sizeY.posX.posY.drawStroke.mirror.rotation`, layers concatenated
+  (layer 1 = background, layer 2+ = icons). Vanilla kingdom examples in SandBox
+  `spkingdoms.xml`; the mod's clans in `tyt_spclans.xml` (`banner_key`).
+- **Verified ids** (Native `banner_icons.xml`): the palette holds 229 colors — **84 = bright
+  yellow** (0xFDE217), **116 = near-black** (0x0B0C11), 131 = the mod's common gold, 15/39/
+  121/143/171 = other golds. Icon **160 = the lion** (vanilla Vlandia's device). Background
+  meshes are only named `banner_background_test_N` — stripe patterns are NOT identifiable
+  from data; iterate visually (the mod ships `hindostan.mysore_banner [code]` exactly for
+  this).
+- **Repainting a kingdom**: `Kingdom.Banner` has a public setter — `k.Banner = new
+  Banner(code)` just works. `Color`, `Color2`, `PrimaryBannerColor`, `SecondaryBannerColor`
+  have **private setters** → set via reflection (`GetProperty(...).GetSetMethod(true)`); the
+  map nameplates and shields read them. `Clan.Color/.Color2` are public (that is how
+  UnifiedEmpireBehavior recolours folded clans). Pattern lives in
+  `ScriptedHistoryBehavior.ApplyBanner`.
+
+## 23. Scripted dynastic surgery (moving heroes between clans, changing ruling clans)
+
+- `Hero.Clan` has a **public setter** — assigning it moves a lord between clans mid-campaign
+  (used by the `mysore_house` migration folding Tipu's family into Hyder Ali's house).
+  Move the CLAN LEADER only after seating a successor: `ChangeClanLeaderAction
+  .ApplyWithSelectedNewLeader(clan, hero)` first, then reassign.
+- `ChangeRulingClanAction.Apply(kingdom, clan)` swaps a kingdom's ruling clan cleanly
+  (Hyder's 1724 coup). The leader-change is picked up by CoronationBehavior's daily snapshot
+  like any accession — coronation/accession-day registry updates follow automatically.
+- Scripted-history rule: reference **hero ids** (`lord_3_5`), never clan ids, in timeline
+  effects — clan composition is itself mutable history (the Mysore restructure moved five
+  heroes across clans; any clan-id assumption would have silently broken).
 
 ---
 

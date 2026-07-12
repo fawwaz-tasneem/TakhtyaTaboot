@@ -1,9 +1,20 @@
-# Scripted Historical Events — Design (NOT yet implemented)
+# Scripted Historical Events — Design (FIRST WAVE IMPLEMENTED, round 8)
+
+> **STATUS UPDATE (2026-07-12):** the first wave is BUILT — `ScriptedHistoryBehavior` +
+> `Util/ScriptedHistory` (pure timeline table, tested) fire eight events by AD year through
+> `HistoricalCalendar` (game 1084 = AD 1707), each an akhbar farmaan plus an engine effect,
+> with stale-load guards for old saves: the continuing Deccan war (1707), Banda's rising
+> (1709), the Deccan treaty (1714), **Hyder Ali's coup on the Wodeyars** (1724,
+> `ChangeRulingClanAction`), Bajirao's dash on Delhi (1737), **Nadir Shah's sack** (1739),
+> the Durrani proclamation (1747), plus the Mysore house restructure and the Tipu-accession
+> lion-standard watcher. Console: `history_status`, `history_fire`, `mysore_banner`.
+> As-built reference: wiki ch.28 system map; engine recipes in Modding-Findings ch.22–23.
+> The emperor cascade (1707–1719) shipped earlier as `ImperialSuccessionEventBehavior`.
+> The sections below remain the design notes for the UNBUILT remainder.
 
 A timeline of real 18th-century events the player witnesses: the death of Aurangzeb, the
 fragmentation of the empire, the rapid-fire succession of emperors, the rise of Mysore, and
-Nadir Shah's invasion. This documents the plan only — no event code is to be written until the
-open questions below are settled.
+Nadir Shah's invasion.
 
 ## 0. The crucial finding — most of the machinery already exists
 

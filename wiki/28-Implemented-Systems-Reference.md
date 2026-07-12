@@ -84,6 +84,27 @@ reloaded into the static registry on load. Corollary: war exhaustion NEVER track
 never peace out) a war involving a live claim kingdom — those wars are binary and settle by
 their own deadlines.
 
+**One calendar.** `Util.HistoricalCalendar` is the ONLY year mapping: game-year 1084 = AD 1707
+(Aurangzeb's death), Hijri via `HijriYear(ad)`. Round 8 removed the last hardcoded display
+base (FarmaanScreen's old `1719 +` arithmetic — it disagreed with the timeline by 12 years).
+Anything that shows a year, dates a seal, or fires by year (`ScriptedHistoryBehavior`) goes
+through this class; never write a base year anywhere else. Regnal years come from
+`CoronationBehavior.RegnalYear` (accession-day register, `hind_coron_acc_*`).
+
+**English strings are overridden at RENDER, not by language files.** The engine never loads
+language files for English (Modding-Findings ch.21). Every English-facing override lives in
+`ModuleData/Languages/*.xml` and is served by `Patches/EnglishTextOverridePatch` (Harmony
+prefix on `MBTextManager.GetLocalizedText`); GameText-variation strings can additionally be
+poked by `Patches/LocalizationOverride`. Adding an override = add the `<string id text>` to a
+Languages file, nothing else. Because resolution happens per-render, existing saves heal
+automatically (baked hero names, quest titles).
+
+**Scripted history references hero ids, not clan ids.** Clan composition is itself mutable
+history: the `mysore_house` restructure moved Tipu's family into Hyder Ali's house and
+re-seated the Kalale under lord_3_20. Timeline effects and the cast tables key on heroes
+(`lord_3_5`), and the Tipu-accession watcher tests `kingdom.Leader == lord_3_3` — never
+"leader of clan_aserai_2".
+
 **One liege chain.** `FeudalTitlesBehavior.GetFeudalLiege` is the ONLY liege resolution.
 The rungs, top to bottom (playtest round 3): explicit `_liegeOverride` bond → village
 zamindar answers the bound town/castle's lord → a CASTLE-only lord answers the NEAREST
@@ -190,15 +211,25 @@ declare war on / make peace with a shell — `UnifiedEmpireBehavior` keeps them 
 - **AI zamindars hold villages in the stored layer only** by default. Engine ownership for
   AI (`Tune.AiZamindarEngineOwnership`, restart-flagged, default off) distorts fief votes /
   clan income and is reverted by conquest of the bound seat — it exists for experiments.
-- **Deferred by scope decision**: EstatesBehavior, trade routes, famine, epidemics,
-  festivals, character traits, ulema fatwa, pilgrimage, great works, intrigue, war-score/
-  peace-negotiation/suzerainty behaviors, main quest, LLM news reporter (chapters 17–21
-  describe their designs). Coronation ceremonies and princely intrigue are designed
-  (roadmap discussion) and now have their foundations (opinions, dynasties, dialogue).
+- **Deferred by scope decision**: EstatesBehavior, trade routes, epidemics,
+  festivals, ulema fatwa, pilgrimage, great works, intrigue, war-score/
+  peace-negotiation/suzerainty behaviors, LLM news reporter (chapters 17–21
+  describe their designs). Since written, several HAVE shipped: famine (MonsoonBehavior),
+  coronation ceremonies (the hall + procession), character traits + the main-quest re-theme
+  (rounds 7–8) — see the system map above for the as-built versions.
+- **OPEN BUGS (round 7, filed in PLAYTEST.md under "Round-7 BUGS FILED", not yet fixed):**
+  (1) coronation-procession placement — the ceremony's lord stand-ins spawn on other
+  floors/rooms of multi-level keeps instead of the hall centre, and `SetTargetFrame` doesn't
+  path them to the throne; suspected fix is hall-centre spawn tags near `sp_throne` plus a
+  teleport fallback on path timeout. (2) The farmaan popup's option buttons can overflow the
+  780-wide decree panel when their text runs long (cap text width / allow wrap).
+- **Known cosmetic risk**: Tipu's lion-standard banner uses background mesh 7 as a GUESS at
+  the striped field (stripe patterns are unidentifiable from data — Modding-Findings ch.22);
+  `hindostan.mysore_banner [code]` exists to iterate it visually.
 
 ## 7. Verifying changes
 
-- `dotnet test src\TheHindostanMod.Tests` — 216+ tests, pure math only, no game needed.
+- `dotnet test src\TheHindostanMod.Tests` — 401+ tests, pure math only, no game needed.
 - `dotnet build src\...\TheHindostanMod.csproj -c Release` — needs the game DLLs; the path
   comes from gitignored `BannerlordDir.local.props` (see the contributor guide).
 - In-game: `PLAYTEST.md` at the repo root is the full per-system checklist; `tyt_log.txt`

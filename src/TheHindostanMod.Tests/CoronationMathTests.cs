@@ -46,6 +46,24 @@ namespace TakhtyaTaboot.Tests
         public void A_friendly_lord_accepts_the_late_oath()
             => Assert.True(CoronationMath.AcceptsLateOath(80f, 0.1f));
 
+        [Fact]
+        public void The_summons_lapses_only_past_the_deadline()
+        {
+            Assert.False(CoronationMath.SummonsLapsed(100f, 100f + CoronationMath.CeremonyDeadlineDays));
+            Assert.True(CoronationMath.SummonsLapsed(100f, 100f + CoronationMath.CeremonyDeadlineDays + 1f));
+        }
+
+        [Fact]
+        public void No_summons_never_lapses()
+            => Assert.False(CoronationMath.SummonsLapsed(-1f, 9999f));
+
+        [Theory]
+        [InlineData(40f, CoronationMath.OathRegister.Warm)]
+        [InlineData(0f, CoronationMath.OathRegister.Even)]
+        [InlineData(-30f, CoronationMath.OathRegister.Cold)]
+        public void The_oath_is_spoken_in_the_register_of_regard(float opinion, CoronationMath.OathRegister expected)
+            => Assert.Equal(expected, CoronationMath.RegisterOf(opinion));
+
         [Theory]
         [InlineData(0, 0, "hold court alone")]
         [InlineData(5, 5, "unquestioned")]

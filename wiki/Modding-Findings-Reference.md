@@ -238,6 +238,33 @@ Four different files own different parts of a lord, and confusing them wastes ti
 - **Diagnosing.** `rgl_log_<pid>.txt` in the crash folder prints the `Exception occurred inside invoke: set_<Property>` lines with the target VM type — grep for `inside invoke` before reaching for WinDbg. The tyt heartbeat is NOT useful here: UI-thread invokes write no crumbs, so the last crumb points at whatever campaign tick ran last.
 - **History.** `VillageWorksVM.BarWidth` (the crash) and `CouncilEntryVM.IndentWidth` (same latent bug) are fixed to `float`.
 
+## 20. Materialising arbitrary heroes in a keep hall (the ceremony recipe)
+
+*(Built for the round-5 in-hall coronation, verified against the v1.3.11 decompile of
+`HeroAgentSpawnCampaignBehavior` and `PlayerTownVisitCampaignBehavior`.)*
+
+- **Placing a hero bodily in the lord's hall without moving his map party:** build a
+  `LocationCharacter` exactly the way the native keep-notable path does and add it to the
+  location — a stand-in agent, not a teleport. The verified recipe (all from
+  `TaleWorlds.CampaignSystem`, no SandBox.dll reference needed — `SandBoxManager` lives in
+  CampaignSystem):
+  `new AgentData(new SimpleAgentOrigin(h.CharacterObject)).Monster(FaceGen.GetMonsterWithSuffix(race, "_settlement")).NoHorses(true)` + faction clothing colours, then
+  `new LocationCharacter(agentData, SandBoxManager.Instance.AgentBehaviorManager.AddFixedCharacterBehaviors, "sp_notable", true, CharacterRelations.Neutral, ActionSetCode.GenerateActionSetNameWithSuffix(agentData.AgentMonster, h.IsFemale, "_lord"), useCivilianEquipment: true)` →
+  `LocationComplex.Current.GetLocationWithId("lordshall").AddCharacter(lc)`. Skip heroes who
+  already have a `LocationCharacter` in the complex (`GetLocationOfCharacter(h) != null`) or you
+  get twins. Remove your stand-ins afterwards with `RemoveCharacterIfExists(hero)`.
+- **Opening the hall mission from a menu, the native way** (this is what "Go to the lord's hall"
+  does): set `GameMenuManager.NextLocation` to the hall and `PreviousLocation` to `"center"`,
+  call `PlayerEncounter.LocationEncounter.CreateAndOpenMissionController(hall)`, then null both.
+  Works from any menu while inside the settlement (`LocationComplex.Current` non-null).
+- **Dialogue works unchanged:** agents spawned this way are real heroes — campaign conversations
+  start at token `"start"` when the player talks to them, so a priority-200 `AddDialogLine` with
+  a state-gated condition owns the encounter (same trick as the darbar dialogue court, ch.15's
+  farmaan rules unaffected).
+- **State discipline:** anything scoped to the live mission (who attended, who swore) can stay
+  unserialized — the game cannot save inside a mission — but the *summons* that leads to it must
+  be serialized, with a deadline fallback so it can never dangle (`CoronationBehavior` pattern).
+
 ---
 
 **[Home](Home.md)**

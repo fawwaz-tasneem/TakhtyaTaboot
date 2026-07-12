@@ -10,16 +10,19 @@ split, W clan-screen zamindari** — J–W are the CURRENT focus; A–I were exe
 rounds 1–3.
 
 **Status ledger (2026-07-12, commits `6bad71f` → HEAD):** A–I built + playtested
-(rounds 1–3); J–Y built, unit-tested (357 green) and statically verified against the
+(rounds 1–3); J–Y built, unit-tested (362 green) and statically verified against the
 v1.3.11 decompile. **Playtest round 4 (2026-07-12)** exercised the akhbaar scout (works), the
 darbar court (worked but felt shallow → REWORKED as dialogue, see U), fief petitions (two grants
 seen in the log), the monsoon roll, and found + fixed: the works-ledger CRASH on Begin (N4, the
 int/float binding — Modding-Findings ch.19) and the missing coronation on FOUNDING a kingdom
-(Q1). **STANDING DECISION: no Diplomacy mod** — its mechanics are integrated natively instead
+(Q1). **Round-5 request (2026-07-12): the coronation now happens IN THE HALL** — the summons →
+travel to your keep → lords stand bodily in the lord's hall and swear in dialogue (section Q
+fully rewritten; Q1/Q2 in-hall staging is now the single riskiest unverified path alongside Y5).
+**STANDING DECISION: no Diplomacy mod** — its mechanics are integrated natively instead
 (X war exhaustion, Y secession/abdication conspiracies; remaining parity items in ROADMAP block
-E). Priority re-verify: **U (dialogue court chain), X/Y (the diplomacy-parity wave — Y5
-graduation is the riskiest), O8, N4, Q1**, plus the still-unseen J3 breakaway, M2 siege unwind,
-and W (clan-screen zamindari).
+E). Priority re-verify: **Q1/Q2 (hall ceremony), U (dialogue court chain), X/Y (the
+diplomacy-parity wave — Y5 graduation is the riskiest), O8, N4**, plus the still-unseen J3
+breakaway, M2 siege unwind, and W (clan-screen zamindari).
 
 ## Setup
 
@@ -254,33 +257,42 @@ bonded labour in villages" under Village Fiefs (on by default).*
 - **P8.** Console: `hindostan.settle_labour <n>` adds a free gang (no captives spent) up to cap;
   `hindostan.labour_status` lists every village's gang with its tax/unrest.
 
-## Q. Coronation ceremonies (`CoronationBehavior`, fires on accession; `hindostan.coronation_test`)
+## Q. Coronation ceremonies (`CoronationBehavior`; `hindostan.coronation_test`) — REWORKED round 5: held IN THE HALL
 
-*New this wave (2026-07-11) — built, unit-tested (8 new `CoronationMathTests`, 314 green), never
-run live. Reuses the existing opinion records, Ceremonial farmaan, and grievance dialogue.*
+*Round-5 rework (2026-07-12, "lords physically present inside the hall in my keep"): the player's
+own coronation is no longer an instant popup. Acceding/founding SUMMONS the darbar; you travel to
+a keep of your realm and hold court in the lord's hall, where the attending house heads stand
+bodily before the throne and swear IN DIALOGUE. 5 new `CoronationMathTests` (362 green). The
+in-hall staging (LocationCharacter materialisation + mission open) has NEVER run live — Q1/Q2
+are the riskiest items in this section.*
 
-- **Q1.** **Player accedes as sovereign** (take a throne, or `hindostan.coronation_test` while you
-  lead a realm): a Ceremonial "Your Coronation Darbar" farmaan lists the verdict of the hall, who
-  bent the knee, and who left an empty place. Sanity: high-relation house heads should mostly
-  attend, resented ones mostly stay away. Legitimacy shifts with the balance of attend vs. absent.
-  **ROUND-4 FIX:** FOUNDING your own kingdom now also stages the darbar (it previously only fired
-  on a leader change of an existing realm — the reported gap). With no vassal houses yet, the
-  farmaan still shows ("No vassal houses yet answer to your throne"). Claim/rebel kingdoms
-  (`hind_rebel_*`) deliberately get no coronation.
-- **Q2.** With absentees, the farmaan offers "Demand a late oath" → a follow-up "The Late Oath"
-  farmaan reports who bent (warmer lords) and who defied (colder lords). Defiant lords get a
-  **grudge** you can then pursue in the grievance dialogue (playtest H3). "Let their absence stand"
-  instead → a message that the court remembers.
-- **Q3.** Check the opinion records afterward (encyclopedia "Disposition toward you" rows / grudge
-  dialogue availability): attendees carry "an oath sworn", absentees "an empty place at the ceremony".
-- **Q4.** **Player as vassal:** be a member (non-ruling) clan of a realm, then cause its ruler to
-  die/change → a "A Summons to the Coronation" farmaan from the new sovereign. "Travel and swear" →
-  relation up, the sovereign marks your loyalty. On a separate save, "Stay away" → relation down,
-  the sovereign holds the empty place against you.
-- **Q5.** **AI accessions are silent:** when a foreign realm's ruler changes (not yours), NO farmaan
-  fires — no coronation spam. During the scripted 1707 cascade specifically, no darbar per beat.
-- **Q6.** **Save/load:** the ruler snapshot persists (no phantom coronation on load). Old save
-  (pre-feature): loads clean; the next real accession in your realm stages the darbar.
+- **Q1.** **The summons → the hall (RISKIEST).** Take/found a throne (or `hindostan.coronation_test`
+  as ruler) → "The Coronation Darbar Is Summoned" farmaan (no instant verdict). Travel to any
+  town/castle of YOUR realm → keep menu shows **"Hold your coronation darbar in the hall"** (on
+  `town_keep` and `castle` menus, right under "Go to the lord's hall"). Click it: the lord's hall
+  mission opens and the ATTENDING house heads stand in the hall (native keep-notable stand-ins —
+  their map parties don't move). Verify: lords visible, hall doesn't crash on entry, leaving the
+  hall works.
+- **Q2.** **The spoken oaths.** Talk to an attending lord during the ceremony: he swears fealty in
+  dialogue — warmly (high regard), evenly, or through his teeth (low regard) — once each; spoken
+  oaths land +3 relation vs +2 unspoken. Leaving the hall closes the ceremony: the "Your Coronation
+  Darbar" verdict farmaan fires (who bent the knee, who left an empty place), legitimacy shifts,
+  attendees you never approached still count (+2, "entered from the dais").
+- **Q3.** **The empty places.** With absentees, the verdict farmaan still offers "Demand a late
+  oath" → "The Late Oath" follow-up (warmer lords bend, colder defy and take a grudge → grievance
+  dialogue H3). Check opinion records: attendees "an oath sworn", absentees "an empty place".
+- **Q4.** **The courier fallback.** On the summons farmaan pick "Take the oaths by farmaan" (or
+  hold no court for 14 days): the OLD instant resolution fires, framed as oaths taken by courier.
+  A summons must never dangle: dethroned/eliminated before holding court → silently void.
+- **Q5.** **Player as vassal — swear in person.** Non-ruling clan, realm's ruler changes → "A
+  Summons to the Coronation". "I will travel to court and swear in person" → a message says where
+  the sovereign is; find him (his throne room ideally, anywhere works) → new dialogue line
+  "Jahanpanah, I answer the summons…" → +6 relation and SworeFealty. Ignore him for 14 days →
+  counts as staying away (−8, MissedCeremony). "Send regrets" on the farmaan → immediate snub.
+- **Q6.** **AI accessions are silent** (no farmaan for foreign realms; no darbar per beat of the
+  scripted 1707 cascade). **Save/load:** pending summons + pending vassal oath persist (new
+  `hind_coron_pend_*`/`hind_coron_oath_*` keys); the live in-hall ceremony state is deliberately
+  NOT serialized (you can't save inside the mission). Old saves load clean.
 
 ## R. Monsoon harvest + famine (`MonsoonBehavior`; `hindostan.monsoon_status / set_monsoon`)
 

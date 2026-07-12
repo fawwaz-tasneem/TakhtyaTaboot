@@ -30,6 +30,24 @@ namespace TakhtyaTaboot.Util
         public static bool AcceptsLateOath(float effectiveOpinion, float rng01)
             => rng01 < LateOathChance(effectiveOpinion);
 
+        // ── The summons deadline ─────────────────────────────────────────────────────
+        // A summoned darbar cannot wait forever: past the deadline the oaths are taken by
+        // courier instead (the instant resolution) and the moment's majesty is lost.
+        public const int CeremonyDeadlineDays = 14;
+
+        public static bool SummonsLapsed(float summonDay, float nowDay)
+            => summonDay >= 0f && nowDay - summonDay > CeremonyDeadlineDays;
+
+        // ── The register of the oath ─────────────────────────────────────────────────
+        // How a lord speaks his oath in the hall, by his regard for the new sovereign:
+        // glad, dutiful, or through his teeth.
+        public enum OathRegister { Warm, Even, Cold }
+
+        public static OathRegister RegisterOf(float effectiveOpinion)
+            => effectiveOpinion >= 20f ? OathRegister.Warm
+             : effectiveOpinion <= -5f ? OathRegister.Cold
+             : OathRegister.Even;
+
         // ── The verdict of the hall ──────────────────────────────────────────────────
         // How the gathering reads, for the coronation farmaan.
         public static string LoyaltyVerdict(int attended, int summoned)

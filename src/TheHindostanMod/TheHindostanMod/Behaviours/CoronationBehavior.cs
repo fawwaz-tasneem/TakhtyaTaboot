@@ -291,25 +291,21 @@ namespace TakhtyaTaboot
                 () => TYTLog.Guard("Coronation.VassalOath", VassalOathSworn), 200);
         }
 
+        // ── The procession's window into the live ceremony ───────────────────────────
+        public bool IsCeremonyLive => _ceremonyLive;
+        public IReadOnlyList<Hero> CeremonyAttendees => _ceremonyAttended;
+        public bool HasSworn(Hero h) => h != null && _swornIds.Contains(h.StringId);
+
         private bool OathCondition()
         {
             Hero p = Hero.OneToOneConversationHero;
             if (!_ceremonyLive || p == null || _swornIds.Contains(p.StringId)) return false;
             if (!_ceremonyAttended.Contains(p)) return false;
             float opinion = OpinionBehavior.Instance?.EffectiveOpinion(p, Hero.MainHero) ?? 0f;
-            string oath;
-            switch (CoronationMath.RegisterOf(opinion))
-            {
-                case CoronationMath.OathRegister.Warm:
-                    oath = "Padishah! I bend the knee with a glad heart. My sword, my salt, and the strength of my " +
-                           "house are yours — let every soul in this hall hear it."; break;
-                case CoronationMath.OathRegister.Cold:
-                    oath = "...I bend the knee, padishah. The oath is sworn before these witnesses — let the " +
-                           "register say so, and let that suffice."; break;
-                default:
-                    oath = "Padishah. Before the assembled court I swear my oath: my sword and my salt are yours " +
-                           "while you keep the faith of the throne."; break;
-            }
+            // Each lord swears in his own culture's voice — seven variations per culture, the
+            // same lord always speaking the same one, coloured by his regard (CoronationOaths).
+            string oath = CoronationOaths.Oath(p.Culture?.StringId,
+                CoronationOaths.SeedOf(p.StringId), CoronationMath.RegisterOf(opinion));
             MBTextManager.SetTextVariable("HIND_CORON_OATH", oath, false);
             return true;
         }

@@ -17,12 +17,16 @@ seen in the log), the monsoon roll, and found + fixed: the works-ledger CRASH on
 int/float binding — Modding-Findings ch.19) and the missing coronation on FOUNDING a kingdom
 (Q1). **Round-5 request (2026-07-12): the coronation now happens IN THE HALL** — the summons →
 travel to your keep → lords stand bodily in the lord's hall and swear in dialogue (section Q
-fully rewritten; Q1/Q2 in-hall staging is now the single riskiest unverified path alongside Y5).
+fully rewritten). **Round 6 (2026-07-12, screenshots):** the hall ceremony WORKS live; feedback
+shipped as section Z + the Q2 procession rework (lords address the SEATED sovereign one by one,
+7 culture-keyed oath variations), the farmaan layout fix (title was at the bottom), encyclopedia
+button placement + native "Last seen" updates (the "4 scouts to no avail" — reports had in fact
+all delivered), the qasid messenger (Diplomacy parity), and spoken follow-me orders.
 **STANDING DECISION: no Diplomacy mod** — its mechanics are integrated natively instead
-(X war exhaustion, Y secession/abdication conspiracies; remaining parity items in ROADMAP block
-E). Priority re-verify: **Q1/Q2 (hall ceremony), U (dialogue court chain), X/Y (the
-diplomacy-parity wave — Y5 graduation is the riskiest), O8, N4**, plus the still-unseen J3
-breakaway, M2 siege unwind, and W (clan-screen zamindari).
+(X war exhaustion, Y secession/abdication conspiracies; ROADMAP block E: messengers now SHIPPED,
+alliances/NAPs + coalitions remain). Priority re-verify: **Q2 (the procession), Z1 (farmaan
+layout, needs the prefab deployed), Z3 (qasid audience), X/Y (Y5 graduation still riskiest)**,
+plus the still-unseen J3 breakaway, M2 siege unwind, and W (clan-screen zamindari).
 
 ## Setup
 
@@ -273,11 +277,17 @@ are the riskiest items in this section.*
   mission opens and the ATTENDING house heads stand in the hall (native keep-notable stand-ins —
   their map parties don't move). Verify: lords visible, hall doesn't crash on entry, leaving the
   hall works.
-- **Q2.** **The spoken oaths.** Talk to an attending lord during the ceremony: he swears fealty in
-  dialogue — warmly (high regard), evenly, or through his teeth (low regard) — once each; spoken
-  oaths land +3 relation vs +2 unspoken. Leaving the hall closes the ceremony: the "Your Coronation
-  Darbar" verdict farmaan fires (who bent the knee, who left an empty place), legitimacy shifts,
-  attendees you never approached still count (+2, "entered from the dais").
+- **Q2.** **The procession (ROUND-6 REWORK — the sovereign is ADDRESSED, he does not go asking).**
+  Take your place — stand at the throne — and after ~5 seconds the attending lords come to you
+  ONE BY ONE (`CoronationProcessionLogic`): each walks to two paces before you, faces you, and
+  opens the conversation himself. Each swears **in his own culture's voice — 7 variations per
+  culture** (Mughal/Bengali/Hyderabadi/Afghan/Mysorean/Rajput/Maratha/Sikh, `CoronationOaths`,
+  14 new tests), the same lord always speaking the same oath, coloured warm/even/cold by his
+  regard. Spoken oaths land +3 relation vs +2 unspoken. You can still approach anyone by hand
+  (the round-5 floor); a lord you already heard is skipped by the procession. Leaving the hall
+  closes the ceremony: the verdict farmaan fires, legitimacy shifts, attendees never heard still
+  count (+2, "entered from the dais"). NOTE: you STAND at the throne — the engine has no player
+  throne-sitting; the procession comes to wherever you place yourself.
 - **Q3.** **The empty places.** With absentees, the verdict farmaan still offers "Demand a late
   oath" → "The Late Oath" follow-up (warmer lords bend, colder defy and take a grudge → grievance
   dialogue H3). Check opinion records: attendees "an oath sworn", absentees "an empty place".
@@ -506,6 +516,37 @@ secession war's resolution and GRADUATION of a winning breakaway into a real kin
 - **Y7.** One secession war at a time; no new ultimatum while ANY convulsion (accession war, AI
   civil war, secession war) is raging — cabals bide their time. Save/load persists cabals, the
   war, and the graduation register.
+
+## Z. Round-6 fixes & features (2026-07-12: farmaan layout, encyclopedia surfaces, the qasid, follow-me, the procession)
+
+*Built on round-6 screenshots + feedback; 381 tests green. The procession (Q2, rewritten above)
+and the qasid audience opening are the risky new paths here.*
+
+- **Z1.** **Farmaan popup reads top-down at last:** decorative header, then TITLE, divider,
+  sender, body, seal — the round-6 screenshot showed it reversed (seal on top, title at the
+  bottom): the prefab carried the backwards `VerticalTopToBottom` (Modding-Findings ch.18).
+  Requires the updated `GUI/Prefabs/HindostanFarmaan.xml` to be deployed, not just the DLL.
+- **Z2.** **Encyclopedia buttons sit in the column, not on the name.** The scout button (and
+  the new qasid button beside it) now flow UNDER the hero's name and kingdom-rank line. And the
+  scout's report now teaches the game itself: after an akhbaar arrives, the native top-right
+  line reads "Last seen around <place>" instead of "Never seen before"
+  (`Hero.UpdateLastKnownClosestSettlement`) — round 6's "4 scouts to no avail" was exactly this
+  (the log shows all 4 reports DELIVERED; the page just never showed it).
+- **Z3.** **The qasid (messenger — Diplomacy parity, ROADMAP E).** "Send a qasid (120/180
+  dinars)" on any lord's page → he rides 0.5–4 days (faster + cheaper than a scout,
+  `MessengerMath`, 5 tests) → when he arrives, a conversation OPENS AS IF YOU STOOD BEFORE THE
+  LORD — the full tree: fealty, grievances, invitations, war talk, everything. The audience
+  waits for the map (never interrupts a battle/mission/darbar sitting); arrived-but-unheard
+  audiences survive save/load (`hind_qasid_*`). Dead target → "The Qasid Returns Unheard"
+  farmaan. Console: `hindostan.qasid_status`, `hindostan.qasid_arrive`.
+- **Z4.** **"Ride with me" said face to face.** Talking to a lord who leads a party you may
+  command (your clan; or your vassals, who may refuse — asked in person carries +10 weight):
+  new dialogue line "Ride with me — keep your banner at my side" → the existing
+  `PartyOrdersBehavior` Follow order (hourly re-assert, expiry, save-safe). "You may resume
+  your own course" releases any standing order. The map-menu "Command your parties" is
+  unchanged — same ledger, two surfaces.
+- **Z5.** **Save/load with a qasid on the road and a follow order standing:** both persist;
+  a follow order re-asserts hourly after load exactly as before.
 
 ---
 

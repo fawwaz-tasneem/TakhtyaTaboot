@@ -29,10 +29,11 @@ Update this file when an item ships (move it to "Shipped") or when priorities ch
 
 1. **Alliances & non-aggression pacts.** Formal pacts between realms with opinion/authority
    stakes; must respect throne-war rules (no pact can bind a hind_rebel_* war).
-2. **Messengers.** Speak with any lord at a distance (the akhbaar scouts' infrastructure is
-   the natural carrier — a harkara carries words both ways).
-3. **Coalitions against the overreaching.** Realms that grow too fast draw a defensive
+2. **Coalitions against the overreaching.** Realms that grow too fast draw a defensive
    league; ties into ImperialAuthority and the tolerance/legitimacy systems.
+
+*(Messengers SHIPPED 2026-07-12 round 6 — the qasid, `MessengerBehavior`: encyclopedia
+dispatch, audience opens as if you stood before the lord. See Shipped.)*
 
 ## D. The big new arcs
 
@@ -56,6 +57,18 @@ waqai-nawis LLM news layer (ch.18).
 
 ## Shipped (for orientation)
 
+- Playtest round 6 — 2026-07-12. **The qasid** (block E messengers, `MessengerBehavior` +
+  `MessengerMath`, 5 tests): encyclopedia "Send a qasid" → 0.5–4 days → a conversation opens as
+  if the player stood before the lord (full dialogue tree; waits for the map, never interleaves
+  the darbar court; survives save/load). **The coronation procession**
+  (`CoronationProcessionLogic` + `CoronationOaths`, 14 tests): during the hall ceremony each
+  attending lord walks to the sovereign in turn and swears in his culture's voice — 7 variations
+  × 8 cultures, warm/even/cold by regard. **Spoken party orders**: "Ride with me — keep your
+  banner at my side" / "resume your own course" dialogue onto the existing PartyOrdersBehavior
+  ledger (+10 in-person weight with vassals). Fixes: farmaan popup rendered reversed (ch.18
+  backwards enum in the prefab — title now on top); encyclopedia scout button off the hero's
+  name into the column flow; akhbaar reports now update the hero's NATIVE "Last seen" line
+  (the round-6 "4 scouts to no avail" — all four reports had delivered; the page never showed it).
 - Diplomacy-parity wave 1 (block E) — 2026-07-12. **War exhaustion** (`WarExhaustionBehavior`
   + `WarExhaustionMath`, 12 tests): every side of every real war accrues exhaustion from
   casualties, fiefs lost, raids and time (small realms feel it harder); a SPENT AI realm sues

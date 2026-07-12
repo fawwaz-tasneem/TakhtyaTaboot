@@ -11,7 +11,10 @@
 
             <Widget WidthSizePolicy="StretchToParent" HeightSizePolicy="StretchToParent" Sprite="StdAssets\Popup\canvas" />
 
-            <ListPanel WidthSizePolicy="StretchToParent" HeightSizePolicy="CoverChildren" VerticalAlignment="Top" MarginTop="34" MarginLeft="46" MarginRight="46" StackLayout.LayoutMethod="VerticalTopToBottom">
+            <!-- ch.18: the engine's vertical LayoutMethod names are BACKWARDS — VerticalBottomToTop
+                 renders top-down. The old VerticalTopToBottom here rendered the decree reversed
+                 (seal on top, title at the bottom — playtest round 6). -->
+            <ListPanel WidthSizePolicy="StretchToParent" HeightSizePolicy="CoverChildren" VerticalAlignment="Top" MarginTop="34" MarginLeft="46" MarginRight="46" StackLayout.LayoutMethod="VerticalBottomToTop">
               <Children>
 
                 <!-- Decorative header -->

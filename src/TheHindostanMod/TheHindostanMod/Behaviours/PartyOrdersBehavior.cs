@@ -153,8 +153,33 @@ namespace TakhtyaTaboot
                 id => { if (id is Settlement s) Issue(p, type, s.StringId); });
         }
 
+        // ── The dialogue surface (round 6: orders spoken face to face) ───────────────
+        // Whether this hero leads a party the player may command, and on what footing.
+        public bool CanCommandInDialogue(Hero h, out MobileParty party, out bool isVassal)
+        {
+            party = h?.PartyBelongedTo; isVassal = false;
+            if (h == null || party == null || party.LeaderHero != h || party == MobileParty.MainParty) return false;
+            if (ClanParties().Contains(party)) return true;
+            if (VassalParties().Contains(party)) { isVassal = true; return true; }
+            return false;
+        }
+
+        public bool IsUnderMyOrder(MobileParty p) => p != null && _orders.ContainsKey(p.StringId);
+
+        // An order asked face to face carries the weight of the asking (a vassal is likelier
+        // to agree than to a courier). Returns whether he accepted.
+        public bool TryIssueFollowInPerson(MobileParty p) => Issue(p, Follow, null, inPerson: true);
+
+        public void StandDownInPerson(MobileParty p)
+        {
+            if (p == null) return;
+            _orders.Remove(p.StringId);
+            try { p.SetMoveModeHold(); } catch { }
+        }
+
         // ── Issuing & enforcing orders ───────────────────────────────────────────────
-        private void Issue(MobileParty p, int type, string targetId)
+        // Returns whether the order was accepted (clan parties always obey; a vassal rolls).
+        private bool Issue(MobileParty p, int type, string targetId, bool inPerson = false)
         {
             int today = (int)CampaignTime.Now.ToDays;
             if (IsVassalParty(p))
@@ -166,25 +191,26 @@ namespace TakhtyaTaboot
                             ?? CharacterRelationManager.GetHeroRelation(Hero.MainHero, leader);
                 float auth = Hero.MainHero.Clan?.Kingdom?.Leader == Hero.MainHero
                     ? (ImperialAuthorityBehavior.Instance?.GetAuthority(Hero.MainHero.Clan.Kingdom) ?? 50f) : 0f;
-                bool accept = rel + auth / 2f + MBRandom.RandomInt(-20, 20) >= 20f;
+                bool accept = rel + auth / 2f + (inPerson ? 10f : 0f) + MBRandom.RandomInt(-20, 20) >= 20f;
                 if (!accept)
                 {
                     ChangeRelationAction.ApplyRelationChangeBetweenHeroes(Hero.MainHero, leader, -2);
                     Notify($"{leader.Name} refuses your order. He answers to no captain but the field.", true);
-                    return;
+                    return false;
                 }
                 ChangeRelationAction.ApplyRelationChangeBetweenHeroes(Hero.MainHero, leader, 1);
                 var ov = new Order { Type = type, TargetId = targetId, Vassal = true, Expiry = today + VassalOrderDays };
                 _orders[p.StringId] = ov;
                 ApplyOrderMovement(p, ov);
                 Notify($"{leader.Name} agrees to your order: {OrderName(type)}.", false);
-                return;
+                return true;
             }
 
             var o = new Order { Type = type, TargetId = targetId, Vassal = false, Expiry = today + ClanOrderDays };
             _orders[p.StringId] = o;
             ApplyOrderMovement(p, o);
             Notify($"{p.LeaderHero?.Name} will carry out your order: {OrderName(type)}.", false);
+            return true;
         }
 
         private void OnHourlyTickParty(MobileParty party)

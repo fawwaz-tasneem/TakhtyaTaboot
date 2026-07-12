@@ -263,6 +263,18 @@ namespace TakhtyaTaboot
             _lastWhere[s.TargetId] = shortWhere;
             _lastDay[s.TargetId] = (float)CampaignTime.Now.ToDays;
 
+            // And teach the GAME what the akhbaar knows: the hero's native last-known place, so
+            // his encyclopedia page stops saying "Never seen before" (playtest round 6 — the
+            // custom register row alone read as the scouts doing nothing).
+            if (h != null)
+            {
+                Settlement seen = h.CurrentSettlement
+                    ?? h.PartyBelongedTo?.SiegeEvent?.BesiegedSettlement
+                    ?? (h.PartyBelongedTo != null ? NearestHoldingSettlement(h.PartyBelongedTo) : null)
+                    ?? h.HomeSettlement;
+                if (seen != null) h.UpdateLastKnownClosestSettlement(seen);
+            }
+
             UI.RoyalFarmaan.Issue("Akhbaar: " + s.TargetName,
                 "By the hand of your harkara, come off the road" + (string.IsNullOrEmpty(s.Origin) ? "" : " to " + s.Origin),
                 body,
@@ -335,6 +347,9 @@ namespace TakhtyaTaboot
         }
 
         private static string NearestHolding(MobileParty party)
+            => NearestHoldingSettlement(party)?.Name.ToString() ?? "no place your scout could name";
+
+        private static Settlement NearestHoldingSettlement(MobileParty party)
         {
             Vec2 pos = party.GetPosition2D;
             Settlement best = null; float bestD = float.MaxValue;
@@ -344,7 +359,7 @@ namespace TakhtyaTaboot
                 float d = pos.Distance(s.GetPosition2D);
                 if (d < bestD) { bestD = d; best = s; }
             }
-            return best?.Name.ToString() ?? "no place your scout could name";
+            return best;
         }
 
         private static void Notify(string text, bool bad)

@@ -49,6 +49,12 @@
       <HintPath>$(BannerlordDir)\Modules\Native\bin\Win64_Shipping_Client\TaleWorlds.MountAndBlade.View.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <!-- SandBox — mission-side campaign plumbing (AgentNavigator, MissionConversationLogic,
+         CampaignAgentComponent) for the coronation procession. Runtime module; never shipped. -->
+    <Reference Include="SandBox">
+      <HintPath>$(BannerlordDir)\Modules\SandBox\bin\Win64_Shipping_Client\SandBox.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="TaleWorlds.GauntletUI">
       <HintPath>$(BannerlordDir)\bin\Win64_Shipping_Client\TaleWorlds.GauntletUI.dll</HintPath>
       <Private>False</Private>

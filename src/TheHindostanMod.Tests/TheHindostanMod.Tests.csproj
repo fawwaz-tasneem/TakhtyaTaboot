@@ -55,6 +55,8 @@
     <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\MansabRankMath.cs" Link="Linked\MansabRankMath.cs" />
     <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\WarExhaustionMath.cs" Link="Linked\WarExhaustionMath.cs" />
     <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\DisaffectionMath.cs" Link="Linked\DisaffectionMath.cs" />
+    <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\MessengerMath.cs" Link="Linked\MessengerMath.cs" />
+    <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\CoronationOaths.cs" Link="Linked\CoronationOaths.cs" />
   </ItemGroup>
 
 </Project>

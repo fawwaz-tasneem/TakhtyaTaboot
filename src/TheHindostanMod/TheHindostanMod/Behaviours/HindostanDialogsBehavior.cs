@@ -1,6 +1,7 @@
 using System.Linq;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.CampaignSystem.Actions;
+using TaleWorlds.CampaignSystem.Party;
 using TaleWorlds.CampaignSystem.Settlements;
 using TaleWorlds.Core;
 using TaleWorlds.Library;
@@ -43,6 +44,7 @@ namespace TakhtyaTaboot
             AddNotableFlow(starter);
             AddPrinceFlow(starter);
             AddCouncilInviteFlow(starter);
+            AddFollowFlow(starter);
         }
 
         // ── 1. Swear fealty in person ────────────────────────────────────────────────
@@ -264,6 +266,58 @@ namespace TakhtyaTaboot
                     OpinionBehavior.Instance?.AddOpinion(p, Hero.MainHero, OpinionMath.OpinionType.Favor);
                     Notify($"{p.Name} is minded to serve at your council; appoint him when a seat opens.", false);
                 });
+        }
+
+        // ── 7. Command a party face to face (round 6: the map menu's orders, spoken) ─
+        // "Follow my banner" / "resume your course" said to the lord himself. Rides on
+        // PartyOrdersBehavior — same acceptance ledger, same hourly re-assertion — but an
+        // order asked in person carries extra weight with a vassal.
+        private static bool _followAccepted;
+
+        private void AddFollowFlow(CampaignGameStarter starter)
+        {
+            starter.AddPlayerLine("hind_dlg_follow", "hero_main_options", "hind_dlg_follow_reply",
+                "{=!}Ride with me — keep your banner at my side.",
+                () =>
+                {
+                    Hero p = Partner;
+                    var po = PartyOrdersBehavior.Instance;
+                    return p != null && po != null
+                           && po.CanCommandInDialogue(p, out MobileParty mp, out _)
+                           && !po.IsUnderMyOrder(mp);
+                },
+                () =>
+                {
+                    Hero p = Partner;
+                    var po = PartyOrdersBehavior.Instance;
+                    _followAccepted = p != null && po != null
+                                      && po.CanCommandInDialogue(p, out MobileParty mp, out _)
+                                      && po.TryIssueFollowInPerson(mp);
+                }, 106);
+
+            starter.AddDialogLine("hind_dlg_follow_yes", "hind_dlg_follow_reply", "close_window",
+                "{=!}My banner rides at yours. Lead, and we follow.",
+                () => _followAccepted, null);
+            starter.AddDialogLine("hind_dlg_follow_no", "hind_dlg_follow_reply", "close_window",
+                "{=!}No. I answer to no captain but the field — ask again when the ledger between us reads better.",
+                () => !_followAccepted, null);
+
+            starter.AddPlayerLine("hind_dlg_release", "hero_main_options", "hind_dlg_release_reply",
+                "{=!}You may resume your own course.",
+                () =>
+                {
+                    Hero p = Partner;
+                    var po = PartyOrdersBehavior.Instance;
+                    return p?.PartyBelongedTo != null && p.PartyBelongedTo.LeaderHero == p
+                           && po != null && po.IsUnderMyOrder(p.PartyBelongedTo);
+                },
+                () =>
+                {
+                    Hero p = Partner;
+                    if (p?.PartyBelongedTo != null) PartyOrdersBehavior.Instance?.StandDownInPerson(p.PartyBelongedTo);
+                }, 106);
+            starter.AddDialogLine("hind_dlg_release_r", "hind_dlg_release_reply", "close_window",
+                "{=!}As you say. My banner keeps its own road again.", () => true, null);
         }
 
         private static void Notify(string text, bool bad)

@@ -94,6 +94,10 @@ namespace TakhtyaTaboot
             // Track the player's personal kills in campaign battles, for valour (Util.PlayerKillValourLogic).
             if (Campaign.Current != null && mission != null)
                 mission.AddMissionBehavior(new Util.PlayerKillValourLogic());
+            // A live coronation ceremony: the procession logic walks each attending lord to the
+            // sovereign in turn to swear (round 6 — the king does not go asking; he is addressed).
+            if (Campaign.Current != null && mission != null && CoronationBehavior.Instance?.IsCeremonyLive == true)
+                mission.AddMissionBehavior(new Util.CoronationProcessionLogic());
         }
 
         private static void OnUnhandledException(object sender, System.UnhandledExceptionEventArgs e)
@@ -205,6 +209,7 @@ namespace TakhtyaTaboot
 
             // Phase 8 — QoL systems
             starter.AddBehavior(new AkhbaarScoutBehavior()); // pay a harkara to trail a named lord; akhbaar report via farmaan
+            starter.AddBehavior(new MessengerBehavior()); // the qasid: your word carried OUT — audience as if you stood there (no-Diplomacy parity)
             starter.AddBehavior(new MonsoonBehavior()); // the rains beyond speed: harvest swing + famine chain
             // starter.AddBehavior(new TradeRouteBehavior());
             // starter.AddBehavior(new FoodSecurityBehavior());

@@ -41,6 +41,10 @@ namespace TakhtyaTaboot
         // ── The sitting (transient) ──────────────────────────────────────────────────
         private enum Stage { None, OpenPlaintiff, Plaintiff, OpenDefendant, Defendant, OpenAdvisor, Advisor }
         private Stage _stage = Stage.None;
+
+        // Whether a court sitting is live — other conversation-openers (the qasid's audiences)
+        // must wait for the court to rise rather than interleave its chain.
+        public bool IsSitting => _stage != Stage.None;
         private Case _case;
 
         private class Case

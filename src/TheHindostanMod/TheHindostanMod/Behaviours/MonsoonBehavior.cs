@@ -108,10 +108,10 @@ namespace TakhtyaTaboot
             int cost = FamineReliefCost(s);
             RoyalFarmaan.Issue("Famine in the District", $"{s.Name} hungers",
                 $"The failed rains have emptied the granaries of {s.Name}. The headman reports the people eating seed-grain and " +
-                $"the weak already dying. You may open the granaries and buy in grain to see them through — some {cost} dinars — " +
+                $"the weak already dying. You may open the granaries and buy in grain to see them through — some {cost} rupees — " +
                 "or let the district fend for itself and bear what follows.",
                 seal: "Sent in the failing light of the year",
-                primary: $"Open the granaries (pay {cost} dinars)",
+                primary: $"Open the granaries (pay {cost} rupees)",
                 onPrimary: () => TYTLog.Guard("Monsoon.Relieve", () => RelieveFamine(s, cost)),
                 secondary: "Let them fend for themselves",
                 onSecondary: () => TYTLog.Guard("Monsoon.Starve", () => LetStarve(s)),
@@ -124,7 +124,7 @@ namespace TakhtyaTaboot
         private void RelieveFamine(Settlement s, int cost)
         {
             if (Hero.MainHero.Gold < cost)
-            { Notify($"You cannot raise the {cost} dinars to relieve {s.Name}. The district must fend for itself.", true); LetStarve(s); return; }
+            { Notify($"You cannot raise the {cost} rupees to relieve {s.Name}. The district must fend for itself.", true); LetStarve(s); return; }
             Hero.MainHero.ChangeHeroGold(-cost);
             // Grain steadies the district: the worst hunger passes, order returns, the gentry remember it.
             if (s.Village != null) s.Village.Hearth = MathF.Max(1f, s.Village.Hearth - 5f); // some loss even relieved

@@ -7,7 +7,7 @@ namespace TakhtyaTaboot.Util
     // than a scout who must lurk, count, and return. MessengerBehavior owns the engine side.
     public static class MessengerMath
     {
-        public const int BaseCost = 120;          // dinars, own realm
+        public const int BaseCost = 120;          // rupees, own realm
         public const float ForeignFactor = 1.5f;  // foreign courts must be bribed through
 
         public static int DispatchCost(bool foreignRealm)

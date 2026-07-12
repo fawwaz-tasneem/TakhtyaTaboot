@@ -739,7 +739,7 @@ namespace TakhtyaTaboot
             {
                 int rel = CharacterRelationManager.GetHeroRelation(Hero.MainHero, n);
                 string hint = $"{NotableRole(n)}. Local influence {n.Power:0}. Relation with you {rel}. " +
-                              $"Investiture costs {AppointInfluenceCost} influence and {AppointGoldCost} dinars.";
+                              $"Investiture costs {AppointInfluenceCost} influence and {AppointGoldCost} rupees.";
                 elements.Add(new InquiryElement(n,
                     $"{n.Name} — {NotableRole(n)} (power {n.Power:0}, rel {rel})", null, true, hint));
             }
@@ -748,7 +748,7 @@ namespace TakhtyaTaboot
             string desc = (current != null
                     ? $"The village is presently held by {current.Name}. "
                     : "The village has no settled lord. ") +
-                $"Invest a notable as its zamindar — its lord beneath you. Costs {AppointInfluenceCost} influence and {AppointGoldCost} dinars.";
+                $"Invest a notable as its zamindar — its lord beneath you. Costs {AppointInfluenceCost} influence and {AppointGoldCost} rupees.";
 
             MBInformationManager.ShowMultiSelectionInquiry(new MultiSelectionInquiryData(
                 title, desc, elements, true, 1, 1, "Invest as zamindar", "Cancel",
@@ -761,7 +761,7 @@ namespace TakhtyaTaboot
             if (Clan.PlayerClan.Influence < AppointInfluenceCost)
             { Notify($"You need {AppointInfluenceCost} influence to invest a zamindar.", true); return; }
             if (Hero.MainHero.Gold < AppointGoldCost)
-            { Notify($"You need {AppointGoldCost} dinars for the investiture.", true); return; }
+            { Notify($"You need {AppointGoldCost} rupees for the investiture.", true); return; }
 
             Hero previous = GetVillageLord(village);
             ChangeClanInfluenceAction.Apply(Clan.PlayerClan, -AppointInfluenceCost);

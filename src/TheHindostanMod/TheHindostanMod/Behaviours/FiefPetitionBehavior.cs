@@ -70,7 +70,7 @@ namespace TakhtyaTaboot
                 bool affordable = Hero.MainHero.Gold >= gift && Clan.PlayerClan.Influence >= inf;
                 float chance = FiefPetitionMath.ApprovalChancePerWeek(gift, inf, regard);
                 elements.Add(new InquiryElement(
-                    new int[] { gift, inf }, $"{name} — {gift} dinars + {inf} influence", null, affordable,
+                    new int[] { gift, inf }, $"{name} — {gift} rupees + {inf} influence", null, affordable,
                     $"About {chance * 100f:0}% chance per week the court grants it once a fief is free."
                     + (affordable ? "" : " (you cannot afford this)")));
             }
@@ -99,7 +99,7 @@ namespace TakhtyaTaboot
             _filedDay = (int)CampaignTime.Now.ToDays;
 
             Kingdom k = Clan.PlayerClan?.Kingdom;
-            Notify($"Your petition for a fief is filed with the court of {k?.Name} — {gift} dinars gifted, {influence} influence staked. " +
+            Notify($"Your petition for a fief is filed with the court of {k?.Name} — {gift} rupees gifted, {influence} influence staked. " +
                    "The court will weigh it in the weeks to come.", false);
             TYTLog.Info($"FiefPetition: filed tier {tier}, gift {gift}, inf {influence}.");
         }
@@ -164,7 +164,7 @@ namespace TakhtyaTaboot
             RefundInfluence();
             int gift = _gift;
             Close();
-            if (!silent) Notify($"You withdraw your fief petition. Your {_influenceRefunded} influence is returned; the {gift}-dinar gift stays with the court.", false);
+            if (!silent) Notify($"You withdraw your fief petition. Your {_influenceRefunded} influence is returned; the {gift}-rupee gift stays with the court.", false);
         }
 
         private int _influenceRefunded;
@@ -190,7 +190,7 @@ namespace TakhtyaTaboot
                 : "";
             InformationManager.ShowInquiry(new InquiryData(
                 "Your Standing Petition",
-                $"You have petitioned for {kind} for {days} day(s): {_gift} dinars gifted, {_influence} influence staked. " +
+                $"You have petitioned for {kind} for {days} day(s): {_gift} rupees gifted, {_influence} influence staked. " +
                 $"When a fief you qualify for is free, the court grants it at about {chance}." + floor,
                 true, true, "Keep the petition standing", "Withdraw it (refund influence)",
                 null, () => TYTLog.Guard("FiefPetition.Withdraw", () => Withdraw())), true);
@@ -201,7 +201,7 @@ namespace TakhtyaTaboot
         {
             if (!_open) return null;
             string kind = _tier == 0 ? "village zamindari" : _tier == 1 ? "castle" : "town";
-            return $"Fief petition standing: for a {kind} — {_gift} dinars gifted, {_influence} influence staked.";
+            return $"Fief petition standing: for a {kind} — {_gift} rupees gifted, {_influence} influence staked.";
         }
 
         private static void Notify(string text, bool bad)

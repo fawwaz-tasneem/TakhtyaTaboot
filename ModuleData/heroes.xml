@@ -70,8 +70,16 @@
 
 	<!-- ============ FAMILY RELATIONS ============ -->
 
-	<!-- Tipu Sultan is the son of Hyder Ali (vanilla had them unrelated). -->
-	<Hero id="lord_3_3" faction="Faction.clan_aserai_2" father="Hero.lord_3_5" text="{=!}Son of Hyder Ali and already acclaimed as a commander of rare brilliance, Tipu Sultan has mastered both traditional Nayaka cavalry tactics and modern musketry with a speed that astonishes veterans twice his age. His particular genius lies in rocket warfare: he has championed iron-cased rockets deployed in massed batteries as a weapon to break enemy formations before cavalry closes. Deeply religious and fiercely independent, Tipu understands what few other lords yet grasp: that the European trading companies arriving on India's coasts are not merely merchants, but the vanguard of something far more dangerous. He has made it his life's work to stop them." />
+	<!-- Tipu Sultan is the son of Hyder Ali AND OF HIS HOUSE (round 8): the whole line rides
+	     under the Arasu banner — Tipu, his wife and children move to clan_aserai_3, and the
+	     Kalale pass to the displaced Dalvai family (lord_3_20). ScriptedHistoryBehavior's
+	     mysore_house event applies the same restructure to saves that predate this. -->
+	<Hero id="lord_3_3" faction="Faction.clan_aserai_3" father="Hero.lord_3_5" text="{=!}Son of Hyder Ali and already acclaimed as a commander of rare brilliance, Tipu Sultan has mastered both traditional Nayaka cavalry tactics and modern musketry with a speed that astonishes veterans twice his age. His particular genius lies in rocket warfare: he has championed iron-cased rockets deployed in massed batteries as a weapon to break enemy formations before cavalry closes. Deeply religious and fiercely independent, Tipu understands what few other lords yet grasp: that the European trading companies arriving on India's coasts are not merely merchants, but the vanguard of something far more dangerous. He has made it his life's work to stop them." />
+	<Hero id="lord_3_4" faction="Faction.clan_aserai_3" />
+	<Hero id="lord_3_8" faction="Faction.clan_aserai_3" />
+	<Hero id="lord_3_11" faction="Faction.clan_aserai_3" />
+	<Hero id="lord_3_3_1" faction="Faction.clan_aserai_3" />
+	<Hero id="lord_3_20" faction="Faction.clan_aserai_2" text="{=!}Nanjarajayya of the Kalale leads the family that furnished Mysore its Dalvais — the hereditary war-ministers who commanded the Gaddi's armies while the Wodeyars reigned — until a trooper of genius named Hyder Ali rose through their own ranks and out-generalled them at their own trade. The Kalale keep their estates, their pride, and a very precise memory of everything they have lost; Nanjarajayya serves the state correctly and watches Hyder Ali the way a dispossessed man watches his old house's lit windows." />
 
 	<!-- The Sayyid Brothers of Barha: Abdullah Khan (lord_1_58, clan owner) and
 	     Hussain Ali Khan (lord_NE7_u) are brothers, via a shared mother (Ruqaiya

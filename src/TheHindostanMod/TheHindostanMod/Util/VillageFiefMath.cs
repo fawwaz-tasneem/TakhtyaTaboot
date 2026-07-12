@@ -21,7 +21,7 @@ namespace TakhtyaTaboot.Util
             => Clamp(Math.Max(0, charm) / 150f + Math.Max(0, steward) / 150f, 0f, 2f);
 
         // ── Taxes ────────────────────────────────────────────────────────────────────
-        // Daily dinars into the village coffer. Order ~1-4/day for a healthy village at
+        // Daily rupees into the village coffer. Order ~1-4/day for a healthy village at
         // default tuning (hearth 400-900), so the coffer supplements rather than dwarfs
         // the existing economy. High threat chokes collection down to half.
         public static float DailyTax(float hearth, float taxBonusPct, float threat,

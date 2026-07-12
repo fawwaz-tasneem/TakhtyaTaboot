@@ -120,9 +120,9 @@ namespace TakhtyaTaboot
                     break;
                 case CourtFactionMath.CourtFaction.Reform:
                     Petition(k, faction, speaker,
-                        "The reformers press for clean registers and honest revenue: an outlay of 2000 dinars on the " +
+                        "The reformers press for clean registers and honest revenue: an outlay of 2000 rupees on the " +
                         "diwan's clerks, they promise, will return in a firmer imperial writ.",
-                        "Fund the reforms (2000 dinars)",
+                        "Fund the reforms (2000 rupees)",
                         () =>
                         {
                             if (Hero.MainHero.Gold < 2000) { Notify("You cannot spare the silver; the reformers withdraw, unimpressed.", true); Displease(lords, 3); return; }

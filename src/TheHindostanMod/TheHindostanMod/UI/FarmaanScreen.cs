@@ -107,7 +107,7 @@ namespace TakhtyaTaboot.UI
             string sender = r != null
                 ? $"By order of {kingdom.EncyclopediaRulerTitle} {r.Name}, sovereign of {kingdom.Name}"
                 : "By order of the Imperial Court";
-            Issue(title, sender, body, $"Sealed at the court of {kingdom?.Name}, {CurrentDate()}",
+            Issue(title, sender, body, $"Sealed at the court of {kingdom?.Name}, {CurrentDate()}{RegnalLine(kingdom)}",
                 primary, onPrimary, secondary, onSecondary, dedupeKey, priority, cooldownDays);
         }
 
@@ -124,27 +124,51 @@ namespace TakhtyaTaboot.UI
                 primary, onPrimary, secondary, onSecondary, dedupeKey, priority, cooldownDays);
         }
 
-        // The in-game date, themed for 1719 Hindostan, so decrees feel dated and real.
+        // The in-game date as a Mughal chancery would write it: AD through the historical
+        // calendar (campaign opens 1707, Aurangzeb's death) with the Hijri year beside it —
+        // the dating every real farmaan actually carried.
         public static string CurrentDate()
         {
             try
             {
                 if (Campaign.Current == null) return "";
-                int year = 1719 + Math.Max(0, CampaignTime.Now.GetYear - 1084);
-                return $"the {CampaignTime.Now.GetDayOfSeason + 1}th day of {CampaignTime.Now.GetSeasonOfYear}, {year} AD";
+                int ad = Util.HistoricalCalendar.ToADYear(CampaignTime.Now.GetYear);
+                int ah = Util.HistoricalCalendar.HijriYear(ad);
+                return $"the {CampaignTime.Now.GetDayOfSeason + 1}th day of {CampaignTime.Now.GetSeasonOfYear}, {ad} AD ({ah} AH)";
             }
             catch { return ""; }
         }
 
+        // "in the 5th year of the reign of Padshah X", when the accession is on record.
+        public static string RegnalLine(Kingdom kingdom)
+        {
+            try
+            {
+                int? year = CoronationBehavior.Instance?.RegnalYear(kingdom);
+                if (year == null || kingdom?.Leader == null) return "";
+                return $", in the {Ordinal(year.Value)} year of the reign of {NameWithHonorific(kingdom.Leader)}";
+            }
+            catch { return ""; }
+        }
+
+        private static string Ordinal(int n)
+            => n % 10 == 1 && n % 100 != 11 ? n + "st"
+             : n % 10 == 2 && n % 100 != 12 ? n + "nd"
+             : n % 10 == 3 && n % 100 != 13 ? n + "rd" : n + "th";
+
         // A kingdom's ruler-title honorific (Padshah, Maharajadhiraja, …), or "".
         public static string Honorific(Kingdom kingdom) => kingdom?.EncyclopediaRulerTitle?.ToString() ?? "";
 
-        // A hero named with their realm's honorific, e.g. "Padshah Muhammad Shah".
+        // A hero named with their realm's honorific and any court-granted title, e.g.
+        // "Padshah Muhammad Shah", "Najaf Khan Bahadur".
         public static string NameWithHonorific(Hero hero)
         {
             if (hero == null) return "";
             string h = Honorific(hero.Clan?.Kingdom);
-            return string.IsNullOrEmpty(h) || hero.Clan?.Kingdom?.Leader != hero ? hero.Name.ToString() : $"{h} {hero.Name}";
+            string name = string.IsNullOrEmpty(h) || hero.Clan?.Kingdom?.Leader != hero
+                ? hero.Name.ToString() : $"{h} {hero.Name}";
+            string granted = CourtHonoursBehavior.Instance?.TitleOf(hero);
+            return string.IsNullOrEmpty(granted) ? name : $"{name} {granted}";
         }
 
         private static void ShowNext()

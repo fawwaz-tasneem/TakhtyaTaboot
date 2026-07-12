@@ -577,6 +577,49 @@ Deccan folly, and ~250 string overrides killing every remaining Calradia/vanilla
   lore, tournament/tavern lines — grep-level goal: NO "Calradia/Calradian/Calradios" anywhere in
   normal play. Report any survivor with a screenshot (it will have a findable string key).
 
+## BB. Round-8: the English-override FIX, court honours, scripted history, Mysore restructure
+
+*Round 8 (2026-07-12). ROOT CAUSE of "vanilla names persist": the engine NEVER loads language
+files for English (`LocalizedTextManager.LoadLanguage` skips strings when the language is
+English; `MBTextManager.GetLocalizedText` returns inline text without consulting any table).
+ALL of round 7's language-file overrides were dead. Fixed with a Harmony prefix on
+`GetLocalizedText` (`EnglishTextOverridePatch`) that serves the mod's ~700 inner-key overrides
+at render time — which also heals EXISTING SAVES (names/quest titles are stored as raw
+"{=key}text" and re-resolve every frame). 401 tests green.*
+
+- **BB1.** **THE FIX (verify first):** load your existing save → the quest log should now read
+  "Investigate Alamgir's Folly"; your brother should be renamed (e.g. Nadir for a Mughal
+  culture start); tyt_log shows `EnglishTextOverride: N inner-key overrides live` (~700).
+  Any surviving vanilla name/Calradia → screenshot it.
+- **BB2.** **Mughal dating.** Farmaan seals now read "...1709 AD (1121 AH)" — the campaign
+  calendar is UNIFIED on 1707 = Aurangzeb's death (the old display said 1719 at start; your
+  dates will shift back accordingly). Ruler-issued farmaans add "in the Nth year of the reign".
+  Currency is now the RUPEE everywhere (one engine currency, renamed; mohur/dam appear only
+  as prose denominations).
+- **BB3.** **The news of the roads.** Ask any lord "What word do the roads carry these days?"
+  → one of 14 historical anecdotes (Alamgir's shroud-caps, the Jagat Seth, Banda's cage, the
+  English factories, Jai Singh's observatories...). Same lord keeps his tale for a week.
+- **BB4.** **The khil'at.** As sovereign, talking to a vassal lord: "Approach. The court would
+  bestow a khil'at upon you" → the khil'at-e-fakhira (royal silk, 500 rupees, +5 relation) or
+  the char-aina breastplate (feats of arms, 900, +7); Favor in the opinion ledger; one per
+  lord per 45 days.
+- **BB5.** **Granted titles.** "Kneel. The court would join a title of honour to your name" →
+  pick Bahadur / Jang / ud-Daula / ul-Mulk (60 influence, permanent) — thereafter the court
+  writes him "Najaf Khan Bahadur" everywhere NameWithHonorific is used.
+- **BB6.** **Jharokha darshan.** In any town of your realm, as sovereign: "Show yourself at the
+  jharokha" — once a MONTH: +1.5 legitimacy, +2 town loyalty; the option shows its cooldown.
+- **BB7.** **Scripted history** (`hindostan.history_status` / `history_fire <id>`): 1707 the
+  Deccan war (empire vs Marathas), 1709 Banda's rising (empire vs misls), 1714 the Deccan
+  treaty (peace), 1724 THE DALVAI'S COUP (Mysore's ruling clan → Hyder Ali's house; Wodeyar
+  keeps his palace and a −60 grudge), 1737 Bajirao's dash on Delhi, 1739 NADIR SHAH'S SACK
+  (authority −15, the treasury bled, the Peacock Throne gone), 1747 the Durrani proclamation.
+  Stale-load guard: wars 5+ years past their year don't fire into old saves.
+- **BB8.** **Mysore restructure.** Tipu now rides under Hyder Ali's OWN house (XML for new
+  campaigns; the `mysore_house` event migrates existing saves). The Kalale pass to
+  Nanjarajayya (renamed lord_3_20, new bio, −50 vs Hyder). **When Tipu succeeds to Mysore's
+  throne, the kingdom raises the LION STANDARD — yellow and black** (banner + kingdom colours;
+  `hindostan.mysore_banner [code]` to preview/iterate the exact stripes).
+
 ### Round-7 BUGS FILED (2026-07-12, not yet fixed — user report with screenshot)
 
 - **BUG-1 (procession placement).** The ceremony lords do NOT appear before the sovereign at

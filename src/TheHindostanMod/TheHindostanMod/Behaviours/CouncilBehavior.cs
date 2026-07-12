@@ -402,19 +402,19 @@ namespace TakhtyaTaboot
         private void IssueDecreeLevies()
         {
             Kingdom k = Hero.MainHero.Clan.Kingdom;
-            ImperialAuthorityBehavior.Instance?.ModifyAuthority(k, 6f, "extraordinary levies");
+            ImperialAuthorityBehavior.Instance?.ModifyAuthority(k, 6f, "extraorrupeey levies");
             Hero.MainHero.ChangeHeroGold(3000);
             foreach (Clan c in k.Clans.Where(c => c.Leader != null && c.Leader != Hero.MainHero))
                 ChangeRelationAction.ApplyRelationChangeBetweenHeroes(Hero.MainHero, c.Leader, -3);
-            ConfirmDecree("Demand for Extraordinary Levies",
-                "You demand extraordinary levies across the realm. The treasury swells and your writ runs harder — " +
+            ConfirmDecree("Demand for Extraorrupeey Levies",
+                "You demand extraorrupeey levies across the realm. The treasury swells and your writ runs harder — " +
                 "but the nobles grumble at the imposition.");
         }
 
         private void IssueDecreeFestival()
         {
             Kingdom k = Hero.MainHero.Clan.Kingdom;
-            if (Hero.MainHero.Gold < 5000) { Notify("A grand Darbar befitting the throne costs 5000 dinars.", true); return; }
+            if (Hero.MainHero.Gold < 5000) { Notify("A grand Darbar befitting the throne costs 5000 rupees.", true); return; }
             Hero.MainHero.ChangeHeroGold(-5000);
             LegitimacyBehavior.Instance?.ModifyLegitimacy(k.Leader, 8f, "a grand Darbar");
             foreach (Clan c in k.Clans.Where(c => c.Leader != null && c.Leader != Hero.MainHero))
@@ -470,7 +470,7 @@ namespace TakhtyaTaboot
             starter.AddGameMenuOption("hindostan_darbar_decrees", "decree_remit", "{=!}Proclaim a remission of taxes  (+legitimacy, -authority)",
                 args => { args.optionLeaveType = GameMenuOption.LeaveType.Continue; return true; },
                 args => { IssueDecreeTaxRemission(); GameMenu.SwitchToMenu("hindostan_darbar"); });
-            starter.AddGameMenuOption("hindostan_darbar_decrees", "decree_levy", "{=!}Demand extraordinary levies  (+authority +gold, -nobles)",
+            starter.AddGameMenuOption("hindostan_darbar_decrees", "decree_levy", "{=!}Demand extraorrupeey levies  (+authority +gold, -nobles)",
                 args => { args.optionLeaveType = GameMenuOption.LeaveType.Continue; return true; },
                 args => { IssueDecreeLevies(); GameMenu.SwitchToMenu("hindostan_darbar"); });
             starter.AddGameMenuOption("hindostan_darbar_decrees", "decree_festival", "{=!}Proclaim a grand Darbar  (5000g, +legitimacy)",

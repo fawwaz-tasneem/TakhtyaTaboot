@@ -275,9 +275,9 @@ namespace TakhtyaTaboot
             if (owed <= 0) return;
 
             RoyalFarmaan.FromLiege(liege, "Demand for Tribute",
-                $"The season turns, and your jagir owes its tribute. {owed} dinars are due to your liege's treasury. " +
+                $"The season turns, and your jagir owes its tribute. {owed} rupees are due to your liege's treasury. " +
                 "Pay, and keep your honour at court; withhold, and answer for it.",
-                $"Pay {owed} dinars", () => PayTax(liege, owed),
+                $"Pay {owed} rupees", () => PayTax(liege, owed),
                 "Withhold the tribute", () => WithholdTax(liege, owed),
                 dedupeKey: "tribute", cooldownDays: 7);
         }
@@ -308,7 +308,7 @@ namespace TakhtyaTaboot
                 GiveGoldAction.ApplyBetweenCharacters(Hero.MainHero, liege, owed, true);
                 if (liege != null) ChangeRelationAction.ApplyRelationChangeBetweenHeroes(Hero.MainHero, liege, 2);
                 if (_daysInPoorStanding > 0) _daysInPoorStanding = Math.Max(0, _daysInPoorStanding - 7);
-                Notify($"You pay {owed} dinars in tribute. Your standing holds.", false);
+                Notify($"You pay {owed} rupees in tribute. Your standing holds.", false);
             }
             else
             {
@@ -316,7 +316,7 @@ namespace TakhtyaTaboot
                 if (partial > 0) GiveGoldAction.ApplyBetweenCharacters(Hero.MainHero, liege, partial, true);
                 _daysInPoorStanding += 14;
                 if (liege != null) ChangeRelationAction.ApplyRelationChangeBetweenHeroes(Hero.MainHero, liege, -5);
-                Notify($"You could pay only {partial} of {owed} dinars. You fall into tax default.", true);
+                Notify($"You could pay only {partial} of {owed} rupees. You fall into tax default.", true);
             }
         }
 
@@ -380,8 +380,8 @@ namespace TakhtyaTaboot
             if (liege == null) return "You are sovereign; you owe tribute to no one.";
             int owed = ComputeSeasonalTax(Hero.MainHero);
             RoyalFarmaan.FromLiege(liege, "Demand for Tribute",
-                $"{owed} dinars are due to your liege's treasury this season.",
-                $"Pay {owed} dinars", () => PayTax(liege, owed),
+                $"{owed} rupees are due to your liege's treasury this season.",
+                $"Pay {owed} rupees", () => PayTax(liege, owed),
                 "Withhold the tribute", () => WithholdTax(liege, owed),
                 dedupeKey: "tribute", cooldownDays: 7);
             return "A tribute demand has been issued.";

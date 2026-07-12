@@ -44,7 +44,7 @@ namespace TakhtyaTaboot
             starter.AddGameMenu(ParleyMenuId, "{=!}{HINDOSTAN_PARLEY_TEXT}", ParleyInit);
 
             starter.AddGameMenuOption(ParleyMenuId, "hindostan_parley_bribe",
-                "{=!}Offer a bribe of {PARLEY_BRIBE} dinars to open the gates",
+                "{=!}Offer a bribe of {PARLEY_BRIBE} rupees to open the gates",
                 BribeCondition, args => TYTLog.Guard("SiegeParley.Bribe", AcceptBribe));
 
             starter.AddGameMenuOption(ParleyMenuId, "hindostan_parley_terms",
@@ -137,7 +137,7 @@ namespace TakhtyaTaboot
             if (!SiegeParleyMath.AcceptsBribe(resolve))
             { args.IsEnabled = false; args.Tooltip = new TextObject("{=!}The qiladar's resolve is too firm for coin. Weaken the defence and try again."); }
             else if (Hero.MainHero.Gold < cost)
-            { args.IsEnabled = false; args.Tooltip = new TextObject($"{{=!}}He demands {cost} dinars; you carry {Hero.MainHero.Gold}."); }
+            { args.IsEnabled = false; args.Tooltip = new TextObject($"{{=!}}He demands {cost} rupees; you carry {Hero.MainHero.Gold}."); }
             return true;
         }
 
@@ -164,7 +164,7 @@ namespace TakhtyaTaboot
             InformationManager.DisplayMessage(new InformationMessage(
                 $"Gold changed hands in the night; at dawn the gates of {s.Name} stand open. The garrison marches out with its shame.",
                 Color.FromUint(0xFFD4AF37)));
-            TYTLog.Info($"SiegeParley: {s.StringId} taken by bribe ({cost} dinars).");
+            TYTLog.Info($"SiegeParley: {s.StringId} taken by bribe ({cost} rupees).");
         }
 
         private static void AcceptTerms()

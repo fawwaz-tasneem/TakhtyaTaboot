@@ -42,6 +42,16 @@ namespace TakhtyaTaboot
         // ceremony fires for the thrones already standing when the campaign loads.
         private Dictionary<string, string> _lastRuler = new Dictionary<string, string>();
 
+        // kingdomId -> campaign day the current ruler acceded — the regnal-year register
+        // ("in the 5th year of the reign of..."), read by RoyalFarmaan.RegnalLine.
+        private Dictionary<string, float> _accessionDay = new Dictionary<string, float>();
+
+        public int? RegnalYear(Kingdom k)
+        {
+            if (k == null || !_accessionDay.TryGetValue(k.StringId, out float day)) return null;
+            return 1 + (int)(((float)CampaignTime.Now.ToDays - day) / CampaignTime.DaysInYear);
+        }
+
         // The summoned-but-unheld player coronation (serialized): his realm and the day of summons.
         private string _pendingKingdomId = "";
         private float _pendingSummonDay = -1f;
@@ -97,6 +107,7 @@ namespace TakhtyaTaboot
                 if (!_lastRuler.TryGetValue(k.StringId, out string prev))
                 {
                     _lastRuler[k.StringId] = now;
+                    _accessionDay[k.StringId] = (float)CampaignTime.Now.ToDays;
                     // A realm we have never seen: kingdoms standing at session launch were
                     // seeded by Snapshot(), so this is a kingdom FOUNDED mid-campaign — a
                     // genuine accession. The mod's LIVE claim kingdoms are a war measure, not
@@ -109,6 +120,7 @@ namespace TakhtyaTaboot
                 if (prev == now) continue;
 
                 _lastRuler[k.StringId] = now;
+                _accessionDay[k.StringId] = (float)CampaignTime.Now.ToDays;
                 if (k.Leader.IsAlive && !k.Leader.IsChild)
                     TYTLog.Guard("Coronation.Hold:" + k.Name, () => HoldCoronation(k));
             }
@@ -116,7 +128,7 @@ namespace TakhtyaTaboot
             // Forget thrones that have fallen, so a re-formed kingdom with the same id crowns afresh.
             foreach (string id in _lastRuler.Keys.ToList())
                 if (Kingdom.All.FirstOrDefault(x => x.StringId == id)?.IsEliminated ?? true)
-                    _lastRuler.Remove(id);
+                { _lastRuler.Remove(id); _accessionDay.Remove(id); }
         }
 
         // A newly independent realm's founding darbar (secession graduation calls this).
@@ -124,6 +136,7 @@ namespace TakhtyaTaboot
         {
             if (k?.Leader == null) return;
             _lastRuler[k.StringId] = k.Leader.StringId;
+            _accessionDay[k.StringId] = (float)CampaignTime.Now.ToDays;
             TYTLog.Guard("Coronation.Founding:" + k.Name, () => HoldCoronation(k));
         }
 
@@ -547,6 +560,10 @@ namespace TakhtyaTaboot
             var rulers = _lastRuler.Values.ToList();
             dataStore.SyncData("hind_coron_kids", ref ids);
             dataStore.SyncData("hind_coron_rulers", ref rulers);
+            var accIds = _accessionDay.Keys.ToList();
+            var accDays = _accessionDay.Values.ToList();
+            dataStore.SyncData("hind_coron_acc_ids", ref accIds);
+            dataStore.SyncData("hind_coron_acc_days", ref accDays);
             dataStore.SyncData("hind_coron_pend_kid", ref _pendingKingdomId);
             dataStore.SyncData("hind_coron_pend_day", ref _pendingSummonDay);
             dataStore.SyncData("hind_coron_oath_sid", ref _oathSovereignId);
@@ -555,6 +572,8 @@ namespace TakhtyaTaboot
             {
                 _lastRuler = new Dictionary<string, string>();
                 for (int i = 0; i < ids.Count && i < rulers.Count; i++) _lastRuler[ids[i]] = rulers[i];
+                _accessionDay = new Dictionary<string, float>();
+                for (int i = 0; i < accIds.Count && i < accDays.Count; i++) _accessionDay[accIds[i]] = accDays[i];
                 if (_pendingKingdomId == null) _pendingKingdomId = "";
                 if (_oathSovereignId == null) _oathSovereignId = "";
             }

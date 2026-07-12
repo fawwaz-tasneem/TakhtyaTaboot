@@ -284,7 +284,7 @@ namespace TakhtyaTaboot
         private void OpenCharterDialog()
         {
             int cost = Config.Tune.CadetGoldCost;
-            if (Hero.MainHero.Gold < cost) { Notify($"Chartering a house demands {cost} dinars.", true); return; }
+            if (Hero.MainHero.Gold < cost) { Notify($"Chartering a house demands {cost} rupees.", true); return; }
             if (Clan.PlayerClan.Influence < FoundInfluenceCost) { Notify($"You need {FoundInfluenceCost} influence.", true); return; }
 
             // The sovereign's consent is a PERSONAL judgment of you.
@@ -310,7 +310,7 @@ namespace TakhtyaTaboot
 
             MBInformationManager.ShowMultiSelectionInquiry(new MultiSelectionInquiryData(
                 "Charter a Cadet House",
-                $"Choose the kinsman who will found a new house of your dynasty. It costs {cost} dinars and {FoundInfluenceCost} influence.",
+                $"Choose the kinsman who will found a new house of your dynasty. It costs {cost} rupees and {FoundInfluenceCost} influence.",
                 elements, true, 1, 1, "Charter it", "Not now",
                 sel =>
                 {

@@ -22,5 +22,12 @@ namespace TakhtyaTaboot.Util
 
         // Whole game-years elapsed since the campaign opened (never negative).
         public static int YearsElapsed(int currentGameYear) => System.Math.Max(0, currentGameYear - BaseGameYear);
+
+        // The Hijri (AH) year for an AD year — the dating every Mughal decree actually carried.
+        // Lunar years run ~3% faster than solar; the linear form below lands within the correct
+        // AH year across the mod's whole era (pinned by tests: Aurangzeb dies 1707 AD = 1118-19
+        // AH; the Sayyids depose Farrukhsiyar 1719 AD = 1131 AH; Nadir sacks Delhi 1739 = 1151).
+        public static int HijriYear(int adYear)
+            => (int)System.Math.Floor((adYear - 621.5643) * 1.0306888);
     }
 }

@@ -58,6 +58,8 @@
     <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\MessengerMath.cs" Link="Linked\MessengerMath.cs" />
     <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\CoronationOaths.cs" Link="Linked\CoronationOaths.cs" />
     <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\HistoricalCast.cs" Link="Linked\HistoricalCast.cs" />
+    <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\HistoricalAnecdotes.cs" Link="Linked\HistoricalAnecdotes.cs" />
+    <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\ScriptedHistory.cs" Link="Linked\ScriptedHistory.cs" />
   </ItemGroup>
 
 </Project>

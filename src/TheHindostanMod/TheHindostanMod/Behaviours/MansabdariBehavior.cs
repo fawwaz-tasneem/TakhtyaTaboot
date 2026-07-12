@@ -378,7 +378,7 @@ namespace TakhtyaTaboot
             GiveGoldAction.ApplyBetweenCharacters(king, Hero.MainHero, pay, true);
             // Routine, no cooldown: permanently a log line + Court Circular item, never a popup.
             RoyalFarmaan.FromRuler(clan.Kingdom, "A Stipend from the Treasury",
-                $"As is owed to your zat of {GetZat(clan)} ({Ranks[idx].Title}), the treasury disburses {pay} dinars. " +
+                $"As is owed to your zat of {GetZat(clan)} ({Ranks[idx].Title}), the treasury disburses {pay} rupees. " +
                 $"Your sawar obligation is a contingent of {GetSawar(clan)} men.",
                 "I am grateful",
                 dedupeKey: "stipend", priority: Util.FarmaanPriority.Routine, cooldownDays: 0);

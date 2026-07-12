@@ -179,7 +179,7 @@ namespace TakhtyaTaboot.Config
         // ── Village fiefs ────────────────────────────────────────────────────────────
         [SettingPropertyGroup("Village Fiefs")]
         [SettingPropertyFloatingInteger("Village tax per hearth per day", 0f, 0.02f, "0.0000", RequireRestart = false,
-            HintText = "Daily dinars accrued to a village's coffer per point of hearth (before works and the zamindar's stewardship).", Order = 0)]
+            HintText = "Daily rupees accrued to a village's coffer per point of hearth (before works and the zamindar's stewardship).", Order = 0)]
         public float VillageTaxPerHearth { get; set; } = 0.004f;
 
         [SettingPropertyGroup("Village Fiefs")]

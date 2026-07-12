@@ -81,8 +81,8 @@ namespace TakhtyaTaboot
                 return false;
             }
             int cost = CostFor(h);
-            label = $"Send a qasid ({cost} dinars)";
-            if (Hero.MainHero.Gold < cost) { reason = $"You cannot pay the {cost}-dinar fee."; return false; }
+            label = $"Send a qasid ({cost} rupees)";
+            if (Hero.MainHero.Gold < cost) { reason = $"You cannot pay the {cost}-rupee fee."; return false; }
             return true;
         }
 
@@ -95,7 +95,7 @@ namespace TakhtyaTaboot
             int cost = CostFor(h);
             InformationManager.ShowInquiry(new InquiryData(
                 "Send a Qasid",
-                $"Send a messenger to {UI.RoyalFarmaan.NameWithHonorific(h)} for {cost} dinars? When the rider reaches him " +
+                $"Send a messenger to {UI.RoyalFarmaan.NameWithHonorific(h)} for {cost} rupees? When the rider reaches him " +
                 "you will speak through your qasid as if you stood before the lord yourself — every word available in " +
                 "person is available by messenger.",
                 true, true, "Send him", "Not now",
@@ -119,8 +119,8 @@ namespace TakhtyaTaboot
                 TargetName = h.Name.ToString(),
                 ArriveDay = (float)CampaignTime.Now.ToDays + days,
             });
-            Notify($"Your qasid rides for {h.Name} ({cost} dinars). Expect the audience in some {(int)Math.Ceiling(days)} day(s).", false);
-            TYTLog.Info($"Qasid: dispatched to {h.StringId}, {cost} dinars, ~{days:0.0} days.");
+            Notify($"Your qasid rides for {h.Name} ({cost} rupees). Expect the audience in some {(int)Math.Ceiling(days)} day(s).", false);
+            TYTLog.Info($"Qasid: dispatched to {h.StringId}, {cost} rupees, ~{days:0.0} days.");
         }
 
         private static Vec2 TargetPosition(Hero h)

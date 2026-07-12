@@ -138,10 +138,10 @@ namespace TakhtyaTaboot
             // legitimacy "should be clear and possible"). Costs and cooldowns shown up front;
             // disabled options explain themselves via tooltip.
             starter.AddGameMenuOption("hindostan_empire_state", "hindostan_empire_darbar",
-                "{=!}Hold a grand darbar (" + GrandDarbarCost + " dinars)",
+                "{=!}Hold a grand darbar (" + GrandDarbarCost + " rupees)",
                 DarbarCondition, args => Util.TYTLog.Guard("ImperialAuthority.Darbar", HoldGrandDarbar), false, 1);
             starter.AddGameMenuOption("hindostan_empire_state", "hindostan_empire_charity",
-                "{=!}Endow charitable works (" + CharityCost + " dinars)",
+                "{=!}Endow charitable works (" + CharityCost + " rupees)",
                 CharityCondition, args => Util.TYTLog.Guard("ImperialAuthority.Charity", EndowCharity), false, 2);
 
             starter.AddGameMenuOption("hindostan_empire_state", "hindostan_empire_leave", "{=!}Back",
@@ -169,7 +169,7 @@ namespace TakhtyaTaboot
             if (wait > 0)
             { args.IsEnabled = false; args.Tooltip = new TextObject($"{{=!}}The court still speaks of the last occasion — wait {wait} more day(s)."); return true; }
             if (Hero.MainHero.Gold < cost)
-            { args.IsEnabled = false; args.Tooltip = new TextObject($"{{=!}}This demands {cost} dinars (you have {Hero.MainHero.Gold})."); return true; }
+            { args.IsEnabled = false; args.Tooltip = new TextObject($"{{=!}}This demands {cost} rupees (you have {Hero.MainHero.Gold})."); return true; }
             return true;
         }
 

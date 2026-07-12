@@ -199,7 +199,7 @@ namespace TakhtyaTaboot.Util
                     int amount = Math.Min(culprit.Gold, 8000);
                     if (amount > 0 && judge != null) GiveGoldAction.ApplyBetweenCharacters(culprit, judge, amount, true);
                     if (culprit.Clan != null) ChangeClanInfluenceAction.Apply(culprit.Clan, -Math.Min(50f, culprit.Clan.Influence));
-                    if (seen) Notify($"{culprit.Name} is fined {amount} dinars in reparation for the affront.", false);
+                    if (seen) Notify($"{culprit.Name} is fined {amount} rupees in reparation for the affront.", false);
                     break;
                 }
 

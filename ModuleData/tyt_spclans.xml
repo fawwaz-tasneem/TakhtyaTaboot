@@ -251,7 +251,7 @@
 	POSITIVE ties to Ghulam
 	-->
   <!--Upstart clan, recently settled bedouin -->
-  <Faction id="clan_aserai_2" initial_home_settlement="Settlement.town_A6" name="Kalale" tier="5" owner="Hero.lord_3_3" culture="Culture.aserai" super_faction="Kingdom.aserai" is_noble="true" banner_key="11.178.131.4345.4345.764.764.1.0.0.108.131.0.500.500.764.764.0.0.0" />
+  <Faction id="clan_aserai_2" initial_home_settlement="Settlement.town_A6" name="Kalale" tier="5" owner="Hero.lord_3_20" culture="Culture.aserai" super_faction="Kingdom.aserai" is_noble="true" banner_key="11.178.131.4345.4345.764.764.1.0.0.108.131.0.500.500.764.764.0.0.0" />
   <!--
 	Jahaliya poet boaster
 	POSITIVE ties to Jawal	

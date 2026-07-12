@@ -356,7 +356,7 @@ namespace TakhtyaTaboot
             if (s.Town != null) s.Town.Prosperity = MathF.Max(0f, s.Town.Prosperity - 1500f);
             RevoltCascadeBehavior.Instance?.SetPressure(s, Math.Min(100f, (RevoltCascadeBehavior.Instance.GetPressure(s)) + 30f));
             if (IsRuler) LegitimacyBehavior.Instance?.ModifyLegitimacy(Hero.MainHero, -5f, "the sack of a city");
-            Notify($"Your men sack {s.Name}. You take {loot} dinars, but the city seethes with hatred.", false);
+            Notify($"Your men sack {s.Name}. You take {loot} rupees, but the city seethes with hatred.", false);
         }
 
         private void Mercy(Settlement s)
@@ -385,7 +385,7 @@ namespace TakhtyaTaboot
                 $"{prisoner.Name} of {prisoner.Clan?.Name} has fallen into your hands. Will you ransom him for gold, " +
                 "or hold him hostage as leverage over his house?",
                 seal: "The fortunes of war",
-                primary: $"Ransom for {ransom} dinars", onPrimary: () => Ransom(prisoner, ransom),
+                primary: $"Ransom for {ransom} rupees", onPrimary: () => Ransom(prisoner, ransom),
                 secondary: "Hold as hostage", onSecondary: () => Notify($"You hold {prisoner.Name} hostage. His house will not soon forget it.", false));
         }
 
@@ -396,7 +396,7 @@ namespace TakhtyaTaboot
                 Hero.MainHero.ChangeHeroGold(ransom);
                 ChangeRelationAction.ApplyRelationChangeBetweenHeroes(Hero.MainHero, prisoner, 5);
                 EndCaptivityAction.ApplyByRansom(prisoner, Hero.MainHero);
-                Notify($"You ransom {prisoner.Name} for {ransom} dinars. His gratitude is noted.", false);
+                Notify($"You ransom {prisoner.Name} for {ransom} rupees. His gratitude is noted.", false);
             }
             catch { Notify("The ransom could not be arranged.", true); }
         }

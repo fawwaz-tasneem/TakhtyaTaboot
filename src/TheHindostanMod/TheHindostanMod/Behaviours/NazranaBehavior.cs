@@ -105,7 +105,7 @@ namespace TakhtyaTaboot
             int expected = NazranaMath.TierAmount(rank, NazranaMath.Tier.Expected, Config.Tune.NazranaBaseScale);
             RoyalFarmaan.FromRuler(k, "The Court Calls for Nazrana",
                 $"By ancient custom every mansabdar presents his nazrana to the throne. The court expects a gift " +
-                $"of some {expected} dinars of {Hero.MainHero.Name} within a fortnight. What is given — and how " +
+                $"of some {expected} rupees of {Hero.MainHero.Name} within a fortnight. What is given — and how " +
                 "generously — will be remembered.",
                 "Present a gift", () => OfferTiers(k, rank),
                 "Let them wait", null,
@@ -120,9 +120,9 @@ namespace TakhtyaTaboot
             {
                 int amount = NazranaMath.TierAmount(rank, tier, scale);
                 var (rel, infl) = NazranaMath.TierEffects(tier);
-                string label = tier == NazranaMath.Tier.Minimal ? $"A token gift ({amount} dinars)"
-                    : tier == NazranaMath.Tier.Lavish ? $"A lavish gift ({amount} dinars)"
-                    : $"The expected gift ({amount} dinars)";
+                string label = tier == NazranaMath.Tier.Minimal ? $"A token gift ({amount} rupees)"
+                    : tier == NazranaMath.Tier.Lavish ? $"A lavish gift ({amount} rupees)"
+                    : $"The expected gift ({amount} rupees)";
                 string hint = $"Relation with the sovereign {(rel >= 0 ? "+" : "")}{rel}, influence {(infl >= 0 ? "+" : "")}{infl}.";
                 elements.Add(new InquiryElement(tier, label, null, Hero.MainHero.Gold >= amount,
                     Hero.MainHero.Gold >= amount ? hint : hint + " (You cannot afford this.)"));
@@ -223,7 +223,7 @@ namespace TakhtyaTaboot
                     // A clean month is routine bookkeeping (digest); withheld gifts are a
                     // political signal that warrants the full decree.
                     RoyalFarmaan.Issue("The Month's Nazrana", "From the imperial treasury",
-                        $"This month the lords of {k.Name} laid {_monthGold} dinars of nazrana before the throne." +
+                        $"This month the lords of {k.Name} laid {_monthGold} rupees of nazrana before the throne." +
                         (_monthWithholders > 0
                             ? $" Yet {_monthWithholders} withholding(s) were recorded — there are lords who no longer bow."
                             : " Every house paid its due."),

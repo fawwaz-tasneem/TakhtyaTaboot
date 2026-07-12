@@ -140,7 +140,7 @@ namespace TakhtyaTaboot
             if (ruling.Influence < q.Influence)
             { reason = $"The court needs {q.Influence} influence for this edict (you have {ruling.Influence:0})."; return false; }
             if (ruler.Gold < q.Gold)
-            { reason = $"The treasury needs {q.Gold} dinars to buy off the magnates (you have {ruler.Gold})."; return false; }
+            { reason = $"The treasury needs {q.Gold} rupees to buy off the magnates (you have {ruler.Gold})."; return false; }
 
             try
             {

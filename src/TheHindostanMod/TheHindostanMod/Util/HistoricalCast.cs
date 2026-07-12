@@ -55,6 +55,7 @@ namespace TakhtyaTaboot.Util
             ("lord_3_22", "lord_3_3",  -40),   // the Sira house vs the Kalale: the slain hero
             ("lord_3_1",  "lord_3_16", 40),    // the Gaddi and its loyal cadets
             ("lord_3_16", "lord_3_5",  -20),   // the old court's reservations about the Dalvai
+            ("lord_3_20", "lord_3_5",  -50),   // the displaced Dalvai family watches Hyder's lit windows
 
             // Rajputana: honour and precedence
             ("lord_4_1",  "lord_4_3",  20),    // Amber and Marwar: allied, rivalrous

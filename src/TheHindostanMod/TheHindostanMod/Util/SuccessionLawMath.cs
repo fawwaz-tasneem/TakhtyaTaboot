@@ -204,8 +204,8 @@ namespace TakhtyaTaboot.Util
         // is asked to surrender, coloured by how he regards the briber. The offer is valued in gold-
         // equivalents; influence and a gift of men each carry a fixed worth, a fief's worth is supplied by
         // the caller (it depends on the settlement). The "going rate" the UI prefills is (fiefs × 50,000).
-        public const float PersuadeInfluenceValue = 2000f;   // 1 influence ≈ this many dinars to a claimant
-        public const float PersuadeTroopValue     = 2000f;   // 1 soldier   ≈ this many dinars
+        public const float PersuadeInfluenceValue = 2000f;   // 1 influence ≈ this many rupees to a claimant
+        public const float PersuadeTroopValue     = 2000f;   // 1 soldier   ≈ this many rupees
 
         // The total worth of an offer, in gold-equivalents.
         public static float OfferValue(int gold, int influence, int troops, float fiefGold)

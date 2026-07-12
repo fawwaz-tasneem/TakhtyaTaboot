@@ -105,7 +105,7 @@ namespace TakhtyaTaboot
             if (s == null || !s.IsTown || s.OwnerClan != Clan.PlayerClan) { Notify("You may only seat the capital in a town you hold.", true); return; }
             if (GetCapital(k) == s) { Notify($"{s.Name} is already your capital.", true); return; }
             int cost = Tune.MoveCapitalCost;
-            if (Hero.MainHero.Gold < cost) { Notify($"Moving the capital demands {cost} dinars (you have {Hero.MainHero.Gold}).", true); return; }
+            if (Hero.MainHero.Gold < cost) { Notify($"Moving the capital demands {cost} rupees (you have {Hero.MainHero.Gold}).", true); return; }
 
             Hero.MainHero.ChangeHeroGold(-cost);
             _capital[k.StringId] = s.StringId;
@@ -214,7 +214,7 @@ namespace TakhtyaTaboot
                     Label = $"Declare war on {e.Name}", Hint = "The council weighs war. Many lords are wary of it." });
 
             list.Add(new Proposal { Type = PropType.Levies, Bias = -5,
-                Label = "Decree extraordinary levies (+authority, +treasury)", Hint = "A heavy demand the lords resent." });
+                Label = "Decree extraorrupeey levies (+authority, +treasury)", Hint = "A heavy demand the lords resent." });
             list.Add(new Proposal { Type = PropType.Remission, Bias = 8,
                 Label = "Decree a remission of taxes (+legitimacy, -authority)", Hint = "A popular measure the lords favour." });
 
@@ -258,7 +258,7 @@ namespace TakhtyaTaboot
                         if (pr.Target != null && !k.IsAtWarWith(pr.Target)) DeclareWarAction.ApplyByDefault(k, pr.Target);
                         return $"War is declared upon {pr.Target?.Name}.";
                     case PropType.Levies:
-                        ImperialAuthorityBehavior.Instance?.ModifyAuthority(k, 6f, "extraordinary levies");
+                        ImperialAuthorityBehavior.Instance?.ModifyAuthority(k, 6f, "extraorrupeey levies");
                         Hero.MainHero.ChangeHeroGold(3000);
                         return "The levies are decreed; the treasury swells and your writ runs harder.";
                     case PropType.Remission:
@@ -414,7 +414,7 @@ namespace TakhtyaTaboot
                 args => { args.optionLeaveType = GameMenuOption.LeaveType.Manage;
                           Settlement s = Settlement.CurrentSettlement;
                           if (!IsRuler || s == null || !s.IsTown || s.OwnerClan != Clan.PlayerClan || GetCapital(PK) == s) return false;
-                          args.Tooltip = new TextObject($"{{=!}}Move the capital here for {Tune.MoveCapitalCost} dinars.");
+                          args.Tooltip = new TextObject($"{{=!}}Move the capital here for {Tune.MoveCapitalCost} rupees.");
                           return true; },
                 args => MoveCapitalHere(Settlement.CurrentSettlement), false, 10);
 
@@ -490,7 +490,7 @@ namespace TakhtyaTaboot
             string text = q.Allowed
                 ? $"Convert {k.Name} to Mansabdari tenure: every fief becomes a non-hereditary, rotational grant of " +
                   $"the crown — reverting on a holder's death and transferred at the throne's pleasure.\n\n" +
-                  $"Cost: {q.Influence} influence and {q.Gold} dinars to buy off {q.AffectedNobles} magnates." +
+                  $"Cost: {q.Influence} influence and {q.Gold} rupees to buy off {q.AffectedNobles} magnates." +
                   (q.Resisters > 0 ? $"\n\nBeware: {q.Resisters} entrenched magnate(s) are too rooted to buy — they will resist, and reform may turn to revolt." : "")
                 : "You cannot impose Mansabdari now. " + q.Reason;
 

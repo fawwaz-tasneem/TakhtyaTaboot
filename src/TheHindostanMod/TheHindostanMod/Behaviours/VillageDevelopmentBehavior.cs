@@ -113,7 +113,7 @@ namespace TakhtyaTaboot
         private Dictionary<string, string> _buildProject = new Dictionary<string, string>();     // villageId -> project name
         private Dictionary<string, int> _buildDays = new Dictionary<string, int>();              // villageId -> days remaining (legacy int mirror)
         private Dictionary<string, float> _buildProgress = new Dictionary<string, float>();      // villageId -> days remaining (fractional)
-        private Dictionary<string, float> _treasury = new Dictionary<string, float>();           // villageId -> coffer (dinars)
+        private Dictionary<string, float> _treasury = new Dictionary<string, float>();           // villageId -> coffer (rupees)
         private Dictionary<string, string> _queued = new Dictionary<string, string>();           // villageId -> queued project name
         private Dictionary<string, int> _lastCollectDay = new Dictionary<string, int>();         // villageId -> day taxes last collected
         private Dictionary<string, int> _lastPatrolDay = new Dictionary<string, int>();          // villageId -> day index
@@ -288,7 +288,7 @@ namespace TakhtyaTaboot
             int amount = (int)coffer;
             _treasury[s.StringId] = coffer - amount;
             Hero.MainHero.ChangeHeroGold(amount);
-            Notify($"You collect {amount} dinars from the coffer of {s.Name}.", false);
+            Notify($"You collect {amount} rupees from the coffer of {s.Name}.", false);
         }
 
         // ── Bandit raids overwhelm the militia; the zamindar pleads for relief ──────────
@@ -544,7 +544,7 @@ namespace TakhtyaTaboot
             if (CanQueue(s, p, out string reason))
             {
                 _queued[s.StringId] = Defs[p].Name;
-                Notify($"The {Defs[p].Name} is queued in {s.Name}; its {Defs[p].Cost} dinars are charged when work begins.", false);
+                Notify($"The {Defs[p].Name} is queued in {s.Name}; its {Defs[p].Cost} rupees are charged when work begins.", false);
                 return;
             }
             Notify(reason, true);
@@ -693,7 +693,7 @@ namespace TakhtyaTaboot
                     ? ImperialAuthorityBehavior.Instance.GetTaxCollectionRate(k) : 1f;
                 float perDay = VillageFiefMath.DailyTax(s.Village.Hearth, TotalTaxBonusPct(s),
                     GetThreat(s), authorityRate, steward, Config.Tune.VillageTaxPerHearth);
-                sb.AppendLine($"Coffer: {(int)GetTreasury(s)} dinars  (~{perDay:0.0}/day)");
+                sb.AppendLine($"Coffer: {(int)GetTreasury(s)} rupees  (~{perDay:0.0}/day)");
 
                 int gang = SlaveLabourBehavior.Instance?.LabourCount(s) ?? 0;
                 if (gang > 0)

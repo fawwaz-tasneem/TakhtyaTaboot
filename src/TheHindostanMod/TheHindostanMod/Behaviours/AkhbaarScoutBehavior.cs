@@ -114,7 +114,7 @@ namespace TakhtyaTaboot
             {
                 int cost = CostFor(h);
                 bool tracked = IsTracked(h);
-                string hint = $"{h.Clan?.Name} of {h.Clan?.Kingdom?.Name}. Fee: {cost} dinars."
+                string hint = $"{h.Clan?.Name} of {h.Clan?.Kingdom?.Name}. Fee: {cost} rupees."
                     + (tracked ? " A scout is already on his trail."
                        : Hero.MainHero.Gold < cost ? " You cannot pay the fee." : "");
                 return new InquiryElement(h, $"{UI.RoyalFarmaan.NameWithHonorific(h)} — {h.Clan?.Name}",
@@ -170,8 +170,8 @@ namespace TakhtyaTaboot
                 ArriveDay = (float)CampaignTime.Now.ToDays + days,
                 Origin = here?.Name.ToString() ?? "your camp",
             });
-            Notify($"Your harkara slips out after {h.Name} ({cost} dinars). Expect his akhbaar in some {(int)Math.Ceiling(days)} days.", false);
-            TYTLog.Info($"Akhbaar: scout dispatched after {h.StringId} from {(here?.StringId ?? "map")}, {cost} dinars, ~{days:0.0} days.");
+            Notify($"Your harkara slips out after {h.Name} ({cost} rupees). Expect his akhbaar in some {(int)Math.Ceiling(days)} days.", false);
+            TYTLog.Info($"Akhbaar: scout dispatched after {h.StringId} from {(here?.StringId ?? "map")}, {cost} rupees, ~{days:0.0} days.");
         }
 
         // ── The encyclopedia surface ─────────────────────────────────────────────────
@@ -191,8 +191,8 @@ namespace TakhtyaTaboot
                 return false;
             }
             int cost = CostFor(h);
-            label = $"Dispatch a scout ({cost} dinars)";
-            if (Hero.MainHero.Gold < cost) { reason = $"You cannot pay the {cost}-dinar fee."; return false; }
+            label = $"Dispatch a scout ({cost} rupees)";
+            if (Hero.MainHero.Gold < cost) { reason = $"You cannot pay the {cost}-rupee fee."; return false; }
             return true;
         }
 
@@ -203,7 +203,7 @@ namespace TakhtyaTaboot
             int cost = CostFor(h);
             InformationManager.ShowInquiry(new InquiryData(
                 "Dispatch an Akhbaar Scout",
-                $"Send a harkara after {UI.RoyalFarmaan.NameWithHonorific(h)} for {cost} dinars? His akhbaar — where the lord is, " +
+                $"Send a harkara after {UI.RoyalFarmaan.NameWithHonorific(h)} for {cost} rupees? His akhbaar — where the lord is, " +
                 "what he is about, and his strength in hearsay terms — arrives when the runner returns, and is entered in the registers.",
                 true, true, "Dispatch", "Not now",
                 () => TYTLog.Guard("Akhbaar.EncyclopediaDispatch", () => Dispatch(h)), null), true);

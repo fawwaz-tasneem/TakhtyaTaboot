@@ -1447,7 +1447,7 @@ namespace TakhtyaTaboot
             var opts = new List<InquiryElement>
             {
                 new InquiryElement("gold", "Gold", null, myGold > 0,
-                    myGold > 0 ? $"A purse of dinars (you hold {myGold:n0}; the going rate is {o.BaseGold:n0})." : "You have no coin."),
+                    myGold > 0 ? $"A purse of rupees (you hold {myGold:n0}; the going rate is {o.BaseGold:n0})." : "You have no coin."),
                 new InquiryElement("influence", "Influence at court", null, myInf >= 1f,
                     myInf >= 1f ? $"Court influence (you hold {myInf:0})." : "You have no influence to spend."),
                 new InquiryElement("troops", "A gift of men", null, rivalHasParty && myRegulars > 1,
@@ -1483,7 +1483,7 @@ namespace TakhtyaTaboot
         {
             if (!o.WantGold) { CollectInfluence(o); return; }
             int myGold = Hero.MainHero?.Gold ?? 0;
-            PromptAmount("Purse of Gold", $"How many dinars for {o.Rival.Name}? (going rate {o.BaseGold:n0}; you hold {myGold:n0})",
+            PromptAmount("Purse of Gold", $"How many rupees for {o.Rival.Name}? (going rate {o.BaseGold:n0}; you hold {myGold:n0})",
                 Math.Min(o.BaseGold, myGold), 0, myGold, v => { o.Gold = v; CollectInfluence(o); }, () => { });
         }
 
@@ -1551,7 +1551,7 @@ namespace TakhtyaTaboot
             float treachery = incumbent ? SuccessionLawMath.TreacheryChance(PlayerStrengthRatioAgainst(o.K)) : 0f;
 
             var sb = new StringBuilder();
-            if (o.Gold > 0) sb.Append($"{o.Gold:n0} dinars, ");
+            if (o.Gold > 0) sb.Append($"{o.Gold:n0} rupees, ");
             if (o.Influence > 0) sb.Append($"{o.Influence} influence, ");
             if (o.Troops > 0) sb.Append($"{o.Troops} men, ");
             if (o.Fief != null) sb.Append($"the fief of {o.Fief.Name}, ");
@@ -1700,7 +1700,7 @@ namespace TakhtyaTaboot
                 case SuccessionLawMath.TraitorFate.HeavyFine:
                     int fine = Math.Min(Hero.MainHero.Gold, _treacheryRansom);
                     RoyalFarmaan.FromRuler(k, "The King's Justice: the Fine",
-                        $"{king.Name} prefers treasure to blood. Your ambition is priced at {fine:n0} dinars, paid to the " +
+                        $"{king.Name} prefers treasure to blood. Your ambition is priced at {fine:n0} rupees, paid to the " +
                         "last copper before the gates open. The war ends; the shame is yours to keep.",
                         "Pay, and go free",
                         onPrimary: () => Util.TYTLog.Guard("Treachery.Fine", () =>
@@ -1717,7 +1717,7 @@ namespace TakhtyaTaboot
                     _treacheryPrisonRollDay = (int)CampaignTime.Now.ToDays;
                     RoyalFarmaan.FromRuler(k, "The King's Justice: the Fort",
                         $"{king.Name} neither kills you nor frees you. You are consigned to a fort, and your house must " +
-                        $"rule itself while its head rots. The king names his price: {_treacheryRansom:n0} dinars for your " +
+                        $"rule itself while its head rots. The king names his price: {_treacheryRansom:n0} rupees for your " +
                         "chains — or the fort keeps what the fort takes.",
                         "The fort, then");
                     break;
@@ -1768,7 +1768,7 @@ namespace TakhtyaTaboot
 
             if (Hero.MainHero.Gold >= _treacheryRansom)
                 RoyalFarmaan.Issue("A Price for Your Chains", "From the fort of your captivity",
-                    $"The jailer brings the same words each month: {_treacheryRansom:n0} dinars, and the gates open — " +
+                    $"The jailer brings the same words each month: {_treacheryRansom:n0} rupees, and the gates open — " +
                     "peace with the throne included in the price. Your treasury can bear it. Can your pride?",
                     seal: "The king's standing offer",
                     primary: "Pay the ransom",
@@ -1776,7 +1776,7 @@ namespace TakhtyaTaboot
                     secondary: "Endure the fort",
                     dedupeKey: "tyt_treachery_ransom", cooldownDays: 25);
             else
-                Notify($"The jailer names the price again: {_treacheryRansom:n0} dinars. You cannot pay it.", true);
+                Notify($"The jailer names the price again: {_treacheryRansom:n0} rupees. You cannot pay it.", true);
         }
 
         private void PayTreacheryRansom()

@@ -44,7 +44,7 @@ namespace TakhtyaTaboot.UI
             StatsLine = $"Hearth {(int)s.Village.Hearth}   ·   Militia {(int)s.Militia}   ·   " +
                         $"Bandit threat {dev.GetThreat(s):0}/100 ({dev.GetThreatBand(s)})   ·   " +
                         $"Zamindar: {(z != null ? z.Name.ToString() : "vacant")}";
-            CofferLine = $"Coffer: {(int)dev.GetTreasury(s)} dinars   (≈ {dev.TaxPerDayEstimate(s):0.0}/day)   ·   Your purse: {Hero.MainHero.Gold:n0}";
+            CofferLine = $"Coffer: {(int)dev.GetTreasury(s)} rupees   (≈ {dev.TaxPerDayEstimate(s):0.0}/day)   ·   Your purse: {Hero.MainHero.Gold:n0}";
             CanCollect = dev.GetTreasury(s) >= 1f;
 
             HasActive = dev.TryGetActiveWork(s, out string activeName, out float done, out int daysLeft);
@@ -128,7 +128,7 @@ namespace TakhtyaTaboot.UI
         {
             _onAct = onAct;
             _name = w.Name;
-            _costLine = $"{w.Cost:n0} dinars · {w.Days} days";
+            _costLine = $"{w.Cost:n0} rupees · {w.Days} days";
             _effect = w.Effect + (string.IsNullOrEmpty(w.PrereqName) ? "" : $"  (needs {w.PrereqName})");
             _statusText = w.IsActive ? "UNDER WAY" : w.IsQueued ? "QUEUED" : "";
             _showAct = !w.IsActive && !w.IsQueued;

@@ -45,6 +45,29 @@ namespace TakhtyaTaboot
             AddPrinceFlow(starter);
             AddCouncilInviteFlow(starter);
             AddFollowFlow(starter);
+            AddAnecdoteFlow(starter);
+        }
+
+        // ── 8. The news of the roads (round 8: the world talks about its own history) ─
+        // Any lord will pass on what the serais are saying — real events of the age retold
+        // as hearsay (Util.HistoricalAnecdotes, tested). The same man keeps his tale for a
+        // week, then the wheel turns.
+        private void AddAnecdoteFlow(CampaignGameStarter starter)
+        {
+            starter.AddPlayerLine("hind_dlg_news", "hero_main_options", "hind_dlg_news_reply",
+                "{=!}Tell me — what word do the roads carry these days?",
+                () =>
+                {
+                    Hero p = Partner;
+                    if (p == null || p == Hero.MainHero) return false;
+                    int week = (int)((float)CampaignTime.Now.ToDays / 7f);
+                    MBTextManager.SetTextVariable("HIND_NEWS",
+                        HistoricalAnecdotes.Tale(CoronationOaths.SeedOf(p.StringId), week), false);
+                    return true;
+                }, null, 101);
+
+            starter.AddDialogLine("hind_dlg_news_reply", "hind_dlg_news_reply", "hero_main_options",
+                "{=!}{HIND_NEWS}", () => true, null);
         }
 
         // ── 1. Swear fealty in person ────────────────────────────────────────────────
@@ -123,7 +146,7 @@ namespace TakhtyaTaboot
                 }, null);
 
             starter.AddPlayerLine("hind_dlg_grudge_mend", "hind_dlg_grudge_choice", "hind_dlg_grudge_mended",
-                "{=!}Then let it be mended. Take this purse of 500 dinars, and let there be salt between us again.",
+                "{=!}Then let it be mended. Take this purse of 500 rupees, and let there be salt between us again.",
                 () => Hero.MainHero.Gold >= 500,
                 () =>
                 {

@@ -49,5 +49,13 @@ namespace TakhtyaTaboot.Tests
             Assert.Equal(0, HistoricalCalendar.YearsElapsed(1080));  // before start clamps to 0
             Assert.Equal(12, HistoricalCalendar.YearsElapsed(1096));
         }
+
+        [Theory]
+        [InlineData(1707, 1118)] // Aurangzeb dies in Zulqada 1118 AH
+        [InlineData(1719, 1131)] // the Sayyids depose Farrukhsiyar, 1131 AH
+        [InlineData(1739, 1151)] // Nadir Shah sacks Delhi, 1151 AH
+        [InlineData(1748, 1161)] // Muhammad Shah dies, 1161 AH
+        public void The_hijri_year_lands_on_the_chronicles(int ad, int ah)
+            => Assert.Equal(ah, HistoricalCalendar.HijriYear(ad));
     }
 }

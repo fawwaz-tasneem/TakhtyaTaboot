@@ -13,7 +13,8 @@ namespace TakhtyaTaboot.Util
         public enum OpinionType
         {
             SworeFealty = 0, MissedCeremony = 1, Grudge = 2, Favor = 3,
-            CourtRuling = 4, Insult = 5, GiftReceived = 6, KinBond = 7
+            CourtRuling = 4, Insult = 5, GiftReceived = 6, KinBond = 7,
+            Subjugated = 8
         }
 
         // (default magnitude, half-life in days). CourtRuling's magnitude is signed by
@@ -28,6 +29,11 @@ namespace TakhtyaTaboot.Util
             (-8f, 240),   // Insult — words spoken at court
             (+6f, 180),   // GiftReceived
             (+6f, 3600),  // KinBond — blood cools very slowly
+            // Subjugated — his realm was swallowed whole and he was made to bend the knee. A bitter
+            // thing, and slow to cool: a half-life of 270 days fades -50 to nothing across ~3-4 years,
+            // which is exactly the design (ch.30 §4). It lives HERE, in the dated ledger, rather than in
+            // raw relation, precisely so that it decays on its own without anyone hand-rolling a timer.
+            (-50f, 270),
         };
 
         public const float DeadThreshold = 0.5f; // |value| below this = the record is forgotten
@@ -69,6 +75,7 @@ namespace TakhtyaTaboot.Util
                 case OpinionType.Insult: return "an insult";
                 case OpinionType.GiftReceived: return "a gift received";
                 case OpinionType.KinBond: return "the bond of blood";
+                case OpinionType.Subjugated: return "a realm swallowed whole";
                 default: return "an old matter";
             }
         }

@@ -684,4 +684,93 @@ sitting holder's claim. 428 tests green. The war layer (steps 4-5) reads this le
 
 ---
 
-**When you report back**, the ideal format per finding: section-number, PASS/FAIL, repro steps, log excerpt, screenshot if UI. The single most valuable data points now are **CC4 (the grudge must survive dispossession — the whole diplomacy layer rests on it)**, **CC1 (the seed actually running post-world-gen)**, **CC7 (the unaffordable writ)**, and **J3 (the breakaway, never seen live)**, **M2 (siege unwind — the riskiest engine path)**, **N1/N2 (the fixed board)**, L3's fates, **O3/O4 (the first akhbaar report and its dead/captive/no-party edge cases)**, **P3–P5 (the labour trade-off: yield up, unrest up, gang thinning)**, and anything that throws in `tyt_log.txt`.
+## DD. The war layer rebuilt: aims, targets, progress, truces, subjugation (wiki ch.30 steps 4-10)
+
+*2026-07-13. `WarfareBehavior` REWRITTEN. The old system's war goal was a label: a second enum
+(`WarGoal`) disconnected from the tested `WarAimMath`, terms gated on SCORE rather than on the aim,
+"demand a province" annexing an arbitrary `FirstOrDefault()` town, and the aim prompt firing during
+CIVIL WARS. All of that is gone. `WarGoal` is deleted; `WarAim` is the single enum. Every war on the
+map (AI-vs-AI included) is now a RECORD — aggressor, defender, aim, target fiefs — and the aim IS the
+win condition. Score is an itemized contribution ledger, so the progress bar can explain itself.
+454 tests green.*
+
+**DD1. THE CIVIL-WAR BUG (verify first — this was the reported defect).** Start an accession or AI civil
+war (`hindostan.force_ai_civil_war`, or challenge the throne yourself). Expect **NO "War Aim against
+X" popup**. A war for the throne has no aim to choose — it is the throne. Previously this fired every time.
+
+**DD2. The aim is chosen, and it is honest.** As a ruler, declare war on a realm your houses hold claims
+against (`hindostan.claims_on <their town>` to confirm). Expect the aim menu to offer **"Conquest — press
+our claims: <named towns>"** listing the actual fiefs and which house claims each. Declare on a realm you
+hold NO claim against: the conquest option should be **absent**, and picking Tribute should warn that you
+march "without a claim or a grievance" and cost you authority + legitimacy.
+
+**DD3. THE PROGRESS BAR (the transparency requirement).** Open the kingdom screen → Diplomacy tab. Each war
+should show a **gold progress bar** under the enemy's name with a line like *"Conquest — 33%, ground is
+being made"*. **Hover it.** Expect the itemized breakdown: the named targets and whether each is TAKEN or
+*still theirs*, plus the score ledger rolled up (*"Battles won: +30 (3 times)"*), plus exhaustion with
+*what* wore you down (*"Casualties 34 · Fiefs lost 16"*). Nothing on that bar should be unexplained.
+Also check `hindostan.war_status` prints the same for every war on the map, AI-vs-AI included.
+
+**DD4. A war of conquest is won by TAKING WHAT YOU CAME FOR — not by score.** Declare a conquest war for
+a named town. Win battles until your score is huge but do NOT take the town: "Direct the war effort" must
+**refuse to let you annex it** (the option is absent) and tell you the aim is only N% achieved. Then take
+the town: expect the farmaan **"The War Is Won"** offering to conclude on your terms.
+
+**DD5. The prize goes to the CLAIMANT (Feudal law).** Under Feudal tenure, conclude a won conquest war.
+The target fief must pass to **the house whose claim was pressed**, not to you by default. Under
+**Mansabdari**, it must NOT auto-pass — you should be told it is "the crown's to grant, not the claimant's",
+and it goes through the normal channel.
+
+**DD6. THE FORCED TRUCE.** After concluding a war, `hindostan.truces` should list a **3-year** truce. Now try
+to re-declare war on them: it must be **refused**, with the message "A truce stands between X and Y."
+(A white peace gives 1 year instead.) Confirm the AI also cannot declare across it.
+
+**DD7. THE GRUDGE LOOP (the payoff of the whole design).** After DD5, check `hindostan.claims_on <the taken
+town>`: the **dispossessed house must still be listed**, claim now decaying. That is the casus belli for
+their war of reconquest when the truce lapses. This closing of the loop is the single most important
+outcome in the wave.
+
+**DD8. Defensive wars.** Let an AI declare on you. You get **no aim prompt** (correct — the defender's aim
+is to deny theirs). The bar should read **"(we defend)"** and fill as you DENY them: hold everything and it
+sits near 100%; let them take a target and it drops. The hover must name *their* aim openly.
+
+**DD9. SUBJUGATION — both roads, both visible.** Declare a war of Subjugation. Hover the bar: expect **all
+three collapse conditions with live values** ("Their king: still at liberty", "Their legitimacy: 73",
+"Their lords with you: 22%") **and** the other road ("— or take everything: 3 of 12 fiefs"). Meet the collapse
+gate (capture/kill their king, low legitimacy, ≥30% of their lords at ≥+10) → the war completes. Or take
+**every last fief** → it completes anyway.
+
+**DD10. The swallowed realm SEETHES (intended, not a bug).** On subjugation: their kingdom is absorbed, NOT
+destroyed-and-scattered. Every one of their houses should **join your realm** (check the clan list) rather
+than vanish, each carrying a **−50 opinion** (`OpinionType.Subjugated`) — check the encyclopedia
+"Disposition toward you" rows, it should read *"a realm swallowed whole"*. **Expect civil-war and
+conspiracy risk to spike for the next ~3 years** as it decays. This is the designed price of an empire.
+If it makes the game unplayable rather than dramatic, say so and I'll add a grace period.
+
+**DD11. THE WAKIL (the riskiest engine path in this wave — a hero parked in a settlement).** Enter a foreign
+town → **"Leave a companion as our wakil"** → pick a companion. He should **leave your party** and stay in
+the town. `hindostan.wakils` tracks his progress (merchants won / needed). Each week he raises your relation
+with the town's merchants (pace = his Charm + Intelligence). When **2/3 of merchants hit +40**, expect the
+farmaan **"The Bazaar Is Ours"**, an external claim in `hindostan.claims` **with a 2-year countdown**, and the
+companion returning to you. **Also verify "Recall your wakil" returns him to the party** — if either path
+leaves a companion stranded (in no party and no settlement), that is a serious bug: report immediately.
+
+**DD12. The Deccan war is no longer unconditional.** The Maratha–Mughal war still fires at campaign start.
+But it should now be endable: make peace with the Marathas and it must **stay** peace (previously
+`ReassertStance` silently re-declared it, which would have evaporated any truce you won).
+
+**DD13. Save/load across the rewrite.** **The war state model changed shape** (`hind_war2_*` keys replace
+`hind_war_gIds/sIds`). Load an OLD save with wars in progress: expect no crash, and every ongoing war
+reconstructed with an aim inferred from the aggressor's claims (`hindostan.war_status`). Targets will be
+empty on reconstructed wars — that is expected, not a bug.
+
+**DD14. Withheld tribute is a casus belli.** Make a realm your tributary. When their treasury runs dry and
+the nazrana stops, expect the farmaan **"The Nazrana Does Not Come"** granting you just cause to chastise them.
+
+> ⚠️ **Check your launcher:** `Bannerlord.Diplomacy` is present in your Modules folder. It must stay
+> **disabled** — it patches the same diplomacy screen and the same war/peace actions this layer now owns,
+> and the two will fight. (Standing decision: no Diplomacy mod; this is its native replacement.)
+
+---
+
+**When you report back**, the ideal format per finding: section-number, PASS/FAIL, repro steps, log excerpt, screenshot if UI. The single most valuable data points now are **DD1 (the civil-war aim prompt must be gone)**, **DD7 + CC4 (the grudge must survive dispossession — the whole diplomacy layer rests on it)**, **DD3 (the bar explains itself)**, **DD11 (the wakil must never strand a companion)**, **DD13 (old saves survive the war-model change)**, **CC7 (the unaffordable writ)**, and **J3 (the breakaway, never seen live)**, **M2 (siege unwind — the riskiest engine path)**, **N1/N2 (the fixed board)**, L3's fates, **O3/O4 (the first akhbaar report and its dead/captive/no-party edge cases)**, **P3–P5 (the labour trade-off: yield up, unrest up, gang thinning)**, and anything that throws in `tyt_log.txt`.

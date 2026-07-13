@@ -32,6 +32,8 @@ namespace TakhtyaTaboot
         public static FactionRelationsBehavior Instance { get; private set; }
 
         private bool _initialised;
+        // The Deccan war is a one-time historical fact, not a standing rule (see EnsureWarsAndPeace).
+        private bool _deccanWarDeclared;
 
         public override void RegisterEvents()
         {
@@ -63,22 +65,41 @@ namespace TakhtyaTaboot
             ApplyLeaderRelations();
         }
 
-        // Kingdom-level stance: intra-Mughal peace, the standing Maratha war. Run once at
-        // session launch, again via ReassertStance. Dormant shells (a realm folded into the
-        // empire, holding no clans) are left out of the stance entirely.
+        // Kingdom-level stance: intra-Mughal peace, and the Maratha war — which is DECLARED ONCE, at the
+        // opening of the campaign, and never again.
+        //
+        // It used to be re-asserted on every ReassertStance() call, which meant the war was permanently
+        // unconditional: any peace the Marathas and the Mughals ever made would be silently torn up the
+        // next time the unified premise sundered. With the diplomacy layer that is intolerable — a truce
+        // the player WON by concluding a war on his own terms would simply evaporate (ch.30 §6). So the
+        // war is now a historical FACT (the Deccan war rages in 1707, under Aurangzeb, with the empire
+        // whole), after which the two powers make war and peace like anyone else.
+        //
+        // Intra-Mughal peace is a different thing and IS still enforced: the kin never fight.
         private void EnsureWarsAndPeace()
         {
             var mughals = MughalIds.Select(Find)
                 .Where(k => k != null && !k.IsEliminated && !UnifiedEmpireBehavior.IsDormant(k)).ToList();
-            Kingdom maratha = Find(MarathaId);
             if (mughals.Count == 0) return;
 
             for (int i = 0; i < mughals.Count; i++)
                 for (int j = i + 1; j < mughals.Count; j++)
                     EnsurePeace(mughals[i], mughals[j]);
 
-            if (maratha != null)
-                foreach (Kingdom m in mughals) EnsureWar(maratha, m);
+            OpenTheDeccanWar(mughals);
+        }
+
+        // The Deccan war, declared once and only once: Aurangzeb's long war in the south is the state of
+        // the world the campaign opens in. Thereafter it is an ordinary war and may be ended like one.
+        private void OpenTheDeccanWar(System.Collections.Generic.List<Kingdom> mughals)
+        {
+            if (_deccanWarDeclared) return;
+            Kingdom maratha = Find(MarathaId);
+            if (maratha == null) return;
+
+            _deccanWarDeclared = true;
+            foreach (Kingdom m in mughals) EnsureWar(maratha, m);
+            Util.TYTLog.Info("FactionRelations: the Deccan war is opened (once). Maratha/Mughal war and peace are free hereafter.");
         }
 
         // Ruler-to-ruler relations. Re-runnable: called at session launch and again by
@@ -163,6 +184,7 @@ namespace TakhtyaTaboot
         public override void SyncData(IDataStore dataStore)
         {
             dataStore.SyncData("hind_factionrel_init", ref _initialised);
+            dataStore.SyncData("hind_factionrel_deccan", ref _deccanWarDeclared);
         }
     }
 }

@@ -29,8 +29,26 @@ namespace TakhtyaTaboot
     {
         public static WarExhaustionBehavior Instance { get; private set; }
 
+        // What wore a realm down. Exhaustion accrued from named sources and then threw the provenance
+        // away into one anonymous float — so the number could never explain itself. It is now itemized
+        // alongside the total (ch.30 §3a: if it moves a bar, it must be nameable in the tooltip).
+        public enum Source { Casualties = 0, FiefsLost = 1, VillagesRaided = 2, TheGrindOfTime = 3 }
+
+        public static string Describe(Source s)
+        {
+            switch (s)
+            {
+                case Source.Casualties:     return "Casualties";
+                case Source.FiefsLost:      return "Fiefs lost";
+                case Source.VillagesRaided: return "Villages harried";
+                default:                    return "The grind of time";
+            }
+        }
+
         // "myKingdomId|enemyKingdomId" -> my side's exhaustion in that war (0..100).
         private Dictionary<string, float> _exhaustion = new Dictionary<string, float>();
+        // "myKingdomId|enemyKingdomId|source" -> how much of that total came from THIS source.
+        private Dictionary<string, float> _components = new Dictionary<string, float>();
         private int _lastPeaceDay = -1;
 
         public override void RegisterEvents()
@@ -55,11 +73,32 @@ namespace TakhtyaTaboot
         private static float RealmStrength(Kingdom k)
             => k?.Clans?.Where(c => c != null && !c.IsEliminated).Sum(c => c.CurrentTotalStrength) ?? 1f;
 
-        private void Add(Kingdom mine, Kingdom enemy, float points)
+        private void Add(Kingdom mine, Kingdom enemy, float points, Source source)
         {
             if (!Tracked(mine, enemy)) return;
             float scale = WarExhaustionMath.StrengthScale(RealmStrength(mine));
-            _exhaustion[Key(mine, enemy)] = WarExhaustionMath.Accrue(Exhaustion(mine, enemy), points, scale);
+
+            float before = Exhaustion(mine, enemy);
+            float after = WarExhaustionMath.Accrue(before, points, scale);
+            _exhaustion[Key(mine, enemy)] = after;
+
+            // Credit the source with what it ACTUALLY added (the cap may have swallowed some of it), so
+            // the components always sum to the total the player is shown.
+            string ck = Key(mine, enemy) + "|" + (int)source;
+            _components[ck] = (_components.TryGetValue(ck, out float c) ? c : 0f) + (after - before);
+        }
+
+        // The itemized reason this realm is tired. Empty on a save that predates the itemization — the
+        // total is still right, only its provenance was never recorded.
+        public List<(string label, float value)> BreakdownOf(Kingdom mine, Kingdom enemy)
+        {
+            var rows = new List<(string, float)>();
+            if (mine == null || enemy == null) return rows;
+            string prefix = Key(mine, enemy) + "|";
+            foreach (Source s in System.Enum.GetValues(typeof(Source)))
+                if (_components.TryGetValue(prefix + (int)s, out float v) && v >= 0.5f)
+                    rows.Add((Describe(s), v));
+            return rows.OrderByDescending(r => r.Item2).ToList();
         }
 
         // ── Accrual ──────────────────────────────────────────────────────────────────
@@ -72,12 +111,12 @@ namespace TakhtyaTaboot
 
             if (e.IsRaid)
             {
-                Add(def, att, WarExhaustionMath.PerVillageRaided);
+                Add(def, att, WarExhaustionMath.PerVillageRaided, Source.VillagesRaided);
                 return;
             }
             // Blood on both sides, each weighed against its own realm's size.
-            Add(att, def, e.AttackerSide.TroopCasualties * WarExhaustionMath.PerCasualty);
-            Add(def, att, e.DefenderSide.TroopCasualties * WarExhaustionMath.PerCasualty);
+            Add(att, def, e.AttackerSide.TroopCasualties * WarExhaustionMath.PerCasualty, Source.Casualties);
+            Add(def, att, e.DefenderSide.TroopCasualties * WarExhaustionMath.PerCasualty, Source.Casualties);
         }
 
         private void OnOwnerChanged(Settlement s, bool openToClaim, Hero newOwner, Hero oldOwner,
@@ -87,7 +126,7 @@ namespace TakhtyaTaboot
             if (detail != ChangeOwnerOfSettlementAction.ChangeOwnerOfSettlementDetail.BySiege) return;
             Kingdom loser = oldOwner?.Clan?.Kingdom;
             Kingdom winner = newOwner?.Clan?.Kingdom;
-            Add(loser, winner, WarExhaustionMath.PerFiefLost);
+            Add(loser, winner, WarExhaustionMath.PerFiefLost, Source.FiefsLost);
         }
 
         private void OnDailyTick()
@@ -105,12 +144,28 @@ namespace TakhtyaTaboot
                 { _exhaustion.Remove(key); continue; }
 
                 if (mine.IsAtWarWith(enemy))
-                    _exhaustion[key] = WarExhaustionMath.Accrue(_exhaustion[key], WarExhaustionMath.DailyCreep,
-                        WarExhaustionMath.StrengthScale(RealmStrength(mine)));
+                    Add(mine, enemy, WarExhaustionMath.DailyCreep, Source.TheGrindOfTime);
                 else
                 {
                     float decayed = WarExhaustionMath.DecayInPeace(_exhaustion[key]);
-                    if (decayed <= 0f) _exhaustion.Remove(key); else _exhaustion[key] = decayed;
+                    if (decayed <= 0f)
+                    {
+                        _exhaustion.Remove(key);
+                        foreach (Source s in System.Enum.GetValues(typeof(Source)))
+                            _components.Remove(key + "|" + (int)s);
+                    }
+                    else
+                    {
+                        // Fade the components in step with the total, so the breakdown never claims more
+                        // than the realm actually feels.
+                        float ratio = _exhaustion[key] <= 0f ? 0f : decayed / _exhaustion[key];
+                        _exhaustion[key] = decayed;
+                        foreach (Source s in System.Enum.GetValues(typeof(Source)))
+                        {
+                            string ck = key + "|" + (int)s;
+                            if (_components.TryGetValue(ck, out float v)) _components[ck] = v * ratio;
+                        }
+                    }
                 }
             }
 
@@ -168,12 +223,22 @@ namespace TakhtyaTaboot
         {
             var keys = _exhaustion.Keys.ToList();
             var vals = _exhaustion.Values.ToList();
+            var ckeys = _components.Keys.ToList();
+            var cvals = _components.Values.ToList();
             dataStore.SyncData("hind_wex_keys", ref keys);
             dataStore.SyncData("hind_wex_vals", ref vals);
+            dataStore.SyncData("hind_wex_ckeys", ref ckeys);
+            dataStore.SyncData("hind_wex_cvals", ref cvals);
             if (!dataStore.IsSaving)
             {
                 _exhaustion = new Dictionary<string, float>();
                 for (int i = 0; i < keys.Count && i < vals.Count; i++) _exhaustion[keys[i]] = vals[i];
+
+                // A save from before the itemization simply has no components: the totals stay right and
+                // the breakdown fills in from here on.
+                _components = new Dictionary<string, float>();
+                if (ckeys != null && cvals != null)
+                    for (int i = 0; i < ckeys.Count && i < cvals.Count; i++) _components[ckeys[i]] = cvals[i];
             }
         }
 

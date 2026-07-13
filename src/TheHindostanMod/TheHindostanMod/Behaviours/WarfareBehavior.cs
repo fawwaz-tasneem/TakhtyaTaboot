@@ -9,129 +9,415 @@ using TaleWorlds.CampaignSystem.Party;
 using TaleWorlds.CampaignSystem.Settlements;
 using TaleWorlds.Core;
 using TaleWorlds.Library;
-using TaleWorlds.Localization;
 using TakhtyaTaboot.UI;
+using TakhtyaTaboot.Util;
+using Kind = TakhtyaTaboot.Util.WarProgressMath.Kind;
 
 namespace TakhtyaTaboot
 {
-    // Makes wars MEAN something. Every war the player's realm fights carries a war goal
-    // and a running war score (battles won, forts taken). Peace is no blank handshake —
-    // the victor dictates terms: a province ceded, a nazrana indemnity, or tributary
-    // submission. War wearies the realm over time. And the fighting is personal: victories
-    // earn mansab, captured cities may be sacked or spared, captured lords ransomed or held,
-    // and the sovereign may call the realm's banners to the field.
+    // WAR, AND WHY IT IS FOUGHT (wiki ch.30). Rewritten from the old player-only scorer.
+    //
+    // Every war on the map — the player's and the AI's alike — is a RECORD: an aggressor, a defender, an
+    // AIM, and (for a war of conquest) the named fiefs it was declared FOR. The aim is fixed at declaration
+    // and it IS the win condition:
+    //
+    //   • ProvincialConquest — take the named fiefs. Nothing else will do, and no score, however crushing,
+    //     substitutes for them. On victory each fief passes to the HOUSE whose claim was acted upon
+    //     (under Feudal law directly; under Mansabdari through the crown's channel).
+    //   • Tribute / Revenge  — beat them decisively, then dictate an indemnity, a tributary yoke, or the
+    //     surrender of the lord who wronged you.
+    //   • TotalSubjugation   — swallow the realm entire. Either their throne collapses (the gate), or every
+    //     last fief falls. The defeated houses are ABSORBED, not scattered — carrying a bitter, decaying
+    //     grudge (OpinionType.Subjugated).
+    //   • The defender chooses NOTHING: his aim is to deny the aggressor's.
+    //
+    // Score is no longer an anonymous float. It is an ITEMIZED LEDGER of named contributions, because the
+    // player can hover the war's progress bar and be told exactly what moved it (WarProgressMath).
+    //
+    // THRONE WARS ARE NOT THIS SYSTEM'S BUSINESS. A hind_rebel_* war is binary and settles by its own
+    // deadline; the aim of a war for the crown is the crown. The old code offered "choose your war aim:
+    // conquest/tribute/chastisement" in the middle of a civil war. It no longer does.
     public class WarfareBehavior : CampaignBehaviorBase
     {
-        public enum WarGoal { Conquest = 0, Tribute = 1, Humble = 2, Defense = 3 }
-        private enum Term { WhitePeace, DemandNazrana, DemandProvince, MakeTributary, OfferNazrana, Subjugate, SurrenderCulprit }
+        private enum Term { WhitePeace, DemandNazrana, DemandTargets, MakeTributary, OfferNazrana, Subjugate, SurrenderCulprit }
 
         public static WarfareBehavior Instance { get; private set; }
 
-        private const int DecisiveScore = 30;
         private const int BannerCooldownDays = 14;
+        private const int ForcedTruceDays    = 365 * 3;  // a dictated peace binds for three years
+        private const int MaxConquestTargets = 3;        // a realm marches for a handful of fiefs, not a list
 
-        // Per-war state, keyed by the OTHER kingdom's id (the player's realm is implicit).
-        private Dictionary<string, int> _goal = new Dictionary<string, int>();
-        private Dictionary<string, int> _score = new Dictionary<string, int>();
-        private Dictionary<string, float> _weary = new Dictionary<string, float>();
-        // Tributaries the player's realm has imposed: tributaryKingdomId -> day tribute ends.
+        // ── The wars ─────────────────────────────────────────────────────────────────
+        private List<string> _wAgg       = new List<string>();
+        private List<string> _wDef       = new List<string>();
+        private List<int>    _wAim       = new List<int>();
+        private List<string> _wTargets   = new List<string>();   // ';'-joined settlement ids
+        private List<string> _wClaimants = new List<string>();   // ';'-joined clan ids, parallel to targets
+        private List<int>    _wStart     = new List<int>();
+
+        // ── The contribution ledger (what moved each war's score, and why) ───────────
+        private List<string> _cWar   = new List<string>();   // "aggId|defId"
+        private List<int>    _cDay   = new List<int>();
+        private List<int>    _cKind  = new List<int>();
+        private List<float>  _cDelta = new List<float>();
+        private List<string> _cSubj  = new List<string>();
+
+        // ── Truces (read by the WarDeclarationGate patch) ────────────────────────────
+        private List<string> _trA     = new List<string>();
+        private List<string> _trB     = new List<string>();
+        private List<int>    _trUntil = new List<int>();
+
+        // Tributaries the player's realm has imposed: tributaryKingdomId -> day the yoke lifts.
         private Dictionary<string, int> _tributaryUntil = new Dictionary<string, int>();
 
         private int _lastBannerDay = -100;
         private bool _ready;
         private bool _applyingTerms;
         private readonly HashSet<string> _peaceUrged = new HashSet<string>();
+        private readonly HashSet<string> _completionOffered = new HashSet<string>();
 
         public override void RegisterEvents()
         {
             Instance = this;
-            CampaignEvents.DailyTickEvent.AddNonSerializedListener(this, () => Util.TYTLog.Guard("Warfare.DailyTick", OnDailyTick));
+            CampaignEvents.DailyTickEvent.AddNonSerializedListener(this, () => TYTLog.Guard("Warfare.DailyTick", OnDailyTick));
             CampaignEvents.OnSessionLaunchedEvent.AddNonSerializedListener(this, OnSessionLaunched);
             CampaignEvents.WarDeclared.AddNonSerializedListener(this, OnWarDeclared);
             CampaignEvents.MakePeace.AddNonSerializedListener(this, OnMakePeace);
             CampaignEvents.OnPlayerBattleEndEvent.AddNonSerializedListener(this, OnPlayerBattleEnd);
+            CampaignEvents.MapEventEnded.AddNonSerializedListener(this, e => TYTLog.GuardQuiet("Warfare.MapEvent", () => OnAnyBattleEnd(e)));
             CampaignEvents.TournamentFinished.AddNonSerializedListener(this, OnTournamentFinished);
             CampaignEvents.OnSettlementOwnerChangedEvent.AddNonSerializedListener(this, OnOwnerChanged);
             CampaignEvents.HeroPrisonerTaken.AddNonSerializedListener(this, OnPrisonerTaken);
             CampaignEvents.HeroKilledEvent.AddNonSerializedListener(this, OnHeroKilled);
+            // A realm being swallowed must not be scattered by vanilla the moment its last fief falls —
+            // we need it alive to absorb its houses (ch.30 §4).
+            CampaignEvents.CanKingdomBeDiscontinuedEvent.AddNonSerializedListener(this, OnCanKingdomBeDiscontinued);
         }
 
         private static Kingdom PK => Hero.MainHero?.Clan?.Kingdom;
         private static Kingdom Find(string id) => Kingdom.All.FirstOrDefault(k => k.StringId == id);
         private static bool IsRuler => PK != null && PK.Leader == Hero.MainHero;
+        private static int Today => (int)CampaignTime.Now.ToDays;
 
-        // ── War goals ────────────────────────────────────────────────────────────────
+        // A war this layer owns: two real realms. A throne war is binary and settles by its own rules.
+        private static bool Tracked(Kingdom a, Kingdom b)
+            => a != null && b != null && a != b && !a.IsEliminated && !b.IsEliminated
+               && !ThroneWar.IsRebelKingdom(a) && !ThroneWar.IsRebelKingdom(b);
+
+        // ── The war record ───────────────────────────────────────────────────────────
+        private int FindWar(Kingdom a, Kingdom b)
+        {
+            if (a == null || b == null) return -1;
+            for (int i = 0; i < _wAgg.Count; i++)
+            {
+                if (_wAgg[i] == a.StringId && _wDef[i] == b.StringId) return i;
+                if (_wAgg[i] == b.StringId && _wDef[i] == a.StringId) return i;
+            }
+            return -1;
+        }
+
+        private string WarKey(int i) => _wAgg[i] + "|" + _wDef[i];
+        private WarAim AimAt(int i) => (WarAim)_wAim[i];
+        public WarAim AimOf(Kingdom a, Kingdom b) { int i = FindWar(a, b); return i < 0 ? WarAim.Tribute : AimAt(i); }
+
+        private List<string> TargetIds(int i)
+            => string.IsNullOrEmpty(_wTargets[i]) ? new List<string>()
+             : _wTargets[i].Split(';').Where(s => !string.IsNullOrEmpty(s)).ToList();
+
+        private List<string> ClaimantIds(int i)
+            => string.IsNullOrEmpty(_wClaimants[i]) ? new List<string>()
+             : _wClaimants[i].Split(';').Where(s => !string.IsNullOrEmpty(s)).ToList();
+
+        private static Settlement Settle(string id) => Settlement.All.FirstOrDefault(s => s.StringId == id);
+        private static Clan ClanOf(string id) => Clan.All.FirstOrDefault(c => c.StringId == id);
+
+        // ── Declaration: the aim is fixed here, and it is the win condition ──────────
         private void OnWarDeclared(IFaction f1, IFaction f2, DeclareWarAction.DeclareWarDetail detail)
+            => TYTLog.Guard("Warfare.WarDeclared", () =>
+            {
+                // THE BUG THIS REWRITE KILLS: a hind_rebel_* breakaway IS a Kingdom, so the old code
+                // cheerfully asked the player to pick "conquest / tribute / chastisement" in the middle
+                // of his own civil war. The aim of a war for the throne is the throne.
+                if (!(f1 is Kingdom agg) || !(f2 is Kingdom def)) return;
+                if (!Tracked(agg, def)) return;
+                if (FindWar(agg, def) >= 0) return;
+
+                // War with a tributary breaks the pact.
+                if (_tributaryUntil.Remove(def.StringId) || _tributaryUntil.Remove(agg.StringId))
+                    if (PK == agg || PK == def)
+                        RoyalFarmaan.FromRuler(PK, "The Tributary Yoke Is Cast Off",
+                            "The pact of tribute is broken: the realms are at war once more, and no further nazrana will flow.",
+                            "So be it");
+
+                OpenWar(agg, def, WarAim.Tribute, new List<Settlement>(), new List<Clan>());
+
+                // The player's own realm, and he wears the crown: HE names the aim.
+                if (_ready && agg == PK && IsRuler) { OfferAimChoice(def); return; }
+
+                // Everyone else — the AI, and the player as a mere vassal — gets the aim assigned from
+                // the standing claims (ch.30 §7.10, the cheap path: vanilla decides WHETHER to fight,
+                // we decide WHAT FOR).
+                AssignAimFromClaims(agg, def);
+            });
+
+        private void OpenWar(Kingdom agg, Kingdom def, WarAim aim, List<Settlement> targets, List<Clan> claimants)
+        {
+            _wAgg.Add(agg.StringId); _wDef.Add(def.StringId); _wAim.Add((int)aim);
+            _wTargets.Add(string.Join(";", targets.Select(s => s.StringId)));
+            _wClaimants.Add(string.Join(";", claimants.Select(c => c.StringId)));
+            _wStart.Add(Today);
+            _peaceUrged.Remove(def.StringId);
+            _completionOffered.Remove(agg.StringId + "|" + def.StringId);
+        }
+
+        private void SetAim(int i, WarAim aim, List<Settlement> targets, List<Clan> claimants)
+        {
+            _wAim[i] = (int)aim;
+            _wTargets[i] = string.Join(";", targets.Select(s => s.StringId));
+            _wClaimants[i] = string.Join(";", claimants.Select(c => c.StringId));
+        }
+
+        // What a realm actually has cause to demand of another. This is the AI's aim, and it is also
+        // the honest menu the player is offered.
+        private void AssignAimFromClaims(Kingdom agg, Kingdom def)
+        {
+            int i = FindWar(agg, def);
+            if (i < 0) return;
+
+            var claims = ClaimsBehavior.Instance?.ClaimTargets(agg, def) ?? new List<(Settlement, Clan, float)>();
+            if (claims.Count > 0)
+            {
+                var take = claims.Take(MaxConquestTargets).ToList();
+                SetAim(i, WarAim.ProvincialConquest,
+                       take.Select(t => t.Item1).ToList(), take.Select(t => t.Item2).ToList());
+                TYTLog.Info($"Warfare: {agg.Name} wars on {def.Name} for {string.Join(", ", take.Select(t => t.Item1.Name))} (claims).");
+                return;
+            }
+
+            // No claim, but a grievance: a war of chastisement.
+            if (Util.WarAimsBehavior.Instance != null && Util.WarAimsBehavior.Instance.HasCasusBelli(agg, def, out _))
+            { SetAim(i, WarAim.Revenge, new List<Settlement>(), new List<Clan>()); return; }
+
+            // Naked ambition: gold, then.
+            SetAim(i, WarAim.Tribute, new List<Settlement>(), new List<Clan>());
+        }
+
+        private void OfferAimChoice(Kingdom ok)
         {
             Kingdom pk = PK;
-            if (pk == null) return;
-            if (f1 != pk && f2 != pk) return;
-            IFaction other = f1 == pk ? f2 : f1;
-            if (!(other is Kingdom ok)) return;
+            var claims = ClaimsBehavior.Instance?.ClaimTargets(pk, ok) ?? new List<(Settlement, Clan, float)>();
+            bool hasAffront = Util.WarAimsBehavior.Instance != null
+                              && Util.WarAimsBehavior.Instance.HasCasusBelli(pk, ok, out _);
 
-            // War with a tributary breaks the pact — once, here, rather than the old daily
-            // forced re-peace, which fought the war system every tick if anyone re-declared.
-            if (_tributaryUntil.Remove(ok.StringId))
-                RoyalFarmaan.FromRuler(pk, "The Tributary Yoke Is Cast Off",
-                    $"The pact of tribute with {ok.Name} is broken: the two realms are at war once more, " +
-                    "and no further nazrana will flow.", "So be it");
+            var elements = new List<InquiryElement>();
 
-            _score[ok.StringId] = 0;
-            _weary[ok.StringId] = 0f;
-            _peaceUrged.Remove(ok.StringId);
-
-            if (!_ready) { _goal[ok.StringId] = (int)WarGoal.Defense; return; }
-
-            if (IsRuler) OfferGoalChoice(ok);
-            else { _goal[ok.StringId] = (int)WarGoal.Defense; AnnounceGoal(ok, WarGoal.Defense); }
-        }
-
-        private void OfferGoalChoice(Kingdom ok)
-        {
-            var elements = new List<InquiryElement>
+            if (claims.Count > 0)
             {
-                new InquiryElement(WarGoal.Conquest, "Conquest — seize their provinces", null, true, "Aim to take and keep enemy lands."),
-                new InquiryElement(WarGoal.Tribute, "Tribute — bleed them for gold", null, true, "Aim for an indemnity or tributary submission."),
-                new InquiryElement(WarGoal.Humble, "Chastisement — humble their pride", null, true, "A punitive war for standing, not land."),
-            };
+                var take = claims.Take(MaxConquestTargets).ToList();
+                string names = string.Join(", ", take.Select(t => $"{t.Item1.Name} (for {t.Item2.Name}, {t.Item3:0.0} yrs)"));
+                elements.Add(new InquiryElement(WarAim.ProvincialConquest,
+                    $"Conquest — press our claims: {string.Join(", ", take.Select(t => t.Item1.Name.ToString()))}", null, true,
+                    $"Our houses hold claims upon {names}. The war is won when every one of them is taken — " +
+                    "and each passes to the house whose claim was pressed."));
+            }
+
+            if (hasAffront)
+                elements.Add(new InquiryElement(WarAim.Revenge, "Chastisement — answer the affront", null, true,
+                    "A punitive war. Beat them decisively, then take reparation — or the surrender of the lord who wronged us."));
+
+            elements.Add(new InquiryElement(WarAim.Tribute, "Tribute — bleed them for gold", null, true,
+                claims.Count > 0 || hasAffront
+                    ? "Beat them decisively, then demand an indemnity or a tributary yoke."
+                    : "Beat them decisively, then demand an indemnity. We march without a claim or a grievance — " +
+                      "naked ambition, and the court will mark it."));
+
+            elements.Add(new InquiryElement(WarAim.TotalSubjugation, "Subjugation — swallow the realm entire", null, true,
+                "The hardest war there is. It ends only when their throne collapses — their king fallen, their " +
+                "legitimacy broken, their lords looking to you — or when every last fief of theirs has fallen."));
+
             MBInformationManager.ShowMultiSelectionInquiry(new MultiSelectionInquiryData(
-                $"War Aim against {ok.Name}",
-                $"Your realm goes to war with {ok.Name}. What is your aim? It will shape the terms you seek at its end.",
-                elements, true, 1, 1, "Set the aim", "Decide later",
-                sel => { WarGoal g = sel != null && sel.Count > 0 && sel[0].Identifier is WarGoal wg ? wg : WarGoal.Conquest;
-                         _goal[ok.StringId] = (int)g; AnnounceGoal(ok, g); },
-                _ => { _goal[ok.StringId] = (int)WarGoal.Conquest; }, "", false), false, false);
+                $"The Aim of the War with {ok.Name}",
+                "Why do we march? The aim is fixed here, and it is what victory will mean. It cannot be changed once the banners are out.",
+                elements, false, 1, 1, "Fix the aim", "",
+                sel =>
+                {
+                    WarAim aim = sel != null && sel.Count > 0 && sel[0].Identifier is WarAim a ? a : WarAim.Tribute;
+                    ApplyChosenAim(ok, aim, claims);
+                }, null, ""), true);
         }
 
-        private void AnnounceGoal(Kingdom ok, WarGoal g)
+        private void ApplyChosenAim(Kingdom ok, WarAim aim, List<(Settlement, Clan, float)> claims)
+            => TYTLog.Guard("Warfare.ApplyAim", () =>
+            {
+                Kingdom pk = PK;
+                int i = FindWar(pk, ok);
+                if (i < 0) return;
+
+                var targets = new List<Settlement>();
+                var claimants = new List<Clan>();
+                if (aim == WarAim.ProvincialConquest)
+                {
+                    var take = claims.Take(MaxConquestTargets).ToList();
+                    targets = take.Select(t => t.Item1).ToList();
+                    claimants = take.Select(t => t.Item2).ToList();
+                }
+                SetAim(i, aim, targets, claimants);
+
+                // A war fought for nothing at all costs the throne some standing.
+                if (aim == WarAim.Tribute && claims.Count == 0
+                    && !(Util.WarAimsBehavior.Instance?.HasCasusBelli(pk, ok, out _) ?? false))
+                {
+                    ImperialAuthorityBehavior.Instance?.ModifyAuthority(pk, -4f, "a war declared without cause");
+                    if (pk.Leader != null)
+                        LegitimacyBehavior.Instance?.ModifyLegitimacy(pk.Leader, -3f, "a war of naked ambition");
+                }
+
+                string body = aim == WarAim.ProvincialConquest
+                    ? $"The war with {ok.Name} is fought for {string.Join(", ", targets.Select(t => t.Name.ToString()))}. " +
+                      "It is won when they are ours — and each shall pass to the house whose claim we press."
+                    : aim == WarAim.TotalSubjugation
+                    ? $"The war with {ok.Name} is fought to end them as a realm. Break their throne, or take every stone they hold."
+                    : aim == WarAim.Revenge
+                    ? $"The war with {ok.Name} is fought to answer their affront. Beat them, and they will answer for it."
+                    : $"The war with {ok.Name} is fought for gold. Beat them, and they will pay.";
+
+                RoyalFarmaan.FromRuler(pk, "The Aim of the War", body, "It shall be done");
+            });
+
+        // ── The ledger: nothing moves the bar unless it can be named ─────────────────
+        private void Add(Kingdom scorer, Kingdom against, Kind kind, string subject = null, float? delta = null)
         {
-            string aim = g == WarGoal.Conquest ? "to seize their provinces"
-                : g == WarGoal.Tribute ? "to wring tribute from them"
-                : g == WarGoal.Humble ? "to humble their pride"
-                : "to defend the realm";
-            RoyalFarmaan.FromRuler(PK, "The Aim of the War",
-                $"The war with {ok.Name} is prosecuted {aim}. Press the enemy in battle and at their walls; " +
-                "the more decisive your victories, the harsher the peace you may dictate.", "It shall be done");
+            if (!Tracked(scorer, against)) return;
+            int i = FindWar(scorer, against);
+            if (i < 0) { EnsureWar(scorer, against); i = FindWar(scorer, against); if (i < 0) return; }
+
+            // The ledger is kept from the AGGRESSOR's point of view: his gains are positive.
+            bool scorerIsAggressor = _wAgg[i] == scorer.StringId;
+            float d = delta ?? WarProgressMath.DefaultDelta(kind);
+            if (!scorerIsAggressor) d = -d;
+
+            _cWar.Add(WarKey(i)); _cDay.Add(Today); _cKind.Add((int)kind);
+            _cDelta.Add(d); _cSubj.Add(subject ?? "");
         }
 
-        private WarGoal GoalOf(string id) => _goal.TryGetValue(id, out int g) ? (WarGoal)g : WarGoal.Conquest;
-        private int ScoreOf(string id) => _score.TryGetValue(id, out int s) ? s : 0;
-        private void AddScore(string id, int delta) { if (id != null) _score[id] = ScoreOf(id) + delta; }
-
-        // Make sure a war the realm is ACTUALLY in is tracked, even if it began before this behavior saw
-        // the declaration (save load, war declared while the player was elsewhere, or the player joined
-        // the realm mid-war). Without this the score stayed 0 and "Direct the war effort" saw no wars.
-        private void EnsureWarTracked(Kingdom ok)
+        private List<WarProgressMath.Contribution> LedgerOf(int i)
         {
-            if (ok == null) return;
-            if (!_score.ContainsKey(ok.StringId)) _score[ok.StringId] = 0;
-            if (!_weary.ContainsKey(ok.StringId)) _weary[ok.StringId] = 0f;
-            if (!_goal.ContainsKey(ok.StringId)) _goal[ok.StringId] = (int)WarGoal.Defense;
+            string key = WarKey(i);
+            var list = new List<WarProgressMath.Contribution>();
+            for (int j = 0; j < _cWar.Count; j++)
+                if (_cWar[j] == key)
+                    list.Add(new WarProgressMath.Contribution(_cDay[j], (Kind)_cKind[j], _cDelta[j], _cSubj[j]));
+            return list;
         }
 
-        // ── War score ────────────────────────────────────────────────────────────────
+        // The war as the given realm sees it — the aggressor's aim, or the defender's denial of it.
+        public WarProgressMath.Snapshot SnapshotFor(Kingdom mine, Kingdom theirs)
+        {
+            var snap = new WarProgressMath.Snapshot();
+            int i = FindWar(mine, theirs);
+            if (i < 0) return snap;
+
+            Kingdom agg = Find(_wAgg[i]);
+            Kingdom def = Find(_wDef[i]);
+            snap.Aim = AimAt(i);
+            snap.IsDefender = mine != agg;
+            snap.Score = WarProgressMath.Score(LedgerOf(i));
+            if (snap.IsDefender) snap.Score = -snap.Score;   // the ledger is kept aggressor-positive
+
+            var targets = TargetIds(i).Select(Settle).Where(s => s != null).ToList();
+            snap.TargetsTotal = targets.Count;
+            snap.TargetsHeld = agg == null ? 0 : targets.Count(s => s.OwnerClan?.Kingdom == agg);
+
+            if (snap.Aim == WarAim.TotalSubjugation && agg != null && def != null)
+            {
+                // Fiefs the defender still holds, against what he began with — plus his throne's health.
+                var defFiefs = def.Settlements.Where(s => s.IsTown || s.IsCastle).ToList();
+                int takenByUs = Settlement.All.Count(s => (s.IsTown || s.IsCastle)
+                    && s.OwnerClan?.Kingdom == agg && WasTakenFrom(s, def, i));
+                snap.EnemyFiefsTotal = defFiefs.Count + takenByUs;
+                snap.EnemyFiefsTaken = takenByUs;
+
+                Hero king = def.Leader;
+                snap.EnemyKingFallen = king == null || !king.IsAlive || king.IsPrisoner;
+                snap.EnemyKingLegitimacy = LegitimacyBehavior.Instance?.GetLegitimacy(king) ?? 60f;
+                snap.LoyalLordFraction = WarAimMath.FractionWithRelationAtLeast(
+                    def.Clans.Where(c => !c.IsEliminated && c.Leader != null)
+                             .Select(c => CharacterRelationManager.GetHeroRelation(agg.Leader ?? Hero.MainHero, c.Leader)),
+                    WarAimMath.SubjugationLoyalRelation);
+            }
+            return snap;
+        }
+
+        // Did this fief change hands from the defender to us during THIS war? The ledger knows: every
+        // FiefTaken names its settlement.
+        private bool WasTakenFrom(Settlement s, Kingdom def, int warIndex)
+        {
+            string key = WarKey(warIndex);
+            for (int j = 0; j < _cWar.Count; j++)
+                if (_cWar[j] == key && (Kind)_cKind[j] == Kind.FiefTaken && _cSubj[j] == s.StringId)
+                    return true;
+            return false;
+        }
+
+        public float ProgressPercent(Kingdom mine, Kingdom theirs)
+            => WarProgressMath.Percent(SnapshotFor(mine, theirs));
+
+        public List<WarProgressMath.Line> ProgressBreakdown(Kingdom mine, Kingdom theirs)
+        {
+            int i = FindWar(mine, theirs);
+            if (i < 0) return new List<WarProgressMath.Line>();
+            var snap = SnapshotFor(mine, theirs);
+            var targets = TargetIds(i).Select(Settle).Where(s => s != null)
+                .Select(s => (s.Name.ToString(), s.OwnerClan?.Kingdom == Find(_wAgg[i])));
+            return WarProgressMath.Breakdown(snap, LedgerOf(i), targets);
+        }
+
+        // Every war on the map is tracked, including those that predate this behavior (old saves) and
+        // those the player never saw declared. Legacy saves land here with a reconstructed aim.
+        private void EnsureWar(Kingdom a, Kingdom b)
+        {
+            if (!Tracked(a, b) || FindWar(a, b) >= 0) return;
+            OpenWar(a, b, WarAim.Tribute, new List<Settlement>(), new List<Clan>());
+            AssignAimFromClaims(a, b);   // sensible default: whatever cause a actually has against b
+        }
+
+        // ── Score events ─────────────────────────────────────────────────────────────
+        // Every battle on the map, not just the player's — the AI's wars must progress too.
+        private void OnAnyBattleEnd(MapEvent e)
+        {
+            if (e == null || !WorldGen.Ready || !e.HasWinner) return;
+            Kingdom att = e.AttackerSide?.MapFaction as Kingdom;
+            Kingdom def = e.DefenderSide?.MapFaction as Kingdom;
+            if (!Tracked(att, def)) return;
+
+            if (e.IsRaid) { Add(att, def, Kind.VillageRaided, e.MapEventSettlement?.Name?.ToString()); return; }
+
+            bool siege = e.MapEventSettlement != null;
+            Kingdom winner = e.WinningSide == BattleSideEnum.Attacker ? att : def;
+            Kingdom loser  = winner == att ? def : att;
+
+            Add(winner, loser, siege ? Kind.SiegeTaken : Kind.BattleWon, e.MapEventSettlement?.Name?.ToString());
+            Add(loser, winner, siege ? Kind.SiegeLost : Kind.BattleLost, e.MapEventSettlement?.Name?.ToString());
+
+            if (KingBrokenOn(e, loser))
+                Add(winner, loser, Kind.KingCaptured, loser.Leader?.Name?.ToString());
+        }
+
+        private static bool KingBrokenOn(MapEvent e, Kingdom loser)
+        {
+            if (e == null || loser?.Leader == null) return false;
+            BattleSideEnum losing = e.WinningSide == BattleSideEnum.Attacker ? BattleSideEnum.Defender : BattleSideEnum.Attacker;
+            MapEventSide side = e.GetMapEventSide(losing);
+            if (side?.Parties == null) return false;
+            foreach (MapEventParty p in side.Parties)
+                if (p?.Party?.LeaderHero == loser.Leader) return true;
+            return false;
+        }
+
+        // The player's own battles: valour toward the next mansab (unchanged), on top of the war ledger
+        // that OnAnyBattleEnd has already written.
         private void OnPlayerBattleEnd(MapEvent mapEvent)
-            => Util.TYTLog.Guard("Warfare.OnPlayerBattleEnd", () => PlayerBattleEnd(mapEvent));
+            => TYTLog.Guard("Warfare.OnPlayerBattleEnd", () => PlayerBattleEnd(mapEvent));
 
         private void PlayerBattleEnd(MapEvent mapEvent)
         {
@@ -145,23 +431,9 @@ namespace TakhtyaTaboot
             bool win = mapEvent.HasWinner && mapEvent.WinningSide == mapEvent.PlayerSide;
             bool siege = mapEvent.MapEventSettlement != null;
 
-            // War score for the realm's war. Track the war first so a battle always counts (the old
-            // ContainsKey guard silently dropped score for any war that wasn't declared on our watch).
-            if (pk != null && opp is Kingdom ok)
-            {
-                EnsureWarTracked(ok);
-                int mag = siege ? 18 : 10;
-                if (win && RoutedOrCapturedKing(mapEvent, ok)) mag += 25;  // breaking their king is decisive
-                AddScore(ok.StringId, (win ? 1 : -1) * mag);
-            }
-
-            // Battlefield valour toward the next mansab — earned against real foes, not brigands.
-            // Capturing or routing the enemy sovereign on the field is worth a great deal, and a
-            // victory won against the odds is sung of louder than one won with them.
             if (win && pk != null && opp is Kingdom enemy)
             {
                 float gain = Config.Tune.ValourPerWin * (siege ? Config.Tune.ValourSiegeMultiplier : 1f);
-
                 try
                 {
                     int ours = mapEvent.GetNumberOfInvolvedMen(mapEvent.PlayerSide);
@@ -173,9 +445,9 @@ namespace TakhtyaTaboot
                         Notify($"Victory against the odds — {theirs} of the foe against your {ours}. The court will hear of it.", false);
                     }
                 }
-                catch (Exception e) { Util.TYTLog.Error("Outnumbered-valour check failed", e); }
+                catch (Exception e) { TYTLog.Error("Outnumbered-valour check failed", e); }
 
-                if (RoutedOrCapturedKing(mapEvent, enemy))
+                if (KingBrokenOn(mapEvent, enemy))
                 {
                     gain += Config.Tune.ValourKingCapture;
                     Notify($"You have broken {enemy.Leader?.Name} on the field — a deed that will be sung of. Your valour soars.", false);
@@ -183,9 +455,7 @@ namespace TakhtyaTaboot
                 MansabdariBehavior.Instance?.AddValour(Clan.PlayerClan, gain);
             }
 
-            // Personal valour: enemies the player cut down by his own hand. Deserters (bhagode)
-            // count; common bandits give nothing (filtered in PlayerKillValourLogic).
-            int kills = Util.PlayerKillValourLogic.Take();
+            int kills = PlayerKillValourLogic.Take();
             if (kills > 0)
             {
                 float killGain = kills * Config.Tune.ValourPerKill;
@@ -197,10 +467,8 @@ namespace TakhtyaTaboot
             }
         }
 
-        // Glory in the akhara counts at court too: a tournament victory earns a small
-        // measure of valour toward the next mansab.
         private void OnTournamentFinished(CharacterObject winner, MBReadOnlyList<CharacterObject> participants, Town town, ItemObject prize)
-            => Util.TYTLog.Guard("Warfare.TournamentFinished", () =>
+            => TYTLog.Guard("Warfare.TournamentFinished", () =>
             {
                 if (winner == null || winner != Hero.MainHero?.CharacterObject) return;
                 float gain = Config.Tune.ValourTournamentWin;
@@ -209,41 +477,578 @@ namespace TakhtyaTaboot
                 Notify($"Your triumph in the tournament at {town?.Name} rings through the court — {gain:0.#} valour earned.", false);
             });
 
-        // True if the enemy realm's sovereign was on the losing side of this battle
-        // (captured or routed), used to award the great valour bonus.
-        private static bool RoutedOrCapturedKing(MapEvent e, Kingdom enemy)
-        {
-            if (e == null || enemy?.Leader == null) return false;
-            BattleSideEnum losing = e.WinningSide == BattleSideEnum.Attacker ? BattleSideEnum.Defender : BattleSideEnum.Attacker;
-            MapEventSide side = e.GetMapEventSide(losing);
-            if (side?.Parties == null) return false;
-            foreach (MapEventParty p in side.Parties)
-                if (p?.Party?.LeaderHero == enemy.Leader) return true;
-            return false;
-        }
-
         private void OnOwnerChanged(Settlement s, bool openToClaim, Hero newOwner, Hero oldOwner, Hero capturer,
             ChangeOwnerOfSettlementAction.ChangeOwnerOfSettlementDetail detail)
         {
-            if (!Util.WorldGen.Ready) return; // skip the parallel world-gen distribution (see Util/WorldGen.cs)
+            if (!WorldGen.Ready) return;
             if (s == null || !(s.IsTown || s.IsCastle)) return;
-            Kingdom pk = PK;
             Kingdom newK = newOwner?.Clan?.Kingdom;
             Kingdom oldK = oldOwner?.Clan?.Kingdom;
 
-            // War score from provinces changing hands between the warring realms.
-            if (pk != null)
+            TYTLog.GuardQuiet("Warfare.OwnerChanged", () =>
             {
-                if (newK == pk && oldK != null && pk.IsAtWarWith(oldK)) { EnsureWarTracked(oldK); AddScore(oldK.StringId, 20); }
-                else if (oldK == pk && newK != null && pk.IsAtWarWith(newK)) { EnsureWarTracked(newK); AddScore(newK.StringId, -20); }
-            }
+                if (Tracked(newK, oldK) && newK.IsAtWarWith(oldK))
+                {
+                    int i = FindWar(newK, oldK);
+                    if (i < 0) { EnsureWar(newK, oldK); i = FindWar(newK, oldK); }
+                    if (i >= 0)
+                    {
+                        // A fief the war was DECLARED FOR is worth far more than any other.
+                        bool isTarget = TargetIds(i).Contains(s.StringId);
+                        bool takerIsAggressor = _wAgg[i] == newK.StringId;
+
+                        Add(newK, oldK, Kind.FiefTaken, s.StringId);
+                        Add(oldK, newK, Kind.FiefLost, s.StringId);
+
+                        if (isTarget)
+                        {
+                            if (takerIsAggressor) Add(newK, oldK, Kind.TargetTaken, s.Name.ToString());
+                            else                  Add(newK, oldK, Kind.TargetRetaken, s.Name.ToString());
+                        }
+                    }
+                }
+            });
 
             // Spoils of war — the player takes a city by storm.
             if (newOwner == Hero.MainHero && detail == ChangeOwnerOfSettlementAction.ChangeOwnerOfSettlementDetail.BySiege)
                 OfferSpoils(s);
         }
 
-        // ── Spoils: sack or show mercy, then judge the notables ──────────────────────
+        // ── The daily pulse ──────────────────────────────────────────────────────────
+        private void OnDailyTick()
+        {
+            _ready = true;
+            if (!WorldGen.Ready) return;
+
+            // Track every war actually being fought, including AI-vs-AI and those from before this
+            // behavior existed.
+            foreach (Kingdom a in Kingdom.All.Where(k => !k.IsEliminated && !ThroneWar.IsRebelKingdom(k)))
+                foreach (Kingdom b in Kingdom.All.Where(k => k != a && !k.IsEliminated && !ThroneWar.IsRebelKingdom(k) && a.IsAtWarWith(k)))
+                    EnsureWar(a, b);
+
+            ExpireTruces();
+
+            for (int i = _wAgg.Count - 1; i >= 0; i--)
+            {
+                Kingdom agg = Find(_wAgg[i]);
+                Kingdom def = Find(_wDef[i]);
+                if (agg == null || def == null || agg.IsEliminated || def.IsEliminated) { CloseWar(i); continue; }
+                if (!agg.IsAtWarWith(def)) { CloseWar(i); continue; }
+
+                GrindOn(i);
+                CheckCompletion(i, agg, def);
+            }
+
+            CouncilUrging();
+            PayTribute();
+            CompactLedger();
+        }
+
+        // A war that merely drags favours nobody: one running row per war, incremented, rather than a
+        // new ledger line every single day (which would bloat the save by 365 rows a year).
+        private void GrindOn(int i)
+        {
+            string key = WarKey(i);
+            for (int j = 0; j < _cWar.Count; j++)
+                if (_cWar[j] == key && (Kind)_cKind[j] == Kind.TimeGrind)
+                { _cDelta[j] += WarProgressMath.DefaultDelta(Kind.TimeGrind); _cDay[j] = Today; return; }
+
+            _cWar.Add(key); _cDay.Add(Today); _cKind.Add((int)Kind.TimeGrind);
+            _cDelta.Add(WarProgressMath.DefaultDelta(Kind.TimeGrind)); _cSubj.Add("");
+        }
+
+        // THE AIM IS THE WIN CONDITION. When it is met, the war can be concluded — on the victor's terms,
+        // with a forced truce on the loser.
+        private void CheckCompletion(int i, Kingdom agg, Kingdom def)
+        {
+            var snap = SnapshotFor(agg, def);
+            if (!WarProgressMath.Complete(snap)) return;
+
+            string key = WarKey(i);
+            if (_completionOffered.Contains(key)) return;
+            _completionOffered.Add(key);
+
+            // The player's realm, and he rules: HE decides whether to take the win.
+            if (agg == PK && IsRuler) { OfferConclusion(i, agg, def, snap); return; }
+
+            // An AI aggressor takes what he came for.
+            ConcludeWar(i, agg, def);
+        }
+
+        private void OfferConclusion(int i, Kingdom agg, Kingdom def, WarProgressMath.Snapshot snap)
+        {
+            string what = snap.Aim == WarAim.ProvincialConquest
+                ? $"Every fief we marched for is ours: {string.Join(", ", TargetIds(i).Select(Settle).Where(s => s != null).Select(s => s.Name.ToString()))}."
+                : snap.Aim == WarAim.TotalSubjugation
+                ? $"{def.Name} is broken. Their realm may be swallowed entire — their houses will bend the knee, and hate you for it."
+                : $"{def.Name} is beaten decisively. They will accept whatever terms you dictate.";
+
+            RoyalFarmaan.FromRuler(agg, "The War Is Won",
+                $"{what}\n\nConclude it now — the peace will be dictated on your terms, and {def.Name} will be bound to a " +
+                "truce for three years. Or press on, and take more than you came for.",
+                primary: "Conclude the war on our terms", onPrimary: () => TYTLog.Guard("Warfare.Conclude", () =>
+                {
+                    int j = FindWar(agg, def);
+                    if (j >= 0) ConcludeWar(j, agg, def);
+                }),
+                secondary: "Press on — I want more", onSecondary: () =>
+                    Notify($"The war with {def.Name} goes on. Direct it from any town or castle when you wish to dictate terms.", false));
+        }
+
+        // ── Concluding a war: the aim is paid out, then the truce is imposed ─────────
+        private void ConcludeWar(int i, Kingdom agg, Kingdom def)
+        {
+            if (i < 0 || i >= _wAgg.Count) return;
+            WarAim aim = AimAt(i);
+            _applyingTerms = true;
+            try
+            {
+                if (aim == WarAim.TotalSubjugation) { Subjugate(agg, def); return; }   // absorbs and closes
+
+                if (aim == WarAim.ProvincialConquest) AwardTargets(i, agg);
+
+                if (agg.IsAtWarWith(def)) MakePeaceAction.Apply(agg, def);
+                ApplyTruce(agg, def, ForcedTruceDays);
+
+                if (agg == PK || def == PK)
+                    RoyalFarmaan.FromRuler(PK, "The War Is Ended",
+                        $"Peace is sealed between {agg.Name} and {def.Name} on the victor's terms. " +
+                        $"The realms are bound to a truce for three years.\n\nWhat was taken is not forgotten: the " +
+                        "dispossessed houses keep their claims, and those claims will fade only slowly.", "It is done");
+                TYTLog.Info($"Warfare: {agg.Name}'s war ({aim}) on {def.Name} concluded; truce {ForcedTruceDays}d.");
+            }
+            catch (Exception e) { TYTLog.Error("ConcludeWar failed", e); }
+            finally { _applyingTerms = false; CloseWar(FindWar(agg, def)); }
+        }
+
+        // The fiefs the war was fought for pass to the HOUSES whose claims were pressed — that is the whole
+        // bargain. Under Mansabdari the crown is not bound by a house's pretensions: the fief stays with the
+        // crown's own channel to re-grant by rank (ch.30 §2).
+        private void AwardTargets(int i, Kingdom agg)
+        {
+            bool mansabdari = MansabdariTenureBehavior.Instance?.IsMansabdari(agg) ?? false;
+            var targets = TargetIds(i);
+            var claimants = ClaimantIds(i);
+
+            for (int t = 0; t < targets.Count; t++)
+            {
+                Settlement s = Settle(targets[t]);
+                if (s == null || s.OwnerClan?.Kingdom != agg) continue;   // we never actually took it
+                if (mansabdari)
+                {
+                    if (agg == PK)
+                        Notify($"{s.Name} is taken, but under Mansabdari law it is the crown's to grant, not the claimant's.", false);
+                    continue;
+                }
+                Clan claimant = t < claimants.Count ? ClanOf(claimants[t]) : null;
+                if (claimant == null || claimant.IsEliminated || claimant.Leader == null) continue;
+                if (s.OwnerClan == claimant) continue;
+
+                try
+                {
+                    ChangeOwnerOfSettlementAction.ApplyByGift(s, claimant.Leader);
+                    if (agg == PK)
+                        Notify($"{s.Name} passes to {claimant.Name}, whose claim we pressed.", false);
+                }
+                catch (Exception e) { TYTLog.Error($"AwardTargets: could not seat {claimant.Name} at {s.Name}", e); }
+            }
+        }
+
+        // ── Total subjugation: the realm is SWALLOWED, not scattered ─────────────────
+        // Vanilla would destroy the kingdom and its houses would be flung to the winds. Instead every clan
+        // is absorbed — and carries a bitter, DECAYING grudge (OpinionType.Subjugated, -50, half-life 270d,
+        // so it fades over ~3-4 years). Their lords do not leave. They stay, and they seethe: the civil-war
+        // and conspiracy systems read exactly this opinion, so a swallowed realm is a slate of live
+        // challengers for a few years. That is the price of an empire, and it is intended (ch.30 §4).
+        private void Subjugate(Kingdom victor, Kingdom loser)
+        {
+            if (victor == null || loser == null) return;
+            Hero conqueror = victor.Leader;
+            var houses = loser.Clans.Where(c => c != null && !c.IsEliminated && c.Leader != null).ToList();
+
+            // Peace FIRST, while both realms still live: annexing every clan empties the loser, and making
+            // peace with a dead kingdom is incoherent.
+            try { if (victor.IsAtWarWith(loser)) MakePeaceAction.Apply(victor, loser); }
+            catch (Exception e) { TYTLog.Error("Subjugate: peace failed", e); }
+
+            int absorbed = 0;
+            foreach (Clan c in houses)
+            {
+                try
+                {
+                    ChangeKingdomAction.ApplyByJoinToKingdom(c, victor, default(CampaignTime), false);
+                    absorbed++;
+                    if (conqueror != null && c.Leader != conqueror)
+                        OpinionBehavior.Instance?.AddOpinion(c.Leader, conqueror, OpinionMath.OpinionType.Subjugated);
+                }
+                catch (Exception e) { TYTLog.Error($"Subjugate: could not absorb {c.Name}", e); }
+            }
+
+            CloseWar(FindWar(victor, loser));   // release the discontinuation veto before we retire the husk
+
+            try
+            {
+                if (!loser.IsEliminated && !loser.Settlements.Any() && !loser.Clans.Any(c => !c.IsEliminated))
+                { loser.RulingClan = null; DestroyKingdomAction.Apply(loser); }
+            }
+            catch (Exception e) { TYTLog.Error("Subjugate: could not retire the husk", e); }
+
+            if (victor.Leader != null)
+                ImperialAuthorityBehavior.Instance?.ModifyAuthority(victor, 10f, "a realm swallowed whole");
+
+            TYTLog.Info($"Warfare: {victor.Name} SUBJUGATED {loser.Name}; {absorbed} houses absorbed, each bearing a -50 grudge.");
+
+            if (victor == PK)
+                RoyalFarmaan.FromRuler(victor, "A Realm Is Swallowed Whole",
+                    $"{loser.Name} is no more. Its {absorbed} houses bend the knee to you and enter your realm — " +
+                    "but they are not friends. They have been conquered, and they know it. Watch them: a swallowed " +
+                    "realm seethes, and it will be years before the bitterness cools.", "Let them kneel");
+            else if (Clan.PlayerClan?.Kingdom == loser)
+                Notify($"{loser.Name} is no more — {victor.Name} has swallowed it whole. You bend the knee to a conqueror.", true);
+        }
+
+        // A realm being swallowed must NOT be discontinued by vanilla the instant its last fief falls —
+        // we need it alive long enough to absorb its houses rather than scatter them.
+        private void OnCanKingdomBeDiscontinued(Kingdom k, ref bool result)
+        {
+            if (k == null) return;
+            for (int i = 0; i < _wAgg.Count; i++)
+                if (_wDef[i] == k.StringId && AimAt(i) == WarAim.TotalSubjugation) { result = false; return; }
+        }
+
+        // ── Truces ───────────────────────────────────────────────────────────────────
+        public void ApplyTruce(Kingdom a, Kingdom b, int days)
+        {
+            if (a == null || b == null || days <= 0) return;
+            int until = Today + days;
+            for (int i = 0; i < _trA.Count; i++)
+                if (IsPair(i, a, b)) { _trUntil[i] = Math.Max(_trUntil[i], until); return; }
+            _trA.Add(a.StringId); _trB.Add(b.StringId); _trUntil.Add(until);
+        }
+
+        // Read by the WarDeclarationGate patch: no war may be declared across a live truce.
+        public bool IsTruced(IFaction a, IFaction b)
+        {
+            if (!(a is Kingdom ka) || !(b is Kingdom kb)) return false;
+            int today = Today;
+            for (int i = 0; i < _trA.Count; i++)
+                if (IsPair(i, ka, kb) && _trUntil[i] > today) return true;
+            return false;
+        }
+
+        public int TruceDaysLeft(Kingdom a, Kingdom b)
+        {
+            int today = Today;
+            for (int i = 0; i < _trA.Count; i++)
+                if (IsPair(i, a, b) && _trUntil[i] > today) return _trUntil[i] - today;
+            return 0;
+        }
+
+        private bool IsPair(int i, Kingdom a, Kingdom b)
+            => (_trA[i] == a.StringId && _trB[i] == b.StringId)
+            || (_trA[i] == b.StringId && _trB[i] == a.StringId);
+
+        private void ExpireTruces()
+        {
+            int today = Today;
+            for (int i = _trUntil.Count - 1; i >= 0; i--)
+                if (_trUntil[i] <= today)
+                { _trA.RemoveAt(i); _trB.RemoveAt(i); _trUntil.RemoveAt(i); }
+        }
+
+        // ── Closing a war ────────────────────────────────────────────────────────────
+        private void CloseWar(int i)
+        {
+            if (i < 0 || i >= _wAgg.Count) return;
+            string key = WarKey(i);
+            for (int j = _cWar.Count - 1; j >= 0; j--)
+                if (_cWar[j] == key) RemoveContribution(j);
+
+            _completionOffered.Remove(key);
+            _wAgg.RemoveAt(i); _wDef.RemoveAt(i); _wAim.RemoveAt(i);
+            _wTargets.RemoveAt(i); _wClaimants.RemoveAt(i); _wStart.RemoveAt(i);
+        }
+
+        private void RemoveContribution(int j)
+        {
+            _cWar.RemoveAt(j); _cDay.RemoveAt(j); _cKind.RemoveAt(j);
+            _cDelta.RemoveAt(j); _cSubj.RemoveAt(j);
+        }
+
+        // A decade-long war would otherwise carry thousands of rows into the save.
+        private void CompactLedger()
+        {
+            if (_cWar.Count <= WarProgressMath.MaxLedgerRows * 2) return;
+            for (int i = 0; i < _wAgg.Count; i++)
+            {
+                string key = WarKey(i);
+                var rows = LedgerOf(i);
+                if (rows.Count <= WarProgressMath.MaxLedgerRows) continue;
+                var compact = WarProgressMath.Compact(rows);
+
+                for (int j = _cWar.Count - 1; j >= 0; j--)
+                    if (_cWar[j] == key) RemoveContribution(j);
+                foreach (var c in compact)
+                {
+                    _cWar.Add(key); _cDay.Add(c.Day); _cKind.Add((int)c.Kind);
+                    _cDelta.Add(c.Delta); _cSubj.Add(c.Subject ?? "");
+                }
+            }
+        }
+
+        // ── Peace concluded elsewhere (the AI, exhaustion, a barter) ─────────────────
+        private void OnMakePeace(IFaction f1, IFaction f2, MakePeaceAction.MakePeaceDetail detail)
+            => TYTLog.GuardQuiet("Warfare.MakePeace", () =>
+            {
+                if (!(f1 is Kingdom a) || !(f2 is Kingdom b)) return;
+                int i = FindWar(a, b);
+                if (i < 0) return;
+
+                // If WE dictated it, ConcludeWar has already paid the aim out and closed the war.
+                if (_applyingTerms) return;
+
+                // A war that simply petered out: no aim is paid, but a decisive victor still settles
+                // accounts, and a short truce keeps the realms from re-declaring the same afternoon.
+                var snap = SnapshotFor(a, b);
+                if (Math.Abs(snap.Score) >= WarProgressMath.DecisiveScore && a.Leader != null && b.Leader != null)
+                {
+                    Kingdom agg = Find(_wAgg[i]);
+                    Hero winner = snap.Score > 0 ? agg?.Leader : Find(_wDef[i])?.Leader;
+                    Hero loser  = winner == a.Leader ? b.Leader : a.Leader;
+                    if (winner != null && loser != null)
+                    {
+                        int amount = Math.Min((int)Math.Abs(snap.Score) * 80, loser.Gold);
+                        if (amount > 0) GiveGoldAction.ApplyBetweenCharacters(loser, winner, amount, true);
+                    }
+                }
+                ApplyTruce(a, b, 365);
+                CloseWar(i);
+            });
+
+        private void CouncilUrging()
+        {
+            Kingdom pk = PK;
+            if (pk == null || !IsRuler) return;
+            foreach (Kingdom ok in Kingdom.All.Where(k => k != pk && !k.IsEliminated && pk.IsAtWarWith(k)).ToList())
+            {
+                if (ThroneWar.IsRebelKingdom(ok)) continue;
+                float w = WarExhaustionBehavior.Instance?.Exhaustion(pk, ok) ?? 0f;
+                if (!WarExhaustionMath.CouncilUrgesPeace(w) || _peaceUrged.Contains(ok.StringId)) continue;
+                _peaceUrged.Add(ok.StringId);
+                RoyalFarmaan.Issue("The Realm Wearies of War", $"From the Imperial Council of {pk.Name}",
+                    $"The war with {ok.Name} drags on and the realm grows weary. The council urges you to seek terms — " +
+                    "press for what your war aim allows, or grant peace. Direct the war effort from any town or castle.",
+                    seal: null, primary: "I shall consider it",
+                    dedupeKey: "weary:" + ok.StringId, cooldownDays: 30);
+            }
+        }
+
+        // The tributary yoke, and the grievance of throwing it off. A tributary that cannot (or will not)
+        // pay its nazrana hands its overlord a JUST CAUSE for a war of chastisement — one of the standing
+        // casus belli of the whole layer (ch.30 §3).
+        private void PayTribute()
+        {
+            Kingdom pk = PK;
+            if (pk == null) return;
+            int today = Today;
+            if (today % 7 != 0) return;
+
+            foreach (string id in _tributaryUntil.Keys.ToList())
+            {
+                Kingdom trib = Find(id);
+                if (trib == null || today >= _tributaryUntil[id]) { _tributaryUntil.Remove(id); continue; }
+                if (pk.IsAtWarWith(trib)) continue;
+                if (trib.Leader == null || pk.Leader == null) continue;
+
+                if (trib.Leader.Gold > 500)
+                {
+                    GiveGoldAction.ApplyBetweenCharacters(trib.Leader, pk.Leader, 500, true);
+                    continue;
+                }
+
+                // The nazrana does not come. Whether from an empty treasury or plain defiance, the insult
+                // is the same — and it is a cause for war.
+                Util.WarAimsBehavior.Instance?.RegisterRevengeCasusBelli(pk, trib, trib.Leader);
+                RoyalFarmaan.Issue("The Nazrana Does Not Come", $"Concerning our tributary, {trib.Name}",
+                    $"{trib.Name} has withheld its nazrana. Whether their treasury is empty or their spine has " +
+                    "stiffened, the insult stands — and the realm now holds just cause to chastise them.",
+                    seal: "A tribute withheld is a defiance offered", primary: "They will answer for it",
+                    dedupeKey: "tribwithheld:" + trib.StringId, cooldownDays: 60);
+            }
+        }
+
+        // ── Directing the war (the ruler's menu) ─────────────────────────────────────
+        private void OpenDirectWar()
+        {
+            Kingdom pk = PK;
+            if (pk == null || !IsRuler) { Notify("Only the sovereign may direct the realm's wars.", true); return; }
+            var wars = Kingdom.All.Where(k => k != null && k != pk && !k.IsEliminated
+                                              && pk.IsAtWarWith(k) && !ThroneWar.IsRebelKingdom(k)).ToList();
+            foreach (var k in wars) EnsureWar(pk, k);
+            if (wars.Count == 0) { Notify("The realm is at peace.", false); return; }
+
+            var elements = wars.Select(k =>
+            {
+                var snap = SnapshotFor(pk, k);
+                float ours = WarExhaustionBehavior.Instance?.Exhaustion(pk, k) ?? 0f;
+                float theirs = WarExhaustionBehavior.Instance?.Exhaustion(k, pk) ?? 0f;
+                string hint = string.Join("\n", ProgressBreakdown(pk, k)
+                    .Select(l => $"{l.Label}: {l.Value}" + (string.IsNullOrEmpty(l.Detail) ? "" : $"  ({l.Detail})")));
+                return new InquiryElement(k,
+                    $"{k.Name} — {WarProgressMath.AimName(snap.Aim)}{(snap.IsDefender ? " (we defend)" : "")}, " +
+                    $"{WarProgressMath.Percent(snap):0}% — {WarProgressMath.Headline(snap)}",
+                    null, true,
+                    hint + $"\n\nOur realm is {WarExhaustionMath.Tier(ours)}; theirs is {WarExhaustionMath.Tier(theirs)}.");
+            }).ToList();
+
+            MBInformationManager.ShowMultiSelectionInquiry(new MultiSelectionInquiryData(
+                "Direct the War Effort", "Choose a war to bring to terms. Hover a war to see exactly what has moved it.",
+                elements, true, 1, 1, "Negotiate", "Cancel",
+                sel => { if (sel != null && sel.Count > 0 && sel[0].Identifier is Kingdom k) OfferTerms(k); },
+                _ => { }, "", false), false, false);
+        }
+
+        // THE TERMS ARE GATED BY THE AIM, not by the score. A war for Bijapur can take Bijapur — not a
+        // nazrana, not a random province, and never the whole realm.
+        private void OfferTerms(Kingdom ok)
+        {
+            Kingdom pk = PK;
+            int i = FindWar(pk, ok);
+            if (i < 0) { Notify("That war is not tracked.", true); return; }
+
+            var snap = SnapshotFor(pk, ok);
+            WarAim aim = snap.Aim;
+            bool complete = WarProgressMath.Complete(snap);
+            bool decisive = snap.Score >= WarProgressMath.DecisiveScore;
+
+            var elements = new List<InquiryElement>
+            {
+                new InquiryElement(Term.WhitePeace, "White peace (no terms)", null, true,
+                    "End the war as it stands. Nothing is taken, nothing is paid — and a year's truce follows.")
+            };
+
+            if (WarAimMath.AllowsAnnexProvince(aim) && complete && !snap.IsDefender)
+                elements.Add(new InquiryElement(Term.DemandTargets, "Take what we came for", null, true,
+                    $"Annex {string.Join(", ", TargetIds(i).Select(Settle).Where(s => s != null).Select(s => s.Name.ToString()))} — " +
+                    "each passing to the house whose claim we pressed. Then a three-year truce."));
+
+            if (WarAimMath.AllowsTribute(aim) && decisive)
+            {
+                elements.Add(new InquiryElement(Term.DemandNazrana, "Demand a nazrana indemnity", null, true, "Take gold for peace."));
+                elements.Add(new InquiryElement(Term.MakeTributary, "Make them a tributary", null, true,
+                    "They pay weekly nazrana and keep the peace for three years."));
+            }
+
+            if (WarAimMath.AllowsJudgement(aim) && decisive
+                && Util.WarAimsBehavior.Instance != null
+                && Util.WarAimsBehavior.Instance.HasCasusBelli(pk, ok, out Hero culprit) && culprit != null)
+                elements.Add(new InquiryElement(Term.SurrenderCulprit, $"Demand they surrender {culprit.Name}", null, true,
+                    "Make them hand over the lord who wronged us — to pardon, fine, imprison, or execute."));
+
+            if (WarAimMath.AllowsAnnexAll(aim) && complete)
+                elements.Add(new InquiryElement(Term.Subjugate, "Demand total submission (annex the realm)", null, true,
+                    "Absorb their ENTIRE realm. Their houses bend the knee and enter our realm — bearing a bitter grudge " +
+                    "that will take years to cool."));
+
+            if (snap.Score <= -8)
+                elements.Add(new InquiryElement(Term.OfferNazrana, "Offer a nazrana for peace", null, true,
+                    "Buy your way out of a losing war."));
+
+            // The honest reason an option is missing.
+            string why = complete
+                ? "Our aim is achieved — we may take what we came for."
+                : $"Our aim ({WarProgressMath.AimName(aim)}) is {WarProgressMath.Percent(snap):0}% achieved. " +
+                  "Until it is met, we cannot demand what the war was declared to win.";
+
+            MBInformationManager.ShowMultiSelectionInquiry(new MultiSelectionInquiryData(
+                $"Terms with {ok.Name}",
+                $"{why}\n\n" + string.Join("\n", ProgressBreakdown(pk, ok).Select(l => $"{l.Label}: {l.Value}")),
+                elements, true, 1, 1, "Seal it", "Cancel",
+                sel => { if (sel != null && sel.Count > 0 && sel[0].Identifier is Term t) ApplyTerms(ok, t); },
+                _ => { }, "", false), false, false);
+        }
+
+        private void ApplyTerms(Kingdom ok, Term t)
+        {
+            Kingdom pk = PK;
+            if (pk == null) return;
+            int i = FindWar(pk, ok);
+            if (i < 0) return;
+            var snap = SnapshotFor(pk, ok);
+
+            _applyingTerms = true;
+            try
+            {
+                switch (t)
+                {
+                    case Term.DemandTargets:
+                        AwardTargets(i, pk);
+                        break;
+                    case Term.DemandNazrana:
+                        TransferGold(ok.Leader, pk.Leader, Math.Min((int)snap.Score * 100, ok.Leader?.Gold ?? 0));
+                        break;
+                    case Term.OfferNazrana:
+                        TransferGold(pk.Leader, ok.Leader, Math.Min((int)Math.Abs(snap.Score) * 100, pk.Leader?.Gold ?? 0));
+                        break;
+                    case Term.MakeTributary:
+                        _tributaryUntil[ok.StringId] = Today + 365 * 3;
+                        break;
+                    case Term.SurrenderCulprit:
+                        Util.WarAimsBehavior.Instance?.JudgeCulprit(ok);
+                        break;
+                    case Term.Subjugate:
+                        Subjugate(pk, ok);
+                        return;   // Subjugate concludes and closes the war itself
+                }
+
+                if (!ok.IsEliminated && pk.IsAtWarWith(ok)) MakePeaceAction.Apply(pk, ok);
+                ApplyTruce(pk, ok, t == Term.WhitePeace ? 365 : ForcedTruceDays);
+
+                RoyalFarmaan.FromRuler(pk, "Peace Is Dictated",
+                    $"Peace is sealed with {ok.Name} ({Describe(t)}). " +
+                    (t == Term.WhitePeace ? "A year's truce holds." : "They are bound to a three-year truce."),
+                    "It is done");
+            }
+            catch (Exception e) { TYTLog.Error("ApplyTerms failed", e); Notify("The terms could not be enforced.", true); }
+            finally { _applyingTerms = false; CloseWar(FindWar(pk, ok)); }
+        }
+
+        private static void TransferGold(Hero from, Hero to, int amount)
+        {
+            if (from != null && to != null && amount > 0) GiveGoldAction.ApplyBetweenCharacters(from, to, amount, true);
+        }
+
+        private static string Describe(Term t) => t == Term.DemandNazrana ? "a nazrana indemnity"
+            : t == Term.DemandTargets ? "the fiefs we marched for, ceded" : t == Term.MakeTributary ? "their tributary submission"
+            : t == Term.OfferNazrana ? "a nazrana paid for peace" : t == Term.Subjugate ? "their realm annexed entire"
+            : t == Term.SurrenderCulprit ? "the surrender of the guilty lord" : "white peace";
+
+        // ── Regicide ─────────────────────────────────────────────────────────────────
+        private void OnHeroKilled(Hero victim, Hero killer, KillCharacterAction.KillCharacterActionDetail detail, bool showNotification)
+            => TYTLog.GuardQuiet("Warfare.HeroKilled", () =>
+            {
+                if (victim == null || detail != KillCharacterAction.KillCharacterActionDetail.Executed) return;
+                Kingdom theirs = Kingdom.All.FirstOrDefault(k => !k.IsEliminated && k.Leader == victim);
+                if (theirs == null) return;
+                Kingdom pk = PK;
+                if (pk == null || theirs == pk) return;
+                bool byUs = killer != null && (killer == Hero.MainHero || killer.Clan?.Kingdom == pk);
+                if (!byUs) return;
+
+                if (pk.IsAtWarWith(theirs))
+                    try { ThroneWar.WithInternalPeace(() => MakePeaceAction.Apply(pk, theirs)); } catch { }
+
+                Hero butcher = killer == Hero.MainHero ? Hero.MainHero : (pk.Leader ?? killer);
+                foreach (Clan c in theirs.Clans.Where(c => !c.IsEliminated && c.Leader != null))
+                    ChangeRelationAction.ApplyRelationChangeBetweenHeroes(butcher, c.Leader, -30);
+                Util.WarAimsBehavior.Instance?.RegisterRevengeCasusBelli(theirs, pk, butcher);
+                if (pk.Leader != null) LegitimacyBehavior.Instance?.ModifyLegitimacy(pk.Leader, -3f, "the killing of a king");
+
+                Notify($"You have put {victim.Name}, king of {theirs.Name}, to death. His realm sues for peace — but every " +
+                       $"lord of {theirs.Name} now thirsts for vengeance against you.", true);
+            });
+
+        // ── Spoils, notables, prisoners, banners (unchanged behaviour) ───────────────
         private enum Fate { Pardon, Penalize, Banish, Execute }
 
         private void OfferSpoils(Settlement s)
@@ -256,8 +1061,6 @@ namespace TakhtyaTaboot
                 secondary: "Show mercy", onSecondary: () => { Mercy(s); JudgeNotables(s); });
         }
 
-        // Sit in judgement over the conquered city's notables, one by one. Each fate is a
-        // trade-off between the spoils/standing you gain and the unrest and enmity you sow.
         private void JudgeNotables(Settlement s)
         {
             if (s?.Notables == null) return;
@@ -290,7 +1093,7 @@ namespace TakhtyaTaboot
                     _ => { while (queue.Count > 0) { Hero r = queue.Dequeue(); if (r != null && r.IsAlive) ApplyFate(s, r, Fate.Pardon); }
                            ApplyFate(s, n, Fate.Pardon); },
                     "", false), false, false);
-                return; // the rest continue from the callback
+                return;
             }
         }
 
@@ -370,7 +1173,6 @@ namespace TakhtyaTaboot
             Notify($"You spare {s.Name}. The people bless your name, and your standing grows.", false);
         }
 
-        // ── Captured lords: ransom or hostage ────────────────────────────────────────
         private void OnPrisonerTaken(PartyBase captor, Hero prisoner)
         {
             if (prisoner == null || !prisoner.IsLord || prisoner.Clan == Clan.PlayerClan) return;
@@ -401,236 +1203,11 @@ namespace TakhtyaTaboot
             catch { Notify("The ransom could not be arranged.", true); }
         }
 
-        // ── War-weariness ────────────────────────────────────────────────────────────
-        private void OnSessionLaunched(CampaignGameStarter starter) => AddMenus(starter);
-
-        private void OnDailyTick()
-        {
-            _ready = true;
-            Kingdom pk = PK;
-            if (pk == null) return;
-            int today = (int)CampaignTime.Now.ToDays;
-
-            // Track every war the realm is actually in (covers wars that predate this behavior's sight).
-            foreach (Kingdom o in Kingdom.All.Where(o => o != pk && !o.IsEliminated && pk.IsAtWarWith(o)).ToList())
-                EnsureWarTracked(o);
-
-            foreach (string id in _score.Keys.ToList())
-            {
-                Kingdom ok = Find(id);
-                if (ok == null || !pk.IsAtWarWith(ok)) continue;
-                // The council's urging now reads the REAL war exhaustion (casualties, fiefs,
-                // raids — WarExhaustionBehavior) instead of the old time-only weariness.
-                // _weary stays serialized for save-compat but no longer accrues.
-                float w = WarExhaustionBehavior.Instance?.Exhaustion(pk, ok) ?? 0f;
-                if (Util.WarExhaustionMath.CouncilUrgesPeace(w) && IsRuler && !_peaceUrged.Contains(id))
-                {
-                    _peaceUrged.Add(id);
-                    RoyalFarmaan.Issue("The Realm Wearies of War", $"From the Imperial Council of {pk.Name}",
-                        $"The war with {ok.Name} drags on and the realm grows weary. The council urges you to seek terms — " +
-                        "press for what advantage your war score allows, or grant peace. Direct the war effort from any town or castle.",
-                        seal: null, primary: "I shall consider it",
-                        dedupeKey: "weary:" + id, cooldownDays: 30);
-                }
-            }
-
-            // Tributaries pay their nazrana while the bond holds. A re-declared war breaks the
-            // pact in OnWarDeclared (one-shot); it is never force-peaced from here.
-            foreach (string id in _tributaryUntil.Keys.ToList())
-            {
-                Kingdom trib = Find(id);
-                if (trib == null || today >= _tributaryUntil[id]) { _tributaryUntil.Remove(id); continue; }
-                if (pk.IsAtWarWith(trib)) continue; // pact break is handled by OnWarDeclared
-                if (today % 7 == 0 && trib.Leader != null && pk.Leader != null && trib.Leader.Gold > 500)
-                    GiveGoldAction.ApplyBetweenCharacters(trib.Leader, pk.Leader, 500, true);
-            }
-        }
-
-        // ── Peace negotiation (ruler dictates terms) ─────────────────────────────────
-        private void OnMakePeace(IFaction f1, IFaction f2, MakePeaceAction.MakePeaceDetail detail)
-        {
-            Kingdom pk = PK;
-            if (pk == null) return;
-            IFaction other = f1 == pk ? f2 : (f2 == pk ? f1 : null);
-            if (!(other is Kingdom ok) || !_score.ContainsKey(ok.StringId)) return;
-
-            // If WE dictated the terms, they are already applied. Otherwise apply a
-            // score-based indemnity so even an AI peace settles accounts.
-            if (!_applyingTerms)
-            {
-                int sc = ScoreOf(ok.StringId);
-                if (Math.Abs(sc) >= DecisiveScore && pk.Leader != null && ok.Leader != null)
-                {
-                    Hero winner = sc > 0 ? pk.Leader : ok.Leader;
-                    Hero loser = sc > 0 ? ok.Leader : pk.Leader;
-                    int amount = Math.Min(Math.Abs(sc) * 80, loser.Gold);
-                    if (amount > 0) GiveGoldAction.ApplyBetweenCharacters(loser, winner, amount, true);
-                }
-            }
-            _score.Remove(ok.StringId); _goal.Remove(ok.StringId); _weary.Remove(ok.StringId); _peaceUrged.Remove(ok.StringId);
-        }
-
-        // ── Regicide: executing an enemy king ends the war for now, but breeds a thirst for revenge ──
-        private void OnHeroKilled(Hero victim, Hero killer, KillCharacterAction.KillCharacterActionDetail detail, bool showNotification)
-        {
-            if (victim == null || detail != KillCharacterAction.KillCharacterActionDetail.Executed) return;
-            Kingdom theirs = Kingdom.All.FirstOrDefault(k => !k.IsEliminated && k.Leader == victim);
-            if (theirs == null) return;
-            Kingdom pk = PK;
-            if (pk == null || theirs == pk) return;
-            bool byUs = killer != null && (killer == Hero.MainHero || killer.Clan?.Kingdom == pk);
-            if (!byUs) return;
-
-            // The leaderless realm reels and sues for peace... (WithInternalPeace: if either
-            // realm is a hind_rebel_* kingdom, NoThroneWarPeacePatch would otherwise silently
-            // block this mod-driven settlement and leave the war permanent.)
-            if (pk.IsAtWarWith(theirs))
-                try { Util.ThroneWar.WithInternalPeace(() => MakePeaceAction.Apply(pk, theirs)); } catch { }
-
-            // ...but every house of the slain king's realm now nurses a blood grudge against you,
-            // and holds just cause for a war of vengeance.
-            Hero butcher = killer == Hero.MainHero ? Hero.MainHero : (pk.Leader ?? killer);
-            foreach (Clan c in theirs.Clans.Where(c => !c.IsEliminated && c.Leader != null))
-                ChangeRelationAction.ApplyRelationChangeBetweenHeroes(butcher, c.Leader, -30);
-            Util.WarAimsBehavior.Instance?.RegisterRevengeCasusBelli(theirs, pk, butcher);
-            if (pk.Leader != null) LegitimacyBehavior.Instance?.ModifyLegitimacy(pk.Leader, -3f, "the killing of a king");
-
-            bool seen = killer == Hero.MainHero || pk == Hero.MainHero?.Clan?.Kingdom;
-            if (seen) Notify($"You have put {victim.Name}, king of {theirs.Name}, to death. His realm sues for peace — but every lord of {theirs.Name} now thirsts for vengeance against you.", true);
-        }
-
-        private void OpenDirectWar()
-        {
-            Kingdom pk = PK;
-            if (pk == null || !IsRuler) { Notify("Only the sovereign may direct the realm's wars.", true); return; }
-            // Read the realm's wars from the engine, not just from what we happened to track.
-            var wars = Kingdom.All.Where(k => k != null && k != pk && !k.IsEliminated && pk.IsAtWarWith(k)).ToList();
-            foreach (var k in wars) EnsureWarTracked(k);
-            if (wars.Count == 0) { Notify("The realm is at peace.", false); return; }
-
-            var elements = wars.Select(k =>
-            {
-                float ours = WarExhaustionBehavior.Instance?.Exhaustion(pk, k) ?? 0f;
-                float theirs = WarExhaustionBehavior.Instance?.Exhaustion(k, pk) ?? 0f;
-                return new InquiryElement(k,
-                    $"{k.Name} — {GoalOf(k.StringId)}, war score {ScoreOf(k.StringId)}, exhaustion {ours:0}/{theirs:0}",
-                    null, true,
-                    $"Score {ScoreOf(k.StringId)} ({Standing(ScoreOf(k.StringId))}). Our realm is {Util.WarExhaustionMath.Tier(ours)}; " +
-                    $"theirs is {Util.WarExhaustionMath.Tier(theirs)}. Choose to dictate terms.");
-            }).ToList();
-
-            MBInformationManager.ShowMultiSelectionInquiry(new MultiSelectionInquiryData(
-                "Direct the War Effort", "Choose a war to bring to terms.",
-                elements, true, 1, 1, "Negotiate", "Cancel",
-                sel => { if (sel != null && sel.Count > 0 && sel[0].Identifier is Kingdom k) OfferTerms(k); },
-                _ => { }, "", false), false, false);
-        }
-
-        private void OfferTerms(Kingdom ok)
-        {
-            Kingdom pk = PK;
-            int sc = ScoreOf(ok.StringId);
-            var elements = new List<InquiryElement> { new InquiryElement(Term.WhitePeace, "White peace (no terms)", null, true, "End the war as it stands.") };
-            if (sc >= 8) elements.Add(new InquiryElement(Term.DemandNazrana, "Demand a nazrana indemnity", null, true, "Take gold for peace."));
-            if (sc >= DecisiveScore)
-            {
-                elements.Add(new InquiryElement(Term.DemandProvince, "Demand a province", null, true, "Annex one of their towns or castles."));
-                elements.Add(new InquiryElement(Term.MakeTributary, "Make them a tributary", null, true, "They pay weekly nazrana and keep the peace."));
-
-                // Total subjugation — annex their ENTIRE realm. Only when their throne has collapsed:
-                // king fallen, legitimacy broken, and their lords already look to you (tested gate).
-                bool kingFallen = ok.Leader == null || !ok.Leader.IsAlive || ok.Leader.IsPrisoner;
-                float okLeg = LegitimacyBehavior.Instance?.GetLegitimacy(ok.Leader) ?? 60f;
-                float loyalFrac = Util.WarAimMath.FractionWithRelationAtLeast(
-                    ok.Clans.Where(c => !c.IsEliminated && c.Leader != null)
-                            .Select(c => CharacterRelationManager.GetHeroRelation(Hero.MainHero, c.Leader)),
-                    Util.WarAimMath.SubjugationLoyalRelation);
-                if (Util.WarAimMath.SubjugationAllowed(kingFallen, okLeg, loyalFrac))
-                    elements.Add(new InquiryElement(Term.Subjugate, "Demand total submission (annex the realm)", null, true,
-                        "Absorb their ENTIRE realm into yours. Possible only because their king is fallen, their legitimacy is broken, and their lords look to you."));
-            }
-            if (sc <= -8) elements.Add(new InquiryElement(Term.OfferNazrana, "Offer a nazrana for peace", null, true, "Buy your way out of a losing war."));
-
-            // Revenge: if this war is justified by an affront, you may demand the culprit for judgement.
-            if (sc >= 8 && Util.WarAimsBehavior.Instance != null
-                && Util.WarAimsBehavior.Instance.HasCasusBelli(pk, ok, out Hero culprit) && culprit != null)
-                elements.Add(new InquiryElement(Term.SurrenderCulprit, $"Demand they surrender {culprit.Name} for judgement", null, true,
-                    "Make them hand over the lord who wronged you — to pardon, fine, imprison, or execute as you see fit."));
-
-            MBInformationManager.ShowMultiSelectionInquiry(new MultiSelectionInquiryData(
-                $"Terms with {ok.Name}",
-                $"Your war score stands at {sc} ({Standing(sc)}). Dictate the peace:",
-                elements, true, 1, 1, "Seal it", "Cancel",
-                sel => { if (sel != null && sel.Count > 0 && sel[0].Identifier is Term t) ApplyTerms(ok, t); },
-                _ => { }, "", false), false, false);
-        }
-
-        private void ApplyTerms(Kingdom ok, Term t)
-        {
-            Kingdom pk = PK;
-            if (pk == null) return;
-            _applyingTerms = true;
-            try
-            {
-                switch (t)
-                {
-                    case Term.DemandNazrana:
-                        TransferGold(ok.Leader, pk.Leader, Math.Min(ScoreOf(ok.StringId) * 100, ok.Leader?.Gold ?? 0));
-                        break;
-                    case Term.OfferNazrana:
-                        TransferGold(pk.Leader, ok.Leader, Math.Min(Math.Abs(ScoreOf(ok.StringId)) * 100, pk.Leader?.Gold ?? 0));
-                        break;
-                    case Term.DemandProvince:
-                        Settlement prize = ok.Settlements.Where(s => s.IsTown).Concat(ok.Settlements.Where(s => s.IsCastle)).FirstOrDefault();
-                        if (prize != null) ChangeOwnerOfSettlementAction.ApplyByGift(prize, Hero.MainHero);
-                        break;
-                    case Term.MakeTributary:
-                        _tributaryUntil[ok.StringId] = (int)CampaignTime.Now.ToDays + 365 * 3;
-                        break;
-                    case Term.Subjugate:
-                        // Annex the entire realm. Peace is concluded FIRST, while both kingdoms
-                        // are still alive — annexing every clan can leave ok empty and destroyed,
-                        // and making peace with a dead kingdom is incoherent (it used to run on
-                        // the destroyed realm and get swallowed by the catch below).
-                        if (pk.IsAtWarWith(ok)) MakePeaceAction.Apply(pk, ok);
-                        foreach (Clan c in ok.Clans.ToList())
-                            try { ChangeKingdomAction.ApplyByJoinToKingdom(c, pk, default(CampaignTime), false); } catch { }
-                        if (!ok.IsEliminated && !ok.Settlements.Any() && !ok.Clans.Any())
-                            try { DestroyKingdomAction.Apply(ok); } catch { }
-                        break;
-                    case Term.SurrenderCulprit:
-                        Util.WarAimsBehavior.Instance?.JudgeCulprit(ok);
-                        break;
-                }
-                if (!ok.IsEliminated && pk.IsAtWarWith(ok)) MakePeaceAction.Apply(pk, ok);
-                RoyalFarmaan.FromRuler(pk, "Peace Is Dictated",
-                    $"Peace is sealed with {ok.Name} on your terms ({Describe(t)}). The war is ended.", "It is done");
-            }
-            catch { Notify("The terms could not be enforced.", true); }
-            finally { _applyingTerms = false; }
-            _score.Remove(ok.StringId); _goal.Remove(ok.StringId); _weary.Remove(ok.StringId);
-        }
-
-        private static void TransferGold(Hero from, Hero to, int amount)
-        {
-            if (from != null && to != null && amount > 0) GiveGoldAction.ApplyBetweenCharacters(from, to, amount, true);
-        }
-
-        private static string Describe(Term t) => t == Term.DemandNazrana ? "a nazrana indemnity"
-            : t == Term.DemandProvince ? "a province ceded" : t == Term.MakeTributary ? "their tributary submission"
-            : t == Term.OfferNazrana ? "a nazrana paid for peace" : t == Term.Subjugate ? "their realm annexed entire"
-            : t == Term.SurrenderCulprit ? "the surrender of the guilty lord" : "white peace";
-
-        private static string Standing(int sc) => sc >= DecisiveScore ? "you are winning decisively"
-            : sc >= 8 ? "you hold the advantage" : sc <= -DecisiveScore ? "you are losing badly"
-            : sc <= -8 ? "the enemy holds the advantage" : "the war hangs in the balance";
-
-        // ── Call the realm's banners (ruler muster) ──────────────────────────────────
         private void CallBanners()
         {
             Kingdom pk = PK;
             if (pk == null || !IsRuler) { Notify("Only the sovereign calls the realm's banners.", true); return; }
-            int today = (int)CampaignTime.Now.ToDays;
+            int today = Today;
             if (today - _lastBannerDay < BannerCooldownDays) { Notify("The banners were lately called; the lords need time to gather.", true); return; }
             if (MobileParty.MainParty == null) return;
             _lastBannerDay = today;
@@ -665,6 +1242,8 @@ namespace TakhtyaTaboot
         }
 
         // ── Menus ────────────────────────────────────────────────────────────────────
+        private void OnSessionLaunched(CampaignGameStarter starter) => AddMenus(starter);
+
         private void AddMenus(CampaignGameStarter starter)
         {
             foreach (string root in new[] { "town", "castle" })
@@ -683,7 +1262,7 @@ namespace TakhtyaTaboot
         private static bool AtWar()
         {
             Kingdom pk = PK;
-            return pk != null && Kingdom.All.Any(o => o != pk && !o.IsEliminated && pk.IsAtWarWith(o));
+            return pk != null && Kingdom.All.Any(o => o != pk && !o.IsEliminated && pk.IsAtWarWith(o) && !ThroneWar.IsRebelKingdom(o));
         }
 
         private static void Notify(string text, bool bad)
@@ -691,42 +1270,78 @@ namespace TakhtyaTaboot
                 bad ? Color.FromUint(0xFFCC4400) : Color.FromUint(0xFFD4AF37)));
 
         // ── Save / load ──────────────────────────────────────────────────────────────
+        // The state model changed shape in ch.30 (from a player-implicit dictionary to real war records).
+        // Legacy saves simply arrive with no records: the daily tick's EnsureWar reconstructs one for every
+        // war actually being fought, with its aim inferred from the aggressor's standing claims.
         public override void SyncData(IDataStore dataStore)
         {
-            var gIds = _goal.Keys.ToList(); var gVals = _goal.Values.ToList();
-            var sIds = _score.Keys.ToList(); var sVals = _score.Values.ToList();
-            var wIds = _weary.Keys.ToList(); var wVals = _weary.Values.ToList();
+            dataStore.SyncData("hind_war2_agg", ref _wAgg);
+            dataStore.SyncData("hind_war2_def", ref _wDef);
+            dataStore.SyncData("hind_war2_aim", ref _wAim);
+            dataStore.SyncData("hind_war2_targets", ref _wTargets);
+            dataStore.SyncData("hind_war2_claimants", ref _wClaimants);
+            dataStore.SyncData("hind_war2_start", ref _wStart);
+
+            dataStore.SyncData("hind_war2_cwar", ref _cWar);
+            dataStore.SyncData("hind_war2_cday", ref _cDay);
+            dataStore.SyncData("hind_war2_ckind", ref _cKind);
+            dataStore.SyncData("hind_war2_cdelta", ref _cDelta);
+            dataStore.SyncData("hind_war2_csubj", ref _cSubj);
+
+            dataStore.SyncData("hind_war2_trA", ref _trA);
+            dataStore.SyncData("hind_war2_trB", ref _trB);
+            dataStore.SyncData("hind_war2_trUntil", ref _trUntil);
+
             var tIds = _tributaryUntil.Keys.ToList(); var tVals = _tributaryUntil.Values.ToList();
-            dataStore.SyncData("hind_war_gIds", ref gIds); dataStore.SyncData("hind_war_gVals", ref gVals);
-            dataStore.SyncData("hind_war_sIds", ref sIds); dataStore.SyncData("hind_war_sVals", ref sVals);
-            dataStore.SyncData("hind_war_wIds", ref wIds); dataStore.SyncData("hind_war_wVals", ref wVals);
             dataStore.SyncData("hind_war_tIds", ref tIds); dataStore.SyncData("hind_war_tVals", ref tVals);
             dataStore.SyncData("hind_war_lastbanner", ref _lastBannerDay);
+
             if (!dataStore.IsSaving)
             {
-                _goal = Zip(gIds, gVals); _score = Zip(sIds, sVals); _weary = Zip(wIds, wVals); _tributaryUntil = Zip(tIds, tVals);
+                _wAgg ??= new List<string>(); _wDef ??= new List<string>(); _wAim ??= new List<int>();
+                _wTargets ??= new List<string>(); _wClaimants ??= new List<string>(); _wStart ??= new List<int>();
+                _cWar ??= new List<string>(); _cDay ??= new List<int>(); _cKind ??= new List<int>();
+                _cDelta ??= new List<float>(); _cSubj ??= new List<string>();
+                _trA ??= new List<string>(); _trB ??= new List<string>(); _trUntil ??= new List<int>();
+
+                _tributaryUntil = new Dictionary<string, int>();
+                if (tIds != null && tVals != null)
+                    for (int i = 0; i < tIds.Count && i < tVals.Count; i++) _tributaryUntil[tIds[i]] = tVals[i];
             }
         }
 
-        private static Dictionary<string, T> Zip<T>(List<string> k, List<T> v)
-        {
-            var d = new Dictionary<string, T>();
-            for (int i = 0; i < k.Count && i < v.Count; i++) d[k[i]] = v[i];
-            return d;
-        }
-
-        // ── Console ────────────────────────────────────────────────────────────────────
+        // ── Console ──────────────────────────────────────────────────────────────────
         [CommandLineFunctionality.CommandLineArgumentFunction("war_status", "hindostan")]
         public static string WarStatus(List<string> args)
         {
             if (Campaign.Current == null || Instance == null) return "Load a campaign first.";
-            Kingdom pk = PK;
-            if (pk == null) return "You serve no realm.";
-            var wars = Instance._score.Keys.Select(Find).Where(k => k != null && pk.IsAtWarWith(k)).ToList();
-            float valour = MansabdariBehavior.Instance?.GetValour(Clan.PlayerClan) ?? 0f;
-            if (wars.Count == 0) return $"Valour toward next mansab: {valour:0}. The realm is at peace.";
-            return $"Valour toward next mansab: {valour:0}\n" + string.Join("\n", wars.Select(k =>
-                $"{k.Name}: goal {Instance.GoalOf(k.StringId)}, score {Instance.ScoreOf(k.StringId)} ({Standing(Instance.ScoreOf(k.StringId))})"));
+            if (Instance._wAgg.Count == 0) return "No wars are being fought.";
+
+            var sb = new System.Text.StringBuilder();
+            for (int i = 0; i < Instance._wAgg.Count; i++)
+            {
+                Kingdom agg = Find(Instance._wAgg[i]);
+                Kingdom def = Find(Instance._wDef[i]);
+                if (agg == null || def == null) continue;
+                var snap = Instance.SnapshotFor(agg, def);
+                sb.AppendLine($"{agg.Name} -> {def.Name}: {WarProgressMath.AimName(snap.Aim)}, " +
+                              $"{WarProgressMath.Percent(snap):0}% ({WarProgressMath.Headline(snap)}), score {snap.Score:0}");
+                foreach (var l in Instance.ProgressBreakdown(agg, def))
+                    sb.AppendLine($"    {l.Label}: {l.Value}");
+            }
+            return sb.ToString();
+        }
+
+        [CommandLineFunctionality.CommandLineArgumentFunction("truces", "hindostan")]
+        public static string Truces(List<string> args)
+        {
+            if (Campaign.Current == null || Instance == null) return "Load a campaign first.";
+            if (Instance._trA.Count == 0) return "No truces stand.";
+            var sb = new System.Text.StringBuilder("Standing truces:\n");
+            for (int i = 0; i < Instance._trA.Count; i++)
+                sb.AppendLine($"  {Find(Instance._trA[i])?.Name} / {Find(Instance._trB[i])?.Name} — " +
+                              $"{Instance._trUntil[i] - Today} days left");
+            return sb.ToString();
         }
     }
 }

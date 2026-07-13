@@ -1241,6 +1241,145 @@ namespace TakhtyaTaboot
                 $"{defiant} hold back, and their defiance is noted against them.", "Let us march");
         }
 
+        // ── The vassal's petition: ask the crown to press YOUR house's claim ─────────
+        // A landed house that holds a claim it cannot act on alone — because only the sovereign declares
+        // war — may lay it before the throne. This is the other half of the wakil's bargain (ch.30 §1):
+        // march for it yourself, or petition the crown to take it up as the REALM's cause. Without this,
+        // a vassal who spends two years buying a bazaar has bought nothing he can use.
+        private void OpenClaimPetition()
+        {
+            Kingdom pk = PK;
+            Hero ruler = pk?.Leader;
+            if (pk == null || ruler == null || ruler == Hero.MainHero)
+            { Notify("You are the sovereign — you need petition no one. Declare the war yourself.", true); return; }
+
+            var claims = (ClaimsBehavior.Instance?.ClaimsOf(Clan.PlayerClan)
+                          ?? new List<(Settlement, float, ClaimsBehavior.ClaimKind)>())
+                .Where(c => c.Item1?.OwnerClan?.Kingdom != null
+                            && c.Item1.OwnerClan.Kingdom != pk
+                            && !ThroneWar.IsRebelKingdom(c.Item1.OwnerClan.Kingdom)
+                            && ClaimMath.WorthAWar(c.Item2))
+                .ToList();
+
+            if (claims.Count == 0)
+            { Notify("Your house holds no claim abroad worth laying before the throne.", true); return; }
+
+            var elements = claims.Select(c =>
+            {
+                Kingdom holder = c.Item1.OwnerClan.Kingdom;
+                bool truced = IsTruced(pk, holder);
+                bool atWar = pk.IsAtWarWith(holder);
+                string state = truced ? "a truce stands — the crown cannot move"
+                             : atWar ? "the realm already wars with them"
+                             : "the realm is at peace with them";
+                return new InquiryElement(c.Item1,
+                    $"{c.Item1.Name} — {c.Item2:0.0} yrs ({ClaimMath.Describe(c.Item2)}), held by {holder.Name}",
+                    null, !truced,
+                    $"Ask {ruler.Name} to press our house's claim on {c.Item1.Name} as the realm's cause — {state}. " +
+                    $"The petition costs {ClaimPetitionInfluence} influence, whatever the answer.");
+            }).ToList();
+
+            MBInformationManager.ShowMultiSelectionInquiry(new MultiSelectionInquiryData(
+                "Lay a Claim Before the Throne",
+                $"Only the sovereign declares war. Lay your house's claim before {ruler.Name} and ask him to make it " +
+                "the realm's own — if he consents, the war will be fought for it, and the fief will be yours when it falls.",
+                elements, true, 1, 1, "Petition the throne", "Withdraw",
+                sel => { if (sel != null && sel.Count > 0 && sel[0].Identifier is Settlement s) PressClaim(s); },
+                _ => { }, "", false), false, false);
+        }
+
+        private const int ClaimPetitionInfluence = 100;
+
+        private void PressClaim(Settlement s)
+            => TYTLog.Guard("Warfare.PressClaim", () =>
+            {
+                Kingdom pk = PK;
+                Hero ruler = pk?.Leader;
+                Kingdom holder = s?.OwnerClan?.Kingdom;
+                if (pk == null || ruler == null || holder == null) return;
+
+                if (IsTruced(pk, holder))
+                { Notify($"A truce stands with {holder.Name}. The crown will not break it.", true); return; }
+
+                if (Clan.PlayerClan.Influence < ClaimPetitionInfluence)
+                { Notify($"The petition needs {ClaimPetitionInfluence} influence at court; you have {Clan.PlayerClan.Influence:0}.", true); return; }
+                ChangeClanInfluenceAction.Apply(Clan.PlayerClan, -ClaimPetitionInfluence);
+
+                float claim = ClaimsBehavior.Instance?.GetClaim(Clan.PlayerClan, s) ?? 0f;
+                float opinion = OpinionBehavior.Instance?.EffectiveOpinion(ruler, Hero.MainHero)
+                                ?? CharacterRelationManager.GetHeroRelation(ruler, Hero.MainHero);
+                float weary = WarExhaustionBehavior.Instance?.Exhaustion(pk, holder) ?? 0f;
+
+                // The crown weighs the man, the claim, and whether the realm has the stomach for it.
+                float verdict = opinion + claim * 3f - weary * 0.5f + MBRandom.RandomFloatRanged(-15f, 15f);
+                bool consents = verdict >= 20f;
+
+                if (!consents)
+                {
+                    RoyalFarmaan.FromRuler(pk, "The Throne Declines",
+                        $"{ruler.Name} hears your claim upon {s.Name} and sets it aside. " +
+                        (weary >= WarExhaustionMath.AdvisoryThreshold
+                            ? "The realm is too weary for another war."
+                            : "Your house does not yet carry weight enough at court to move the realm to war."),
+                        "I withdraw, for now");
+                    return;
+                }
+
+                // Already at war with them: the claim is folded into the war being fought.
+                if (pk.IsAtWarWith(holder))
+                {
+                    int i = FindWar(pk, holder);
+                    if (i < 0) { EnsureWar(pk, holder); i = FindWar(pk, holder); }
+                    if (i < 0) return;
+
+                    if (AimAt(i) != WarAim.ProvincialConquest)
+                    {
+                        RoyalFarmaan.FromRuler(pk, "The War Is Already Fought For Another Purpose",
+                            $"The realm's war with {holder.Name} is a war of {WarProgressMath.AimName(AimAt(i)).ToLowerInvariant()}. " +
+                            $"{ruler.Name} will not recast its aim now the banners are out. Your claim upon {s.Name} must wait for the next war.",
+                            "So be it");
+                        return;
+                    }
+                    AddTarget(i, s, Clan.PlayerClan);
+                    RoyalFarmaan.FromRuler(pk, "Your Claim Is Taken Up",
+                        $"{ruler.Name} adds {s.Name} to the aims of the realm's war with {holder.Name}. " +
+                        "When it falls, it falls to your house.", "It shall be taken");
+                    return;
+                }
+
+                // Peace: the crown declares the war, and it is declared FOR your claim.
+                try
+                {
+                    DeclareWarAction.ApplyByDefault(pk, holder);
+                    int i = FindWar(pk, holder);
+                    if (i < 0) { EnsureWar(pk, holder); i = FindWar(pk, holder); }
+                    if (i >= 0)
+                        SetAim(i, WarAim.ProvincialConquest, new List<Settlement> { s }, new List<Clan> { Clan.PlayerClan });
+
+                    RoyalFarmaan.FromRuler(pk, "The Realm Takes Up Your Claim",
+                        $"{ruler.Name} declares war upon {holder.Name} to press your house's claim on {s.Name}. " +
+                        "The realm marches for it — and when it falls, it is yours.\n\nSee that you are worth the blood.",
+                        "We march");
+                    TYTLog.Info($"Warfare: {pk.Name} declared war on {holder.Name} on the player's claim to {s.Name}.");
+                }
+                catch (Exception e)
+                {
+                    TYTLog.Error("PressClaim: the war could not be declared", e);
+                    Notify("The crown consents, but the war could not be declared.", true);
+                }
+            });
+
+        private void AddTarget(int i, Settlement s, Clan claimant)
+        {
+            var targets = TargetIds(i);
+            if (targets.Contains(s.StringId)) return;
+            var claimants = ClaimantIds(i);
+            targets.Add(s.StringId); claimants.Add(claimant.StringId);
+            _wTargets[i] = string.Join(";", targets);
+            _wClaimants[i] = string.Join(";", claimants);
+            _completionOffered.Remove(WarKey(i));   // the aim just grew; it may no longer be complete
+        }
+
         // ── Menus ────────────────────────────────────────────────────────────────────
         private void OnSessionLaunched(CampaignGameStarter starter) => AddMenus(starter);
 
@@ -1256,7 +1395,23 @@ namespace TakhtyaTaboot
                     args => { args.optionLeaveType = GameMenuOption.LeaveType.Recruit;
                               return IsRuler && AtWar(); },
                     args => CallBanners(), false, 8);
+
+                // A vassal's road to acting on a claim: only the sovereign declares war.
+                starter.AddGameMenuOption(root, "hindostan_pressclaim_" + root, "{=!}Lay a claim before the throne",
+                    args => { args.optionLeaveType = GameMenuOption.LeaveType.Mission;
+                              return PK != null && !IsRuler && HasForeignClaim(); },
+                    args => OpenClaimPetition(), false, 9);
             }
+        }
+
+        private static bool HasForeignClaim()
+        {
+            Kingdom pk = PK;
+            if (pk == null || ClaimsBehavior.Instance == null) return false;
+            return ClaimsBehavior.Instance.ClaimsOf(Clan.PlayerClan).Any(c =>
+                c.Item1?.OwnerClan?.Kingdom != null && c.Item1.OwnerClan.Kingdom != pk
+                && !ThroneWar.IsRebelKingdom(c.Item1.OwnerClan.Kingdom)
+                && ClaimMath.WorthAWar(c.Item2));
         }
 
         private static bool AtWar()

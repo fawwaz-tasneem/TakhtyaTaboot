@@ -767,6 +767,15 @@ empty on reconstructed wars — that is expected, not a bug.
 **DD14. Withheld tribute is a casus belli.** Make a realm your tributary. When their treasury runs dry and
 the nazrana stops, expect the farmaan **"The Nazrana Does Not Come"** granting you just cause to chastise them.
 
+**DD15. The vassal's petition (only the sovereign declares war).** As a **vassal** (not the ruler) holding a
+claim on a foreign fief — earned by the wakil (DD11) or inherited — enter any town/castle → **"Lay a claim
+before the throne"**. Costs 100 influence whatever the answer. The crown weighs your standing, the depth of
+the claim, and the realm's weariness. On consent, expect either a **fresh war declared for your claim**
+(with that fief as its named target, and your house as the claimant who gets it), or — if the realm is
+already fighting them a war of conquest — **your fief added to that war's aims**. If the realm's existing
+war has a different aim, the crown should refuse to recast it mid-war. A standing truce must block the
+petition outright.
+
 > ⚠️ **Check your launcher:** `Bannerlord.Diplomacy` is present in your Modules folder. It must stay
 > **disabled** — it patches the same diplomacy screen and the same war/peace actions this layer now owns,
 > and the two will fight. (Standing decision: no Diplomacy mod; this is its native replacement.)

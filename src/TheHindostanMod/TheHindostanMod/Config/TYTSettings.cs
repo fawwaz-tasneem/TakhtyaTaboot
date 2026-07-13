@@ -113,6 +113,11 @@ namespace TakhtyaTaboot.Config
             HintText = "How long a mansabdar may hold a fief under Mansabdari tenure before the crown rotates him on. 360 days = 1 year.", Order = 4)]
         public int TenureRotationIntervalDays { get; set; } = 1080;
 
+        [SettingPropertyGroup("Tenure & Rotation")]
+        [SettingPropertyFloatingInteger("Base influence to rotate a mansabdar", 0f, 300f, "0", RequireRestart = false,
+            HintText = "What the crown pays to move one holder on. Scaled UP by his rank, his Rusukh, and — above all — his CLAIM on the fief: a house that has sat somewhere for twenty years costs three times as much to shift, and past the crown's purse cannot be shifted at all.", Order = 5)]
+        public float TenureRotationBaseInfluence { get; set; } = 40f;
+
         // ── Succession law (per-kingdom constitution) ─────────────────────────────────
         [SettingPropertyGroup("Succession Law")]
         [SettingPropertyFloatingInteger("Legitimacy needed to rewrite the succession law", 0f, 100f, "0", RequireRestart = false,

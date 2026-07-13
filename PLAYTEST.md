@@ -637,4 +637,51 @@ at render time — which also heals EXISTING SAVES (names/quest titles are store
 
 ---
 
-**When you report back**, the ideal format per finding: section-number, PASS/FAIL, repro steps, log excerpt, screenshot if UI. The single most valuable data points now are **J3 (the breakaway, never seen live)**, **M2 (siege unwind — the riskiest engine path)**, **N1/N2 (the fixed board)**, L3's fates, **O3/O4 (the first akhbaar report and its dead/captive/no-party edge cases)**, **P3–P5 (the labour trade-off: yield up, unrest up, gang thinning)**, and anything that throws in `tyt_log.txt`.
+## CC. The claim ledger & the price of the writ (`ClaimsBehavior` + `ClaimMath`) — wiki ch.30 steps 1-3
+
+*2026-07-13. The FOUNDATION of the complete diplomacy layer (wiki ch.30). A claim is a HOUSE's
+pretension to a place, in YEARS OF STANDING: it belongs to the clan (a successor inherits it),
+deepens 1/yr while you govern (cap 20), and — the point of the whole thing — does NOT vanish when
+you lose the fief. It freezes and fades at HALF the rate, so a grudge outlives the holding that made
+it. Seeded at 1707 on a normal curve (0-10 yrs) from the actual holders, so the map has grievances to
+act on from year one. First consumer: Mansabdari rotation, which was FREE and is now PRICED by the
+sitting holder's claim. 428 tests green. The war layer (steps 4-5) reads this ledger next.*
+
+- **CC1.** **The ledger seeded.** New campaign → `hindostan.claims`. Expect: your clan holds a claim on
+  each fief it starts with, somewhere in 0–10 years. Then `hindostan.claims_on delhi` (or any town):
+  expect the sitting house listed with its years and a description ("a firm claim", "an ancient claim"),
+  marked *sits here*. Check `tyt_log.txt` for `Claims: seeded N founding claims`. **N should be roughly
+  the number of towns+castles on the map** — if it is 0 or tiny, the seed ran before world-gen finished.
+- **CC2.** **Claims are seeded on an OLD SAVE too** (the back-fill). Load a pre-existing save →
+  `hindostan.claims` should be populated, not empty, and the log line should appear once.
+- **CC3.** **Governing deepens it.** `hindostan.claims`, note a fief's years → pass a campaign year →
+  `hindostan.claims` again. Expect **+1.0 year** on every fief you still hold. (Settles weekly, so it
+  moves in weekly steps, not daily.)
+- **CC4.** **THE GRUDGE — the core mechanic.** Lose a fief (let an enemy take it, or `hindostan.grant_claim`
+  a rival's town then take it and give it back). Immediately after losing it, `hindostan.claims` must
+  **still list it**, now reading *dispossessed — fading, forgotten in Nd*. It must NOT disappear. Pass a
+  year: the value should drop by **0.5** (half the accrual rate). This decaying claim is what the next
+  war will be declared on — if it silently vanishes, the whole layer is dead.
+- **CC5.** **A retaken seat resumes, it does not restart.** Lose a fief with (say) 8 years of claim, retake
+  it within a year or two, `hindostan.claims`: expect it to resume near **7.5**, NOT reset to 0.
+- **CC6.** **THE PRICE OF THE WRIT (Mansabdari).** As sovereign, enact Mansabdari law. Then
+  `hindostan.rotation_price <town>` on a fief held by a long-seated vassal: expect a multiplier well
+  above x1.00 (up to **x3.00** at a 20-year claim). When that fief's term expires, expect the farmaan
+  **"A Tenure Has Run Its Term"** quoting the exact influence cost — and a real choice: *Order the transfer
+  (N influence)* or *Leave him where he sits*. Ordering it must actually **deduct the influence**.
+- **CC7.** **The writ that cannot reach.** Drain the ruling clan's influence below the quoted cost (or use a
+  deeply entrenched 20-yr holder). Expect the farmaan **"The Writ Stops at His Gate"** — the rotation is
+  *not issued at all*, the holder keeps the fief, and `tyt_log.txt` logs `rotation UNAFFORDABLE`. This is
+  the intended empire-decay mechanic: entrenched magnates pass beyond the crown's reach.
+- **CC8.** **Feudal law is unaffected.** Under Feudal tenure, no rotation farmaans, no influence charged —
+  claims still accrue silently in the background (`hindostan.claims` confirms), they just do nothing yet.
+- **CC9.** **Save/load.** Save mid-campaign, reload, `hindostan.claims`: identical values, no doubling, no
+  loss. (The ledger's index is rebuilt at session launch — a corrupted index would show wrong claims
+  against the wrong settlements, so spot-check two houses.)
+- **CC10.** *Not yet wired (do not report as bugs):* the wakil/companion agent that manufactures external
+  claims (step 8), and the war layer actually *using* claims as casus belli (steps 4–5). `ClaimsBehavior`
+  already stores and expires external claims, but nothing grants them yet.
+
+---
+
+**When you report back**, the ideal format per finding: section-number, PASS/FAIL, repro steps, log excerpt, screenshot if UI. The single most valuable data points now are **CC4 (the grudge must survive dispossession — the whole diplomacy layer rests on it)**, **CC1 (the seed actually running post-world-gen)**, **CC7 (the unaffordable writ)**, and **J3 (the breakaway, never seen live)**, **M2 (siege unwind — the riskiest engine path)**, **N1/N2 (the fixed board)**, L3's fates, **O3/O4 (the first akhbaar report and its dead/captive/no-party edge cases)**, **P3–P5 (the labour trade-off: yield up, unrest up, gang thinning)**, and anything that throws in `tyt_log.txt`.

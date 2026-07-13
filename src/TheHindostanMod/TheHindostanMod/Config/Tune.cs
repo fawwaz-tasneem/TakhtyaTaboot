@@ -36,6 +36,7 @@ namespace TakhtyaTaboot.Config
         public static float TenureEdictBaseGold => S?.TenureEdictBaseGold ?? 5000f;
         public static float TenureResistThreshold => S?.TenureResistThreshold ?? 0.5f;
         public static int TenureRotationIntervalDays => S?.TenureRotationIntervalDays ?? 1080;
+        public static float TenureRotationBaseInfluence => S?.TenureRotationBaseInfluence ?? 40f;
 
         // Succession law (per-kingdom constitution: primogeniture / election / appointed Wali Ahd)
         public static float SuccLawLegitimacyFloor => S?.SuccLawLegitimacyFloor ?? 50f;

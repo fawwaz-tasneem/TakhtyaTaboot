@@ -170,6 +170,7 @@ namespace TakhtyaTaboot
             starter.AddBehavior(new CareerProgressionBehavior());
             starter.AddBehavior(new FiefPetitionBehavior()); // "claim your due" -> a staked petition the weekly court weighs
             starter.AddBehavior(new RusukhBehavior()); // local entrenchment of fief-holders
+            starter.AddBehavior(new ClaimsBehavior()); // the claim ledger (ch.30) — MUST precede the tenure law and the war layer, which both read it
             starter.AddBehavior(new MansabdariTenureBehavior()); // Feudal <-> Mansabdari tenure edict
 
             // Phase 4 — Political foundation

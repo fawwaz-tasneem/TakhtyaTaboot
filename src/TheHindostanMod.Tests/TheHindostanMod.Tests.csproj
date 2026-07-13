@@ -60,6 +60,7 @@
     <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\HistoricalCast.cs" Link="Linked\HistoricalCast.cs" />
     <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\HistoricalAnecdotes.cs" Link="Linked\HistoricalAnecdotes.cs" />
     <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\ScriptedHistory.cs" Link="Linked\ScriptedHistory.cs" />
+    <Compile Include="..\TheHindostanMod\TheHindostanMod\Util\ClaimMath.cs" Link="Linked\ClaimMath.cs" />
   </ItemGroup>
 
 </Project>

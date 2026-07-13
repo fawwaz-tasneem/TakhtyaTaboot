@@ -31,6 +31,36 @@ Update this file when an item ships (move it to "Shipped") or when priorities ch
    stakes; must respect throne-war rules (no pact can bind a hind_rebel_* war).
 2. **Coalitions against the overreaching.** Realms that grow too fast draw a defensive
    league; ties into ImperialAuthority and the tolerance/legitimacy systems.
+3. **Claim-driven AI war DECLARATION (deferred from the claims layer, wiki ch.30 §7.9).**
+   The claims build ships the *cheap* path: vanilla's `DeclareWarDecision` decides **whether**
+   to go to war exactly as it does today, and the mod assigns the war's **aim** post-hoc in
+   `OnWarDeclared` by picking the aggressor's best standing claim against the defender
+   (falling back to Chastisement if an affront exists, else Tribute). That gets claim-shaped
+   wars without touching vanilla's war AI — but the AI still *chooses its wars* for vanilla
+   reasons (raw strength, borders, relation), so it will sometimes declare a war it holds no
+   claim for, and will ignore a juicy claim it does hold.
+
+   The full feature: make the claim ledger an **input to the decision to declare**, so realms
+   go to war *because* a house of theirs has a pretension worth pressing.
+   - **Where.** `Campaign.Current.Models.KingdomDecisionPermissionModel` /
+     `DeclareWarDecision.CalculateSupport` + the AI's `KingdomDecisionProposalBehavior`
+     (which is what proposes the decision in the first place). Either Harmony-patch the
+     support/score calculation, or replace the proposal behavior wholesale.
+   - **Scoring.** War support rises with: the best claim the realm's clans hold against the
+     target (strength × recency), the *number* of clans holding claims (a bloc wants this war),
+     a live external claim inside its 2-year window (urgency — act or lose it), a withheld
+     tribute or an unavenged affront. It falls with: war exhaustion carried from the last war,
+     an active truce (hard block — the gate already bars the declaration), and the target's
+     relative strength.
+   - **Target selection.** The declared war's `targetSettlementIds` come straight from the
+     claims that justified it, so an AI conquest war has real, legible objectives — and the
+     AI then *prosecutes* them (feed the targets into the army/siege AI so it besieges what it
+     came for rather than the nearest wall).
+   - **Why deferred.** Vanilla's war-declaration scoring is what keeps the campaign map alive
+     and churning; replacing it is a large AI-behaviour surface with a real risk of a dead or
+     a permanently-burning map. It wants its own playtest wave, on top of a claims layer that
+     has already been proven in play.
+   - **Prereq.** Blocks 1–8 of wiki ch.30 shipped and playtested.
 
 *(Messengers SHIPPED 2026-07-12 round 6 — the qasid, `MessengerBehavior`: encyclopedia
 dispatch, audience opens as if you stood before the lord. See Shipped.)*

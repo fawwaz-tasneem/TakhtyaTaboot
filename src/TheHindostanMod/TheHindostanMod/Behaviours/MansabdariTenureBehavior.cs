@@ -251,6 +251,17 @@ namespace TakhtyaTaboot
                 .Where(s => Today - AppointedDay(s) >= interval)
                 .OrderByDescending(s => Today - AppointedDay(s));
 
+        // What the crown must spend to move this house on: the rank of the office and the depth of the
+        // holder's roots (Rusukh), then multiplied by his CLAIM on the fief (ch.30 §2). A house that has
+        // sat somewhere twenty years costs three times as much to shift as a newcomer.
+        public int RotationCost(Kingdom k, Settlement s, Clan holderClan)
+        {
+            int rank = MansabdariBehavior.Instance?.GetRankIndex(holderClan) ?? 1;
+            float rusukh = RusukhBehavior.Instance?.GetRusukh(holderClan?.Leader, s) ?? 0f;
+            int baseCost = MansabTenureMath.EnforcementInfluenceCost(rank, rusukh, Tune.TenureRotationBaseInfluence);
+            return ClaimMath.RotationInfluenceCost(baseCost, ClaimsBehavior.Instance?.HolderClaim(s) ?? 0f);
+        }
+
         private void IssueRotation(Kingdom k, Settlement s)
         {
             Clan holderClan = s.OwnerClan;
@@ -265,11 +276,69 @@ namespace TakhtyaTaboot
             // isn't re-issued every single week.
             _appointed[s.StringId] = Today;
 
-            if (holderClan == Clan.PlayerClan) { PlayerRotationChoice(k, s, auto); return; }
+            // THE PRICE OF THE WRIT (ch.30 §2). Rotation used to be free; a claim now makes an entrenched
+            // house dear to move — and past the crown's purse, immovable. This is what turns Mansabdari
+            // into a race: rotate them early and cheaply, or watch the jagirdars entrench past recall.
+            Clan ruling = k.RulingClan;
+            int cost = RotationCost(k, s, holderClan);
+            float claim = ClaimsBehavior.Instance?.HolderClaim(s) ?? 0f;
+            bool playerRules = k.Leader == Hero.MainHero;
 
-            // An AI holder is rotated; the sovereign (if the player) chooses who succeeds him.
+            if (!ClaimMath.CanAffordRotation(ruling?.Influence ?? 0f, cost))
+            {
+                if (playerRules)
+                    RoyalFarmaan.Issue("The Writ Stops at His Gate", $"Concerning {s.Name}",
+                        $"{holder.Name} has held {s.Name} long enough to be part of it — {ClaimMath.Describe(claim)}, " +
+                        $"{claim:0.0} years of standing. To move him on would cost the court {cost} influence, and the " +
+                        $"crown has but {ruling?.Influence ?? 0f:0}. The order cannot be issued. He sits where he sits.",
+                        seal: "The writ of the crown reaches only so far", primary: "Then he keeps it — for now",
+                        dedupeKey: "rotfail:" + s.StringId, cooldownDays: 60);
+                TYTLog.Info($"Tenure: rotation of {holder.Name} from {s.Name} UNAFFORDABLE (cost {cost}, purse {ruling?.Influence ?? 0f:0}, claim {claim:0.0}).");
+                return;
+            }
+
+            // The player's own house is being rotated by an AI crown: the crown pays, then he chooses to
+            // comply or defy (the sovereign-choice below is for when the PLAYER wears the crown).
+            if (holderClan == Clan.PlayerClan) { ChargeRotation(ruling, cost); PlayerRotationChoice(k, s, auto); return; }
+
+            // The player wears the crown: rotation is a JUDGEMENT, not an automatic tick. He is shown the
+            // price and decides whether this house is worth the influence.
+            if (playerRules) { SovereignRotationChoice(k, s, holderClan, holder, cost, claim); return; }
+
+            // An AI crown pays and proceeds.
+            ChargeRotation(ruling, cost);
             ResolveRecipient(k, s, holderClan, $"The tenure of {holder.Name} at {s.Name} has run its term.",
                 succ => { if (succ != null) AiRotation(k, s, holderClan, holder, succ); });
+        }
+
+        private static void ChargeRotation(Clan ruling, int cost)
+        {
+            if (ruling != null && cost > 0) ChangeClanInfluenceAction.Apply(ruling, -cost);
+        }
+
+        // The sovereign weighs the price. Shifting an entrenched magnate is expensive; leaving him is
+        // free but lets his roots go deeper still — and every year he keeps the seat, his claim grows.
+        private void SovereignRotationChoice(Kingdom k, Settlement s, Clan holderClan, Hero holder, int cost, float claim)
+        {
+            Clan ruling = k.RulingClan;
+            RoyalFarmaan.Issue("A Tenure Has Run Its Term", $"Concerning {s.Name}",
+                $"{holder.Name} has held {s.Name} for his full term. He has {ClaimMath.Describe(claim)} upon it — " +
+                $"{claim:0.0} years of standing — and to move him on will cost the court {cost} influence " +
+                $"(the crown holds {ruling?.Influence ?? 0f:0}). Leave him, and his roots go deeper: every year he " +
+                "keeps the seat, his house's claim upon it grows, and the price of ever moving him rises.",
+                seal: "The law of Mansabdari",
+                primary: $"Order the transfer ({cost} influence)",
+                onPrimary: () => TYTLog.Guard("Tenure.SovereignRotate", () =>
+                {
+                    // Re-check the purse: the farmaan may have sat unanswered while influence was spent.
+                    if (!ClaimMath.CanAffordRotation(ruling?.Influence ?? 0f, cost))
+                    { Notify($"The court no longer has the {cost} influence to move {holder.Name} from {s.Name}.", true); return; }
+                    ChargeRotation(ruling, cost);
+                    ResolveRecipient(k, s, holderClan, $"The tenure of {holder.Name} at {s.Name} has run its term.",
+                        succ => { if (succ != null) AiRotation(k, s, holderClan, holder, succ); });
+                }),
+                secondary: "Leave him where he sits",
+                onSecondary: () => Notify($"{holder.Name} keeps {s.Name}. His house sinks another year's roots into it.", false));
         }
 
         // AI holder: resolve the full risk ladder against his Rusukh-driven defiance.
